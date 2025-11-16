@@ -31,8 +31,24 @@ php artisan migrate --seed
 ```
 
 ### 5. Jalankan Server
+
+**Opsi 1: Gunakan Laragon (Recommended)**
 ```bash
-php artisan serve
+# Jalankan script
+use-laragon.bat
+
+# Akses di:
+# http://localhost/akuntansi/public
+# atau http://akuntansi.test (jika sudah setup virtual host)
+```
+
+**Opsi 2: PHP Built-in Server**
+```bash
+# Jika artisan serve bermasalah, gunakan:
+cd public
+php -S localhost:8080
+
+# Akses di: http://localhost:8080
 ```
 
 ## Test API

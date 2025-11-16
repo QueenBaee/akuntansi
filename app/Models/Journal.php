@@ -18,6 +18,7 @@ class Journal extends Model
         'source_id',
         'total_debit',
         'total_credit',
+        'total_amount',
         'is_posted',
         'created_by',
     ];
@@ -26,6 +27,7 @@ class Journal extends Model
         'date' => 'date',
         'total_debit' => 'decimal:2',
         'total_credit' => 'decimal:2',
+        'total_amount' => 'decimal:2',
         'is_posted' => 'boolean',
     ];
 

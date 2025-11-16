@@ -40,11 +40,13 @@ Sistem akuntansi lengkap berbasis Laravel dengan fitur double-entry bookkeeping,
 - **Sanctum** - API Authentication
 - **Spatie Permission** - Role & Permission management
 
-### Frontend (Planned)
-- **Vue.js 3** atau **React 18** - SPA Framework
-- **Tailwind CSS** - Styling
-- **Axios** - HTTP Client
-- **Chart.js** - Data visualization
+### Frontend
+- **HTML5** - Semantic markup
+- **CSS3** - Pure CSS dengan responsive design
+- **Vanilla JavaScript** - ES6+ tanpa framework
+- **Client-side Routing** - SPA dengan History API
+- **Fetch API** - HTTP Client
+- **Chart.js** - Data visualization (planned)
 
 ### DevOps
 - **Docker** - Containerization
@@ -76,7 +78,26 @@ git clone https://github.com/your-repo/akuntansi.git
 cd akuntansi
 ```
 
-### 2. Setup dengan Docker
+### 2. Setup HTML/CSS Version (Recommended)
+```bash
+# Windows - Setup otomatis
+setup-html.bat
+
+# Manual setup
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --seed
+
+# Copy assets
+copy resources\css\app.css public\css\app.css
+copy resources\js\app.js public\js\app.js
+
+# Start server
+php artisan serve
+```
+
+### 3. Setup dengan Docker
 ```bash
 # Copy environment file
 cp .env.example .env
@@ -125,6 +146,9 @@ php artisan queue:work
 ```
 
 ## 📚 Dokumentasi
+
+### HTML/CSS Guide
+Lihat [HTML_GUIDE.md](HTML_GUIDE.md) untuk panduan lengkap implementasi HTML/CSS murni.
 
 ### API Documentation
 Lihat [API_DOCUMENTATION.md](API_DOCUMENTATION.md) untuk detail lengkap semua endpoint API.

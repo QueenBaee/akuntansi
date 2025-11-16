@@ -28,6 +28,7 @@ Route::prefix('auth')->group(function () {
     
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('user', [AuthController::class, 'me']);
         Route::get('me', [AuthController::class, 'me']);
     });
 });
@@ -103,11 +104,12 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard
     Route::prefix('dashboard')->group(function () {
+        Route::get('stats', [DashboardController::class, 'stats']);
+        Route::get('recent-transactions', [DashboardController::class, 'recentTransactions']);
         Route::get('summary', [DashboardController::class, 'summary']);
         Route::get('cash-flow-chart', [DashboardController::class, 'cashFlowChart']);
         Route::get('revenue-chart', [DashboardController::class, 'revenueChart']);
         Route::get('expense-chart', [DashboardController::class, 'expenseChart']);
-        Route::get('recent-transactions', [DashboardController::class, 'recentTransactions']);
     });
     
     // Utility routes

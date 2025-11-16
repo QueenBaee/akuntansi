@@ -2,200 +2,159 @@
 
 namespace App\Services;
 
-use App\Models\Journal;
-use App\Models\JournalDetail;
-use App\Models\Account;
+use App\Models\CashTransaction;
+use App\Models\BankTransaction;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class TransactionService
 {
-    public function createJournal(array $data): Journal
+    protected $journalService;
+    
+    public function __construct(JournalService $journalService)
+    {
+        $this->journalService = $journalService;
+    }
+    
+    public function createCashTransaction(array $data): CashTransaction
     {
         return DB::transaction(function () use ($data) {
-            // Generate journal number
-            $journalNumber = $this->generateJournalNumber($data['date'], $data['source_module']);
-            
-            // Calculate totals
-            $totalDebit = collect($data['details'])->sum('debit');
-            $totalCredit = collect($data['details'])->sum('credit');
-            
-            // Validate double entry
-            if ($totalDebit != $totalCredit) {
-                throw new \Exception('Total debit must equal total credit');
-            }
-            
-            // Create journal header
-            $journal = Journal::create([
+            // Create cash transaction record
+            $transaction = CashTransaction::create([
                 'date' => $data['date'],
-                'number' => $journalNumber,
-                'reference' => $data['reference'] ?? null,
+                'number' => $this->generateTransactionNumber($data['date'], 'CASH'),
+                'type' => $data['type'], // 'in' or 'out'
+                'cash_account_id' => $data['cash_account_id'],
+                'contra_account_id' => $data['contra_account_id'],
+                'cashflow_category_id' => $data['cashflow_category_id'],
+                'amount' => $data['amount'],
                 'description' => $data['description'],
-                'source_module' => $data['source_module'],
-                'source_id' => $data['source_id'] ?? null,
-                'total_debit' => $totalDebit,
-                'total_credit' => $totalCredit,
-                'is_posted' => true,
+                'reference' => $data['reference'] ?? null,
                 'created_by' => auth()->id(),
             ]);
             
-            // Create journal details
-            foreach ($data['details'] as $detail) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'account_id' => $detail['account_id'],
-                    'description' => $detail['description'],
-                    'debit' => $detail['debit'] ?? 0,
-                    'credit' => $detail['credit'] ?? 0,
-                ]);
+            // Create journal entry
+            $journalData = [
+                'date' => $data['date'],
+                'source_module' => 'CASH',
+                'reference' => $transaction->id,
+                'description' => $data['description'],
+                'details' => []
+            ];
+            
+            if ($data['type'] === 'in') {
+                // Cash In: Debit Cash, Credit Contra Account
+                $journalData['details'] = [
+                    [
+                        'account_id' => $data['cash_account_id'],
+                        'debit' => $data['amount'],
+                        'credit' => 0,
+                        'description' => $data['description']
+                    ],
+                    [
+                        'account_id' => $data['contra_account_id'],
+                        'debit' => 0,
+                        'credit' => $data['amount'],
+                        'description' => $data['description']
+                    ]
+                ];
+            } else {
+                // Cash Out: Debit Contra Account, Credit Cash
+                $journalData['details'] = [
+                    [
+                        'account_id' => $data['contra_account_id'],
+                        'debit' => $data['amount'],
+                        'credit' => 0,
+                        'description' => $data['description']
+                    ],
+                    [
+                        'account_id' => $data['cash_account_id'],
+                        'debit' => 0,
+                        'credit' => $data['amount'],
+                        'description' => $data['description']
+                    ]
+                ];
             }
             
-            return $journal->load('details.account');
+            $journal = $this->journalService->createJournal($journalData);
+            
+            // Update transaction with journal reference
+            $transaction->update(['journal_id' => $journal->id]);
+            
+            return $transaction;
         });
     }
     
-    public function createCashJournal(array $transactionData): Journal
+    public function updateCashTransaction(CashTransaction $transaction, array $data): CashTransaction
     {
-        $details = [];
-        
-        if ($transactionData['type'] === 'in') {
-            // Cash In: Debit Cash, Credit Contra Account
-            $details[] = [
-                'account_id' => $transactionData['cash_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => $transactionData['amount'],
-                'credit' => 0,
-            ];
-            $details[] = [
-                'account_id' => $transactionData['contra_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => 0,
-                'credit' => $transactionData['amount'],
-            ];
-        } else {
-            // Cash Out: Debit Contra Account, Credit Cash
-            $details[] = [
-                'account_id' => $transactionData['contra_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => $transactionData['amount'],
-                'credit' => 0,
-            ];
-            $details[] = [
-                'account_id' => $transactionData['cash_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => 0,
-                'credit' => $transactionData['amount'],
-            ];
-        }
-        
-        return $this->createJournal([
-            'date' => $transactionData['date'],
-            'description' => $transactionData['description'],
-            'reference' => $transactionData['reference'],
-            'source_module' => 'cash',
-            'source_id' => $transactionData['id'] ?? null,
-            'details' => $details,
-        ]);
-    }
-    
-    public function createBankJournal(array $transactionData): Journal
-    {
-        $details = [];
-        
-        if ($transactionData['type'] === 'in') {
-            // Bank In: Debit Bank, Credit Contra Account
-            $details[] = [
-                'account_id' => $transactionData['bank_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => $transactionData['amount'],
-                'credit' => 0,
-            ];
-            $details[] = [
-                'account_id' => $transactionData['contra_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => 0,
-                'credit' => $transactionData['amount'],
-            ];
-        } else {
-            // Bank Out: Debit Contra Account, Credit Bank
-            $details[] = [
-                'account_id' => $transactionData['contra_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => $transactionData['amount'],
-                'credit' => 0,
-            ];
-            $details[] = [
-                'account_id' => $transactionData['bank_account_id'],
-                'description' => $transactionData['description'],
-                'debit' => 0,
-                'credit' => $transactionData['amount'],
-            ];
-        }
-        
-        return $this->createJournal([
-            'date' => $transactionData['date'],
-            'description' => $transactionData['description'],
-            'reference' => $transactionData['reference'],
-            'source_module' => 'bank',
-            'source_id' => $transactionData['id'] ?? null,
-            'details' => $details,
-        ]);
-    }
-    
-    public function createDepreciationJournal(array $depreciationData): Journal
-    {
-        $details = [
-            [
-                'account_id' => $depreciationData['expense_account_id'],
-                'description' => "Depreciation - {$depreciationData['asset_name']}",
-                'debit' => $depreciationData['depreciation_amount'],
-                'credit' => 0,
-            ],
-            [
-                'account_id' => $depreciationData['depreciation_account_id'],
-                'description' => "Accumulated Depreciation - {$depreciationData['asset_name']}",
-                'debit' => 0,
-                'credit' => $depreciationData['depreciation_amount'],
-            ],
-        ];
-        
-        return $this->createJournal([
-            'date' => $depreciationData['period_date'],
-            'description' => "Monthly depreciation for {$depreciationData['asset_name']}",
-            'source_module' => 'depreciation',
-            'source_id' => $depreciationData['depreciation_id'],
-            'details' => $details,
-        ]);
-    }
-    
-    private function generateJournalNumber(string $date, string $module): string
-    {
-        $date = Carbon::parse($date);
-        $prefix = match($module) {
-            'manual' => 'JU',
-            'cash' => 'KM',
-            'bank' => 'BK',
-            'asset' => 'AS',
-            'depreciation' => 'DP',
-            'maklon' => 'MK',
-            'rent_income' => 'RI',
-            'rent_expense' => 'RE',
-            default => 'JU',
-        };
-        
-        $yearMonth = $date->format('Ym');
-        
-        // Get last number for this month and module
-        $lastJournal = Journal::where('number', 'like', "{$prefix}{$yearMonth}%")
-            ->orderBy('number', 'desc')
-            ->first();
+        return DB::transaction(function () use ($transaction, $data) {
+            // Update transaction record
+            $transaction->update([
+                'date' => $data['date'],
+                'type' => $data['type'],
+                'cash_account_id' => $data['cash_account_id'],
+                'contra_account_id' => $data['contra_account_id'],
+                'cashflow_category_id' => $data['cashflow_category_id'],
+                'amount' => $data['amount'],
+                'description' => $data['description'],
+                'reference' => $data['reference'] ?? null,
+            ]);
             
-        $sequence = 1;
-        if ($lastJournal) {
-            $lastSequence = (int) substr($lastJournal->number, -4);
-            $sequence = $lastSequence + 1;
-        }
+            // Update journal if exists
+            if ($transaction->journal) {
+                $journalData = [
+                    'date' => $data['date'],
+                    'description' => $data['description'],
+                    'details' => []
+                ];
+                
+                if ($data['type'] === 'in') {
+                    $journalData['details'] = [
+                        [
+                            'account_id' => $data['cash_account_id'],
+                            'debit' => $data['amount'],
+                            'credit' => 0,
+                            'description' => $data['description']
+                        ],
+                        [
+                            'account_id' => $data['contra_account_id'],
+                            'debit' => 0,
+                            'credit' => $data['amount'],
+                            'description' => $data['description']
+                        ]
+                    ];
+                } else {
+                    $journalData['details'] = [
+                        [
+                            'account_id' => $data['contra_account_id'],
+                            'debit' => $data['amount'],
+                            'credit' => 0,
+                            'description' => $data['description']
+                        ],
+                        [
+                            'account_id' => $data['cash_account_id'],
+                            'debit' => 0,
+                            'credit' => $data['amount'],
+                            'description' => $data['description']
+                        ]
+                    ];
+                }
+                
+                $this->journalService->updateJournal($transaction->journal, $journalData);
+            }
+            
+            return $transaction;
+        });
+    }
+    
+    private function generateTransactionNumber(string $date, string $type): string
+    {
+        $date = \Carbon\Carbon::parse($date);
+        $prefix = $type . '/' . $date->format('Ymd') . '/';
         
-        return $prefix . $yearMonth . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        $lastNumber = CashTransaction::where('number', 'like', $prefix . '%')
+            ->whereDate('date', $date->toDateString())
+            ->count();
+            
+        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     }
 }
