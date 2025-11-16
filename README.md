@@ -72,7 +72,7 @@ Sistem akuntansi lengkap berbasis Laravel dengan fitur double-entry bookkeeping,
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-repo/akuntansi.git
+git clone https://github.com/QueenBaee/akuntansi.git
 cd akuntansi
 ```
 
@@ -330,9 +330,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation**: [Wiki](https://github.com/your-repo/akuntansi/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/akuntansi/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/akuntansi/discussions)
+- **Documentation**: [Wiki](https://github.com/QueenBaee/akuntansi/wiki)
+- **Issues**: [GitHub Issues](https://github.com/QueenBaee/akuntansi/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/QueenBaee/akuntansi/discussions)
 - **Email**: support@yourcompany.com
 
 ## 🙏 Acknowledgments
