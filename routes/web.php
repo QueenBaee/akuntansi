@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrialBalanceController;
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -47,7 +48,17 @@ Route::middleware('auth')->group(function () {
     
     // Journals
     Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+
+    Route::resource('trial-balance', \App\Http\Controllers\TrialBalanceController::class);
 });
+
+Route::middleware('auth')->group(function () {
+    Route::get('/trial-balance', [TrialBalanceController::class, 'index'])
+        ->name('trial-balance.index');
+    
+});
+
+
 
 // Catch all route
 Route::get('/{any?}', function () {
