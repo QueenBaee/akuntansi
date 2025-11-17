@@ -34,7 +34,7 @@ Route::middleware('auth')->post('/logout', function (\Illuminate\Http\Request $r
 
 // Dashboard
 Route::middleware('auth')->get('/', function () {
-    return view('dashboard');
+    return view('dashboard.index');
 })->name('dashboard');
 
 // Protected routes
@@ -51,5 +51,5 @@ Route::middleware('auth')->group(function () {
 
 // Catch all route
 Route::get('/{any?}', function () {
-    return view('dashboard');
+    return view('dashboard.index');
 })->where('any', '.*');

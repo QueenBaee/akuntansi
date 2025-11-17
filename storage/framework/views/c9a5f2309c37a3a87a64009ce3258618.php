@@ -5,8 +5,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - Sistem Akuntansi</title>
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent('title', 'Dashboard'); ?> - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons-sprite.svg" rel="stylesheet" />
 </head>
@@ -20,21 +20,21 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="{{ route('dashboard') }}">Sistem Akuntansi</a>
+                    <a href="<?php echo e(route('dashboard')); ?>">Sistem Akuntansi</a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
                             <span class="avatar avatar-sm"
-                                style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=206bc4&color=fff)"></span>
+                                style="background-image: url(https://ui-avatars.com/api/?name=<?php echo e(urlencode(auth()->user()->name)); ?>&background=206bc4&color=fff)"></span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ auth()->user()->name }}</div>
-                                <div class="mt-1 small text-muted">{{ auth()->user()->email }}</div>
+                                <div><?php echo e(auth()->user()->name); ?></div>
+                                <div class="mt-1 small text-muted"><?php echo e(auth()->user()->email); ?></div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                                @csrf
+                            <form method="POST" action="<?php echo e(route('logout')); ?>" style="display: inline;">
+                                <?php echo csrf_field(); ?>
                                 <button type="submit" class="dropdown-item"
                                     style="border: none; background: none; width: 100%; text-align: left;">Logout</button>
                             </form>
@@ -49,8 +49,8 @@
                 <div class="navbar navbar-light">
                     <div class="container-xl">
                         <ul class="navbar-nav">
-                            <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ route('dashboard') }}">
+                            <li class="nav-item <?php echo e(request()->routeIs('dashboard') ? 'active' : ''); ?>">
+                                <a class="nav-link" href="<?php echo e(route('dashboard')); ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
                                             height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
@@ -64,7 +64,7 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
+                            <li class="nav-item dropdown <?php echo e(request()->routeIs('accounts.*') ? 'active' : ''); ?>">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -80,12 +80,12 @@
                                     <span class="nav-link-title">Master Data</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
-                                        href="{{ route('accounts.index') }}">List Account</a>
+                                    <a class="dropdown-item <?php echo e(request()->routeIs('accounts.*') ? 'active' : ''); ?>"
+                                        href="<?php echo e(route('accounts.index')); ?>">List Account</a>
                                 </div>
                             </li>
                             <li
-                                class="nav-item dropdown {{ request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : '' }}">
+                                class="nav-item dropdown <?php echo e(request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : ''); ?>">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -104,10 +104,10 @@
                                     <span class="nav-link-title">Journal</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('journals.*') ? 'active' : '' }}"
-                                        href="{{ route('journals.index') }}">Journal Entry</a>
-                                    <a class="dropdown-item {{ request()->routeIs('cash-transactions.*') ? 'active' : '' }}"
-                                        href="{{ route('cash-transactions.index') }}">Cash Transactions</a>
+                                    <a class="dropdown-item <?php echo e(request()->routeIs('journals.*') ? 'active' : ''); ?>"
+                                        href="<?php echo e(route('journals.index')); ?>">Journal Entry</a>
+                                    <a class="dropdown-item <?php echo e(request()->routeIs('cash-transactions.*') ? 'active' : ''); ?>"
+                                        href="<?php echo e(route('cash-transactions.index')); ?>">Cash Transactions</a>
                                 </div>
                             </li>
                             <li class="nav-item dropdown">
@@ -147,15 +147,15 @@
                 <div class="container-xl">
                     <div class="row g-2 align-items-center">
                         <div class="col">
-                            @yield('page-header')
+                            <?php echo $__env->yieldContent('page-header'); ?>
                         </div>
-                        @hasSection('page-actions')
+                        <?php if (! empty(trim($__env->yieldContent('page-actions')))): ?>
                             <div class="col-auto ms-auto d-print-none">
                                 <div class="btn-list">
-                                    @yield('page-actions')
+                                    <?php echo $__env->yieldContent('page-actions'); ?>
                                 </div>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -163,7 +163,7 @@
             <!-- Page body -->
             <div class="page-body">
                 <div class="container-xl">
-                    @if (session('success'))
+                    <?php if(session('success')): ?>
                         <div class="alert alert-success alert-dismissible" role="alert">
                             <div class="d-flex">
                                 <div>
@@ -174,13 +174,13 @@
                                         <path d="M5 12l5 5l10 -10" />
                                     </svg>
                                 </div>
-                                <div>{{ session('success') }}</div>
+                                <div><?php echo e(session('success')); ?></div>
                             </div>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
-                    @if (session('error'))
+                    <?php if(session('error')): ?>
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <div class="d-flex">
                                 <div>
@@ -193,20 +193,21 @@
                                         <line x1="12" y1="16" x2="12.01" y2="16" />
                                     </svg>
                                 </div>
-                                <div>{{ session('error') }}</div>
+                                <div><?php echo e(session('error')); ?></div>
                             </div>
                             <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
                         </div>
-                    @endif
+                    <?php endif; ?>
 
-                    @yield('content')
+                    <?php echo $__env->yieldContent('content'); ?>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
-    @stack('scripts')
+    <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
 
 </html>
+<?php /**PATH /home/najibzulfan/project/akuntansi/resources/views/layouts/app.blade.php ENDPATH**/ ?>

@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Chart of Accounts')
+@section('title', 'List of Accounts')
 
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
-    <h2 class="page-title">Chart of Accounts</h2>
+    <h2 class="page-title">List of Accounts</h2>
 @endsection
 
 @section('page-actions')

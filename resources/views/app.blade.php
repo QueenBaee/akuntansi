@@ -15,7 +15,7 @@
                 <div class="nav-content">
                     <div class="nav-brand">Sistem Akuntansi</div>
                     <ul class="nav-menu">
-                        <li><a href="/" class="nav-link">Dashboard</a></li>
+                        {{-- <li><a href="/" class="nav-link">Dashboard</a></li> --}}
                         <li><a href="/accounts" class="nav-link">Chart of Accounts</a></li>
                         <li><a href="/cash-transactions" class="nav-link">Transaksi Kas</a></li>
                         <li><a href="/reports" class="nav-link">Laporan</a></li>

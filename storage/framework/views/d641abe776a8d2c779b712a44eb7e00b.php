@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title>Dashboard - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet"/>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons-sprite.svg" rel="stylesheet"/>
@@ -25,13 +25,13 @@
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
                             <span class="avatar avatar-sm" style="background-image: url(https://ui-avatars.com/api/?name=Admin&background=206bc4&color=fff)"></span>
                             <div class="d-none d-xl-block ps-2">
-                                <div id="user-name">{{ auth()->user()->name ?? 'User' }}</div>
-                                <div class="mt-1 small text-muted" id="user-email">{{ auth()->user()->email ?? 'user@example.com' }}</div>
+                                <div id="user-name"><?php echo e(auth()->user()->name ?? 'User'); ?></div>
+                                <div class="mt-1 small text-muted" id="user-email"><?php echo e(auth()->user()->email ?? 'user@example.com'); ?></div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                                @csrf
+                            <form method="POST" action="<?php echo e(route('logout')); ?>" style="display: inline;">
+                                <?php echo csrf_field(); ?>
                                 <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">Logout</button>
                             </form>
                         </div>
@@ -61,9 +61,9 @@
                                     <span class="nav-link-title">Akuntansi</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="{{ route('accounts.index') }}">Chart of Accounts</a>
-                                    <a class="dropdown-item" href="{{ route('journals.index') }}">Journal Entry</a>
-                                    <a class="dropdown-item" href="{{ route('cash-transactions.index') }}">Cash Transactions</a>
+                                    <a class="dropdown-item" href="<?php echo e(route('accounts.index')); ?>">Chart of Accounts</a>
+                                    <a class="dropdown-item" href="<?php echo e(route('journals.index')); ?>">Journal Entry</a>
+                                    <a class="dropdown-item" href="<?php echo e(route('cash-transactions.index')); ?>">Cash Transactions</a>
                                 </div>
                             </li>
                             <li class="nav-item dropdown">
@@ -211,58 +211,6 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
-    {{-- <script src="{{ asset('js/app.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!requireAuth()) return;
-            
-            loadDashboardData();
-        });
-        
-        async function loadDashboardData() {
-            try {
-                const data = await apiCall('/dashboard/stats');
-                
-                document.getElementById('total-cash').textContent = formatCurrency(data.data.total_cash || 0);
-                document.getElementById('total-bank').textContent = formatCurrency(data.data.total_bank || 0);
-                document.getElementById('monthly-revenue').textContent = formatCurrency(data.data.monthly_revenue || 0);
-                document.getElementById('monthly-expense').textContent = formatCurrency(data.data.monthly_expense || 0);
-                
-                loadRecentTransactions();
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-            }
-        }
-        
-        async function loadRecentTransactions() {
-            try {
-                const data = await apiCall('/dashboard/recent-transactions');
-                const container = document.getElementById('recent-transactions');
-                
-                if (data.data.length === 0) {
-                    container.innerHTML = '<div class="text-center text-muted py-4">Belum ada transaksi</div>';
-                    return;
-                }
-                
-                let html = '<div class="table-responsive"><table class="table table-vcenter"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Tipe</th></tr></thead><tbody>';
-                
-                data.data.forEach(transaction => {
-                    html += `
-                        <tr>
-                            <td>${formatDate(transaction.date)}</td>
-                            <td>${transaction.description}</td>
-                            <td>${formatCurrency(transaction.amount)}</td>
-                            <td><span class="badge bg-${transaction.type === 'in' ? 'success' : 'danger'}">${transaction.type === 'in' ? 'Masuk' : 'Keluar'}</span></td>
-                        </tr>
-                    `;
-                });
-                
-                html += '</tbody></table></div>';
-                container.innerHTML = html;
-            } catch (error) {
-                document.getElementById('recent-transactions').innerHTML = '<div class="text-center text-danger py-4">Error loading transactions</div>';
-            }
-        }
-    </script> --}}
+    
 </body>
-</html>
+</html><?php /**PATH /home/najibzulfan/project/akuntansi/resources/views/dashboard.blade.php ENDPATH**/ ?>

@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'laravel/akuntansi',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '43882687cf7baa4ed61cfc8bcad9ec26ce406f7c',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -344,9 +344,9 @@
             ),
         ),
         'laravel/akuntansi' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '43882687cf7baa4ed61cfc8bcad9ec26ce406f7c',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
