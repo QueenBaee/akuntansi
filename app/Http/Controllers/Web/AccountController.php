@@ -18,11 +18,13 @@ class AccountController extends Controller
     {
         $parentAccounts = Account::whereNull('parent_id')->get();
         $types = [
-            'asset' => 'Aset',
-            'liability' => 'Kewajiban', 
-            'equity' => 'Ekuitas',
-            'revenue' => 'Pendapatan',
-            'expense' => 'Beban'
+            // 'asset' => 'Aset',
+            // 'liability' => 'Kewajiban', 
+            // 'equity' => 'Ekuitas',
+            // 'revenue' => 'Pendapatan',
+            // 'expense' => 'Beban'
+            'Kas' => 'Kas',
+            'Bank' => 'Bank'
         ];
         return view('accounts.create', compact('parentAccounts', 'types'));
     }

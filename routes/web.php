@@ -39,17 +39,26 @@ Route::middleware('auth')->get('/', function () {
 
 // Protected routes
 Route::middleware('auth')->group(function () {
-    // Accounts
-    Route::resource('accounts', \App\Http\Controllers\Web\AccountController::class);
+    // Admin only routes
+    Route::middleware('role:admin')->group(function () {
+        // User Management
+        Route::resource('users', \App\Http\Controllers\Web\UserController::class);
+        
+        // Accounts (master data)
+        Route::resource('accounts', \App\Http\Controllers\Web\AccountController::class);
+        
+        // User Accounts (master data)
+        Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
+    });
     
-    // Cash Transactions
-    Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
-    
-    // Journals
-    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
-    
-    // User Accounts
-    Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
+    // Routes accessible by both admin and user
+    Route::middleware('role:admin|user')->group(function () {
+        // Cash Transactions
+        Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
+        
+        // Journals
+        Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+    });
 });
 
 // Catch all route

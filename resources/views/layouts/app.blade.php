@@ -125,7 +125,8 @@
                             </li>
 
 
-                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') ? 'active' : '' }}">
+                            @role('admin')
+                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('users.*') ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -142,12 +143,15 @@
                                     <span class="nav-link-title">Master Data</span>
                                 </a>
                                 <div class="dropdown-menu">
+                                    <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                                        href="{{ route('users.index') }}">User Management</a>
                                     <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
                                         href="{{ route('accounts.index') }}">List Account</a>
                                     <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}"
                                         href="{{ route('user-accounts.index') }}">User Accounts</a>
                                 </div>
                             </li>
+                            @endrole
                             <li
                                 class="nav-item dropdown {{ request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"

@@ -94,14 +94,13 @@ class PermissionSeeder extends Seeder
 
         // Create roles
         $adminRole = Role::create(['name' => 'admin']);
-        $staffRole = Role::create(['name' => 'staff_akuntansi']);
-        $managerRole = Role::create(['name' => 'manajer']);
+        $userRole = Role::create(['name' => 'user']);
 
-        // Assign permissions to roles
+        // Admin can access all features
         $adminRole->givePermissionTo(Permission::all());
 
-        $staffRole->givePermissionTo([
-            'accounts.view',
+        // User can only access transactions, journals, and reports (no master data/configuration)
+        $userRole->givePermissionTo([
             'journals.view', 'journals.create', 'journals.update', 'journals.post',
             'cash.view', 'cash.create', 'cash.update',
             'bank.view', 'bank.create', 'bank.update',
@@ -110,19 +109,6 @@ class PermissionSeeder extends Seeder
             'maklon.view', 'maklon.create', 'maklon.update',
             'rent_income.view', 'rent_income.create', 'rent_income.update',
             'rent_expense.view', 'rent_expense.create', 'rent_expense.update',
-            'dashboard.view',
-        ]);
-
-        $managerRole->givePermissionTo([
-            'accounts.view',
-            'journals.view',
-            'cash.view',
-            'bank.view', 
-            'assets.view',
-            'depreciation.view',
-            'maklon.view',
-            'rent_income.view',
-            'rent_expense.view',
             'reports.view', 'reports.export',
             'dashboard.view',
         ]);
