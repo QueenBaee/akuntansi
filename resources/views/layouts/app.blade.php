@@ -125,7 +125,7 @@
                             </li>
 
 
-                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
+                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -144,6 +144,8 @@
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
                                         href="{{ route('accounts.index') }}">List Account</a>
+                                    <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}"
+                                        href="{{ route('user-accounts.index') }}">User Accounts</a>
                                 </div>
                             </li>
                             <li

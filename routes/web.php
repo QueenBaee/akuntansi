@@ -47,6 +47,9 @@ Route::middleware('auth')->group(function () {
     
     // Journals
     Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+    
+    // User Accounts
+    Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
 });
 
 // Catch all route

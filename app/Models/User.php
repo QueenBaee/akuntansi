@@ -54,4 +54,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function userAccounts()
+    {
+        return $this->hasMany(UserAccount::class);
+    }
+
+    public function accounts()
+    {
+        return $this->belongsToMany(Account::class, 'user_accounts')
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
+    }
 }

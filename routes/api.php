@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserAccountController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\JournalController;
@@ -40,6 +41,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class);
     Route::post('users/{user}/assign-role', [UserController::class, 'assignRole']);
     Route::delete('users/{user}/remove-role', [UserController::class, 'removeRole']);
+    
+    // User Account management
+    Route::apiResource('user-accounts', UserAccountController::class);
+    Route::get('user-accounts-users', [UserAccountController::class, 'getUsers']);
+    Route::get('user-accounts-accounts', [UserAccountController::class, 'getAccounts']);
     
     // Role and permission management
     Route::apiResource('roles', RoleController::class);
