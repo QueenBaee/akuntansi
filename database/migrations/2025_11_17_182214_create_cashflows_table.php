@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('cashflows', function (Blueprint $table) {
             $table->id();
+            $table->string('kode');
+            $table->string('keterangan');
+            $table->foreignId('trial_balance_id')->constrained()->cascadeOnDelete();
+            $table->string('kategori')->nullable();
             $table->timestamps();
         });
     }

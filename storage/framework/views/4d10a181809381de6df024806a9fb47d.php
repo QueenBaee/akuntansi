@@ -93,6 +93,19 @@
                                     <span class="nav-link-title">Trial Balance</span>
                                 </a>
                             </li>
+                            <li class="nav-item <?php echo e(request()->routeIs('cashflow.index') ? 'active' : ''); ?>">
+                                <a class="nav-link" href="<?php echo e(route('cashflow.index')); ?>">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+                                            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z"/>
+                                            <path d="M3 3h18v4H3zM3 9h18v12H3z"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Cash Flow</span>
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>

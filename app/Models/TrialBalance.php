@@ -25,4 +25,9 @@ class TrialBalance extends Model
     {
         return $this->hasMany(TrialBalance::class, 'parent_id');
     }
+
+    public function cashflows()
+    {
+        return $this->hasMany(Cashflow::class);
+    }
 }
