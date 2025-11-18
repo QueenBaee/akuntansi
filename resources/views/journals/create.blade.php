@@ -101,6 +101,19 @@
 @push('scripts')
 <script>
 let lineIndex = 0;
+let accountOptions = `
+    <option value="">Pilih Akun</option>
+    @if(isset($accounts))
+        @foreach($accounts as $account)
+            <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
+        @endforeach
+    @endif
+`;
+
+document.addEventListener('DOMContentLoaded', function() {
+    addJournalLine();
+    addJournalLine();
+});
 
 function addJournalLine() {
     const tbody = document.getElementById('journalLines');
@@ -109,9 +122,11 @@ function addJournalLine() {
         <td>
             <select name="details[${lineIndex}][account_id]" class="form-select" required>
                 <option value="">Pilih Akun</option>
-                @foreach($accounts as $account)
-                    <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
-                @endforeach
+                @if(isset($accounts))
+                    @foreach($accounts as $account)
+                        <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
+                    @endforeach
+                @endif
             </select>
         </td>
         <td>
@@ -154,11 +169,7 @@ function calculateTotals() {
     document.getElementById('totalCredit').textContent = totalCredit.toLocaleString('id-ID');
 }
 
-// Add initial lines
-document.addEventListener('DOMContentLoaded', function() {
-    addJournalLine();
-    addJournalLine();
-});
+
 </script>
 @endpush
 @endsection

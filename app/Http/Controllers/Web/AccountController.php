@@ -8,23 +8,27 @@ use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $accounts = Account::with('parent')->orderBy('code')->paginate(20);
+        $accounts = Account::orderBy('code')->paginate(20);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => $accounts->items()
+            ]);
+        }
+        
         return view('accounts.index', compact('accounts'));
     }
 
     public function create()
     {
-        $parentAccounts = Account::whereNull('parent_id')->get();
         $types = [
-            'asset' => 'Aset',
-            'liability' => 'Kewajiban', 
-            'equity' => 'Ekuitas',
-            'revenue' => 'Pendapatan',
-            'expense' => 'Beban'
+            'kas' => 'Kas',
+            'bank' => 'Bank'
         ];
-        return view('accounts.create', compact('parentAccounts', 'types'));
+        return view('accounts.create', compact('types'));
     }
 
     public function store(Request $request)
@@ -32,24 +36,42 @@ class AccountController extends Controller
         $request->validate([
             'code' => 'required|unique:accounts,code',
             'name' => 'required|string|max:255',
-            'type' => 'required|in:asset,liability,equity,revenue,expense'
+            'type' => 'required|in:kas,bank',
+            'opening_balance' => 'nullable|numeric',
+            'is_active' => 'boolean'
         ]);
 
-        Account::create($request->all());
+        $data = $request->all();
+        $data['is_active'] = $request->has('is_active');
+        
+        $account = Account::create($data);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun berhasil ditambahkan',
+                'data' => $account
+            ]);
+        }
+
         return redirect()->route('accounts.index')->with('success', 'Akun berhasil ditambahkan');
     }
 
     public function edit(Account $account)
     {
-        $parentAccounts = Account::whereNull('parent_id')->where('id', '!=', $account->id)->get();
         $types = [
-            'asset' => 'Aset',
-            'liability' => 'Kewajiban',
-            'equity' => 'Ekuitas', 
-            'revenue' => 'Pendapatan',
-            'expense' => 'Beban'
+            'kas' => 'Kas',
+            'bank' => 'Bank'
         ];
-        return view('accounts.edit', compact('account', 'parentAccounts', 'types'));
+        return view('accounts.edit', compact('account', 'types'));
+    }
+
+    public function show(Account $account)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $account
+        ]);
     }
 
     public function update(Request $request, Account $account)
@@ -57,16 +79,40 @@ class AccountController extends Controller
         $request->validate([
             'code' => 'required|unique:accounts,code,' . $account->id,
             'name' => 'required|string|max:255',
-            'type' => 'required|in:asset,liability,equity,revenue,expense'
+            'type' => 'required|in:kas,bank'
         ]);
 
-        $account->update($request->all());
+        $data = $request->only(['code', 'name', 'type']);
+        $data['is_active'] = true;
+        $data['opening_balance'] = $account->opening_balance;
+        
+        $account->update($data);
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun berhasil diperbarui',
+                'data' => $account
+            ]);
+        }
+
         return redirect()->route('accounts.index')->with('success', 'Akun berhasil diperbarui');
     }
 
     public function destroy(Account $account)
     {
-        $account->delete();
-        return redirect()->route('accounts.index')->with('success', 'Akun berhasil dihapus');
+        try {
+            $account->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Akun berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus akun: ' . $e->getMessage()
+            ], 422);
+        }
     }
 }

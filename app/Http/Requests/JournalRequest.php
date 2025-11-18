@@ -19,8 +19,8 @@ class JournalRequest extends FormRequest
             'reference' => 'nullable|string|max:100',
             'details' => 'required|array|min:2',
             'details.*.account_id' => 'required|exists:accounts,id',
-            'details.*.debit' => 'required|numeric|min:0',
-            'details.*.credit' => 'required|numeric|min:0',
+            'details.*.debit' => 'nullable|numeric|min:0',
+            'details.*.credit' => 'nullable|numeric|min:0',
             'details.*.description' => 'nullable|string|max:255',
         ];
     }
@@ -33,8 +33,7 @@ class JournalRequest extends FormRequest
             'details.required' => 'Detail jurnal wajib diisi',
             'details.min' => 'Minimal 2 baris detail jurnal',
             'details.*.account_id.required' => 'Akun wajib dipilih',
-            'details.*.debit.required' => 'Debit wajib diisi',
-            'details.*.credit.required' => 'Kredit wajib diisi',
+
         ];
     }
     

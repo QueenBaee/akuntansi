@@ -16,23 +16,12 @@ class Account extends Model
         'category',
         'opening_balance',
         'is_active',
-        'parent_id',
     ];
 
     protected $casts = [
         'opening_balance' => 'decimal:2',
         'is_active' => 'boolean',
     ];
-
-    public function parent()
-    {
-        return $this->belongsTo(Account::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Account::class, 'parent_id');
-    }
 
     public function journalDetails()
     {
@@ -59,10 +48,8 @@ class Account extends Model
         $totalDebit = $this->journalDetails()->sum('debit');
         $totalCredit = $this->journalDetails()->sum('credit');
         
-        return match($this->type) {
-            'asset', 'expense' => $this->opening_balance + $totalDebit - $totalCredit,
-            'liability', 'equity', 'revenue' => $this->opening_balance + $totalCredit - $totalDebit,
-        };
+        // Both kas and bank are asset accounts (debit increases balance)
+        return $this->opening_balance + $totalDebit - $totalCredit;
     }
 
     public function scopeActive($query)

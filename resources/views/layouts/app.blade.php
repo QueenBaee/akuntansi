@@ -64,28 +64,9 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') ? 'active' : '' }}">
-                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
-                                    role="button">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
-                                            height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                            fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                            <rect x="3" y="4" width="18" height="4" rx="2" />
-                                            <path d="m5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
-                                            <line x1="10" y1="12" x2="14" y2="12" />
-                                        </svg>
-                                    </span>
-                                    <span class="nav-link-title">Master Data</span>
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
-                                        href="{{ route('accounts.index') }}">List Account</a>
-                                </div>
-                            </li>
+
                             <li
-                                class="nav-item dropdown {{ request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : '' }}">
+                                class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -104,6 +85,8 @@
                                     <span class="nav-link-title">Journal</span>
                                 </a>
                                 <div class="dropdown-menu">
+                                    <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
+                                        href="{{ route('accounts.index') }}">List Account</a>
                                     <a class="dropdown-item {{ request()->routeIs('journals.*') ? 'active' : '' }}"
                                         href="{{ route('journals.index') }}">Journal Entry</a>
                                     <a class="dropdown-item {{ request()->routeIs('cash-transactions.*') ? 'active' : '' }}"
