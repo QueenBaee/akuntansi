@@ -73,7 +73,7 @@
                                     </thead>
                                     <tbody id="journalLines">
                                         @foreach($journalsHistory as $history)
-                                            <tr data-existing="1" data-balance="{{ $history['balance'] }}" style="border: 1px solid #dee2e6; background-color: #f8f9fa;">
+                                            <tr data-existing="1" data-balance="{{ $history['balance'] }}" data-journal-id="{{ $history['journal_id'] }}" style="border: 1px solid #dee2e6; background-color: #f8f9fa;">
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['date'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['description'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
@@ -85,7 +85,9 @@
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right; background: #e3f2fd;">{{ number_format($history['balance'], 0, ',', '.') }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
+                                                    <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">×</button>
+                                                </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -289,6 +291,32 @@
                         const remainingRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
                         remainingRows.forEach((r, index) => {
                             calculateBalance(r.querySelector('.cash-in'));
+                        });
+                    }
+                }
+
+                function deleteTransaction(journalId) {
+                    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
+                        fetch(`/journals/${journalId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Reload page to refresh history and balances
+                                window.location.reload();
+                            } else {
+                                alert('Error: ' + (data.message || 'Gagal menghapus transaksi'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Terjadi kesalahan saat menghapus transaksi');
                         });
                     }
                 }

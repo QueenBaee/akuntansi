@@ -67,6 +67,7 @@ class JournalController extends Controller
                     $runningBalance += $cashIn - $cashOut;
                     
                     return [
+                        'journal_id' => $journal->id,
                         'date' => $journal->date->format('Y-m-d'),
                         'description' => $journal->description,
                         'proof_number' => $journal->reference ?? $journal->number,
@@ -219,8 +220,21 @@ class JournalController extends Controller
 
     public function destroy(Journal $journal)
     {
-        $journal->delete();
-        return redirect()->route('journals.index')
-            ->with('success', 'Jurnal berhasil dihapus');
+        try {
+            $journal->delete();
+            
+            if (request()->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Jurnal berhasil dihapus']);
+            }
+            
+            return redirect()->route('journals.index')
+                ->with('success', 'Jurnal berhasil dihapus');
+        } catch (\Exception $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            }
+            
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 }
