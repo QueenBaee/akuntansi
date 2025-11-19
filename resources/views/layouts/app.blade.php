@@ -64,7 +64,94 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
+                                    role="button">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="icon icon-tabler icons-tabler-outline icon-tabler-cash">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M7 15h-3a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v3" />
+                                            <path
+                                                d="M7 9m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z" />
+                                            <path d="M12 14a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Kas</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    @forelse($cashAccounts as $account)
+                                        <a class="dropdown-item" href="#">
+                                            {{ $account->name }}
+                                        </a>
+                                    @empty
+                                        <span class="dropdown-item text-muted">No cash accounts available</span>
+                                    @endforelse
+                                </div>
+                            </li>
 
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
+                                    role="button">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            class="icon icon-tabler icons-tabler-outline icon-tabler-building-bank">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M3 21l18 0" />
+                                            <path d="M3 10l18 0" />
+                                            <path d="M5 6l7 -3l7 3" />
+                                            <path d="M4 10l0 11" />
+                                            <path d="M20 10l0 11" />
+                                            <path d="M8 14l0 3" />
+                                            <path d="M12 14l0 3" />
+                                            <path d="M16 14l0 3" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Bank</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    @forelse($bankAccounts as $account)
+                                        <a class="dropdown-item" href="#">
+                                            {{ $account->name }}
+                                        </a>
+                                    @empty
+                                        <span class="dropdown-item text-muted">No cash accounts available</span>
+                                    @endforelse
+                                </div>
+                            </li>
+
+
+                            @role('admin')
+                            <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('users.*') ? 'active' : '' }}">
+                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
+                                    role="button">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
+                                            height="24" viewBox="0 0 24 24" stroke-width="2"
+                                            stroke="currentColor" fill="none" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none" />
+                                            <rect x="3" y="4" width="18" height="4" rx="2" />
+                                            <path d="m5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+                                            <line x1="10" y1="12" x2="14" y2="12" />
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Master Data</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}"
+                                        href="{{ route('users.index') }}">User Management</a>
+                                    <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}"
+                                        href="{{ route('accounts.index') }}">List Account</a>
+                                    <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}"
+                                        href="{{ route('user-accounts.index') }}">User Accounts</a>
+                                </div>
+                            </li>
+                            @endrole
                             <li
                                 class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"

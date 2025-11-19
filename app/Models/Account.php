@@ -61,4 +61,16 @@ class Account extends Model
     {
         return $query->where('type', $type);
     }
+
+    public function userAccounts()
+    {
+        return $this->hasMany(UserAccount::class);
+    }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'user_accounts')
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
+    }
 }
