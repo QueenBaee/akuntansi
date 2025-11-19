@@ -4,172 +4,295 @@
 
 @section('page-header')
     <div class="page-pretitle">Transaksi</div>
-    <h2 class="page-title">Tambah Jurnal Umum</h2>
+    <h2 class="page-title" id="pageTitle">
+        @if($selectedAccount)
+            Jurnal {{ $selectedAccount->name }}
+        @else
+            Jurnal Kas/Bank
+        @endif
+    </h2>
+    <div class="page-subtitle text-muted" id="pageSubtitle">
+        @if($selectedAccount)
+            Saldo Awal: {{ number_format($openingBalance, 0, ',', '.') }}
+        @else
+            Pilih akun dari menu untuk memulai
+        @endif
+    </div>
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <form method="POST" action="{{ route('journals.store') }}" id="journalForm">
-            @csrf
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Form Jurnal Umum</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label required">Tanggal</label>
-                                <input type="date" name="date" class="form-control @error('date') is-invalid @enderror" 
-                                       value="{{ old('date', date('Y-m-d')) }}" required>
-                                @error('date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Referensi</label>
-                                <input type="text" name="reference" class="form-control @error('reference') is-invalid @enderror" 
-                                       value="{{ old('reference') }}" placeholder="Nomor bukti">
-                                @error('reference')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label required">Deskripsi</label>
-                                <input type="text" name="description" class="form-control @error('description') is-invalid @enderror" 
-                                       value="{{ old('description') }}" required>
-                                @error('description')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4>Detail Jurnal</h4>
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addJournalLine()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Tambah Baris
-                        </button>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="journalTable">
-                            <thead>
-                                <tr>
-                                    <th width="40%">Akun</th>
-                                    <th width="25%">Deskripsi</th>
-                                    <th width="15%">Debit</th>
-                                    <th width="15%">Kredit</th>
-                                    <th width="5%">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="journalLines">
-                                <!-- Journal lines will be added here -->
-                            </tbody>
-                            <tfoot>
-                                <tr class="table-active">
-                                    <td colspan="2"><strong>Total</strong></td>
-                                    <td><strong id="totalDebit">0</strong></td>
-                                    <td><strong id="totalCredit">0</strong></td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    
-                    @error('details')
-                        <div class="alert alert-danger">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="card-footer text-end">
-                    <a href="{{ route('journals.index') }}" class="btn btn-secondary me-2">Batal</a>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-let lineIndex = 0;
-let accountOptions = `
-    <option value="">Pilih Akun</option>
-    @if(isset($accounts))
-        @foreach($accounts as $account)
-            <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
-        @endforeach
+    @if(!$selectedAccount)
+        <div class="alert alert-warning">
+            <strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.
+        </div>
     @endif
-`;
 
-document.addEventListener('DOMContentLoaded', function() {
-    addJournalLine();
-    addJournalLine();
-});
+    <div class="row">
+        <div class="col-12">
+            <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="selected_cash_account_id" value="{{ $selectedAccount->id ?? '' }}">
 
-function addJournalLine() {
-    const tbody = document.getElementById('journalLines');
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>
-            <select name="details[${lineIndex}][account_id]" class="form-select" required>
-                <option value="">Pilih Akun</option>
-                @if(isset($accounts))
-                    @foreach($accounts as $account)
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="card-title">
+                                @if($selectedAccount)
+                                    {{ $selectedAccount->code }} - {{ $selectedAccount->name }}
+                                @else
+                                    Jurnal Kas/Bank
+                                @endif
+                            </h3>
+                        </div>
+                        @if($selectedAccount)
+                            <div class="text-end">
+                                <small class="text-muted">Saldo Awal:</small><br>
+                                <strong>{{ number_format($openingBalance, 0, ',', '.') }}</strong>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        @if($selectedAccount)
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="journalTable" style="border: 1px solid #dee2e6;">
+                                    <thead class="table-light">
+                                        <tr style="border: 1px solid #dee2e6;">
+                                            <th style="border: 1px solid #dee2e6; width: 80px;">Tanggal</th>
+                                            <th style="border: 1px solid #dee2e6; width: 200px;">Deskripsi</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">PIC</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">File</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">No. Bukti</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Kas Masuk</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Kas Keluar</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Debit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Kredit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Cashflow</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
+                                            <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="journalLines">
+                                        @foreach($journalsHistory as $history)
+                                            <tr data-existing="1" data-balance="{{ $history['balance'] }}" style="border: 1px solid #dee2e6; background-color: #f8f9fa;">
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['date'] }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['description'] }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['proof_number'] }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['cash_in'] > 0 ? number_format($history['cash_in'], 0, ',', '.') : '' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['cash_out'] > 0 ? number_format($history['cash_out'], 0, ',', '.') : '' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">-</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right; background: #e3f2fd;">{{ number_format($history['balance'], 0, ',', '.') }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">-</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5">
+                                <p class="text-muted">Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.</p>
+                            </div>
+                        @endif
+
+                        @error('entries')
+                            <div class="alert alert-danger">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ route('journals.index') }}" class="btn btn-secondary me-2">Batal</a>
+                        @if($selectedAccount)
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        @endif
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if($selectedAccount)
+        @push('scripts')
+            <script>
+                let lineIndex = 0;
+                let openingBalance = {{ $openingBalance }};
+                let selectedCashAccountId = {{ $selectedAccount->id }};
+                let currentBalance = openingBalance;
+                const formatter = new Intl.NumberFormat('id-ID');
+
+                const accountOptions = `
+                    <option value="">Pilih Akun</option>
+                    @foreach ($accounts as $account)
                         <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
                     @endforeach
-                @endif
-            </select>
-        </td>
-        <td>
-            <input type="text" name="details[${lineIndex}][description]" class="form-control" placeholder="Deskripsi">
-        </td>
-        <td>
-            <input type="number" name="details[${lineIndex}][debit]" class="form-control debit-input" step="0.01" min="0" onchange="calculateTotals()">
-        </td>
-        <td>
-            <input type="number" name="details[${lineIndex}][credit]" class="form-control credit-input" step="0.01" min="0" onchange="calculateTotals()">
-        </td>
-        <td>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeJournalLine(this)">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(row);
-    lineIndex++;
-}
+                `;
 
-function removeJournalLine(button) {
-    button.closest('tr').remove();
-    calculateTotals();
-}
+                const cashflowOptions = `
+                    <option value="">Pilih Cashflow</option>
+                    @foreach ($cashflowCategories as $category)
+                        <option value="{{ $category->id }}">{{ $category->keterangan }}</option>
+                    @endforeach
+                `;
 
-function calculateTotals() {
-    let totalDebit = 0;
-    let totalCredit = 0;
-    
-    document.querySelectorAll('.debit-input').forEach(input => {
-        totalDebit += parseFloat(input.value) || 0;
-    });
-    
-    document.querySelectorAll('.credit-input').forEach(input => {
-        totalCredit += parseFloat(input.value) || 0;
-    });
-    
-    document.getElementById('totalDebit').textContent = totalDebit.toLocaleString('id-ID');
-    document.getElementById('totalCredit').textContent = totalCredit.toLocaleString('id-ID');
-}
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Calculate current balance from history
+                    const historyRows = document.querySelectorAll('tr[data-existing="1"]');
+                    if (historyRows.length > 0) {
+                        const lastRow = historyRows[historyRows.length - 1];
+                        currentBalance = parseFloat(lastRow.getAttribute('data-balance'));
+                    }
+                    
+                    addJournalLine();
+                });
 
+                function addJournalLine() {
+                    const tbody = document.getElementById('journalLines');
+                    const row = document.createElement('tr');
+                    row.style.border = '1px solid #dee2e6';
+                    row.innerHTML = `
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="date" name="entries[${lineIndex}][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="{{ date('Y-m-d') }}">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="text" name="entries[${lineIndex}][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="text" name="entries[${lineIndex}][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="file" name="entries[${lineIndex}][file]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" onchange="generateProofNumber(this, ${lineIndex})">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="text" name="entries[${lineIndex}][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="number" name="entries[${lineIndex}][cash_in]" class="form-control form-control-sm cash-in" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this)" oninput="handleInput(this)">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="number" name="entries[${lineIndex}][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this)" oninput="handleInput(this)">
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <select name="entries[${lineIndex}][debit_account_id]" class="form-control form-control-sm" style="border: none; font-size: 12px;">
+                                ${accountOptions}
+                            </select>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <select name="entries[${lineIndex}][credit_account_id]" class="form-control form-control-sm" style="border: none; font-size: 12px;">
+                                ${accountOptions}
+                            </select>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <select name="entries[${lineIndex}][cashflow_id]" class="form-control form-control-sm" style="border: none; font-size: 12px;">
+                                ${cashflowOptions}
+                            </select>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">
+                            <span class="balance-display" style="font-size: 12px; font-weight: bold;">${formatter.format(currentBalance)}</span>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeRow(this)" style="font-size: 10px; padding: 2px 6px;">×</button>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                    lineIndex++;
+                }
 
-</script>
-@endpush
+                function handleInput(input) {
+                    const row = input.closest('tr');
+                    const inputs = row.querySelectorAll('input[type="text"], input[type="number"], select');
+                    let hasValue = false;
+                    
+                    inputs.forEach(inp => {
+                        if (inp.value && inp.value.trim() !== '') {
+                            hasValue = true;
+                        }
+                    });
+                    
+                    // If this is the last row and user started typing, add new row
+                    const allRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
+                    const isLastRow = row === allRows[allRows.length - 1];
+                    
+                    if (hasValue && isLastRow) {
+                        addJournalLine();
+                    }
+                }
+
+                function calculateBalance(input) {
+                    const row = input.closest('tr');
+                    const cashInInput = row.querySelector('.cash-in');
+                    const cashOutInput = row.querySelector('.cash-out');
+                    const balanceDisplay = row.querySelector('.balance-display');
+                    
+                    // Get previous balance
+                    let prevBalance = currentBalance;
+                    const prevRow = row.previousElementSibling;
+                    if (prevRow) {
+                        if (prevRow.hasAttribute('data-existing')) {
+                            prevBalance = parseFloat(prevRow.getAttribute('data-balance'));
+                        } else {
+                            const prevBalanceDisplay = prevRow.querySelector('.balance-display');
+                            if (prevBalanceDisplay) {
+                                prevBalance = parseFloat(prevBalanceDisplay.textContent.replace(/[^0-9.-]/g, ''));
+                            }
+                        }
+                    }
+                    
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    const newBalance = prevBalance + cashIn - cashOut;
+                    
+                    balanceDisplay.textContent = formatter.format(newBalance);
+                    
+                    // Recalculate all subsequent rows
+                    let nextRow = row.nextElementSibling;
+                    let runningBalance = newBalance;
+                    
+                    while (nextRow && !nextRow.hasAttribute('data-existing')) {
+                        const nextCashIn = parseFloat(nextRow.querySelector('.cash-in').value) || 0;
+                        const nextCashOut = parseFloat(nextRow.querySelector('.cash-out').value) || 0;
+                        runningBalance = runningBalance + nextCashIn - nextCashOut;
+                        
+                        const nextBalanceDisplay = nextRow.querySelector('.balance-display');
+                        if (nextBalanceDisplay) {
+                            nextBalanceDisplay.textContent = formatter.format(runningBalance);
+                        }
+                        
+                        nextRow = nextRow.nextElementSibling;
+                    }
+                }
+
+                function generateProofNumber(input, index) {
+                    if (input.files.length > 0) {
+                        const now = new Date();
+                        const timestamp = now.getFullYear().toString() + 
+                                        (now.getMonth() + 1).toString().padStart(2, '0') + 
+                                        now.getDate().toString().padStart(2, '0') + 
+                                        now.getHours().toString().padStart(2, '0') + 
+                                        now.getMinutes().toString().padStart(2, '0');
+                        const proofNumber = 'PROOF-' + timestamp + '-' + (index + 1);
+                        
+                        const proofInput = input.closest('tr').querySelector('.proof-number');
+                        proofInput.value = proofNumber;
+                    }
+                }
+
+                function removeRow(button) {
+                    const row = button.closest('tr');
+                    const allEditableRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
+                    
+                    if (allEditableRows.length > 1) {
+                        row.remove();
+                        
+                        // Recalculate balances for remaining rows
+                        const remainingRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
+                        remainingRows.forEach((r, index) => {
+                            calculateBalance(r.querySelector('.cash-in'));
+                        });
+                    }
+                }
+            </script>
+        @endpush
+    @endif
 @endsection

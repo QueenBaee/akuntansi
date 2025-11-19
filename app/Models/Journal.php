@@ -21,6 +21,7 @@ class Journal extends Model
         'total_amount',
         'is_posted',
         'created_by',
+        'file_path',
     ];
 
     protected $casts = [
