@@ -1,14 +1,12 @@
 <!doctype html>
 <html lang="id">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo $__env->yieldContent('title', 'Dashboard'); ?> - Sistem Akuntansi</title>
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@tabler/icons@2.44.0/icons-sprite.svg" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -52,88 +50,88 @@
                             <li class="nav-item <?php echo e(request()->routeIs('dashboard') ? 'active' : ''); ?>">
                                 <a class="nav-link" href="<?php echo e(route('dashboard')); ?>">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
-                                            height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                            fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                            <polyline points="5 12 3 12 12 3 21 12 19 12" />
-                                            <path d="m5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                                            <path d="m9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                            <polyline points="5 12 3 12 12 3 21 12 19 12"/>
+                                            <path d="m5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/>
+                                            <path d="m9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/>
                                         </svg>
                                     </span>
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown <?php echo e(request()->routeIs('accounts.*') ? 'active' : ''); ?>">
-                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
-                                    role="button">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
-                                            height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                            fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                            <rect x="3" y="4" width="18" height="4" rx="2" />
-                                            <path d="m5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
-                                            <line x1="10" y1="12" x2="14" y2="12" />
-                                        </svg>
-                                    </span>
-                                    <span class="nav-link-title">Master Data</span>
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item <?php echo e(request()->routeIs('accounts.*') ? 'active' : ''); ?>"
-                                        href="<?php echo e(route('accounts.index')); ?>">List Account</a>
-                                </div>
-                            </li>
-                            <li
-                                class="nav-item dropdown <?php echo e(request()->routeIs('journals.*') || request()->routeIs('cash-transactions.*') ? 'active' : ''); ?>">
-                                <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
-                                    role="button">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="icon icon-tabler icons-tabler-outline icon-tabler-notes">
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path
-                                                d="M5 3m0 2a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
-                                            <path d="M9 7l6 0" />
-                                            <path d="M9 11l6 0" />
-                                            <path d="M9 15l4 0" />
-                                        </svg>
-                                    </span>
-                                    <span class="nav-link-title">Journal</span>
-                                </a>
-                                <div class="dropdown-menu">
-                                    <a class="dropdown-item <?php echo e(request()->routeIs('journals.*') ? 'active' : ''); ?>"
-                                        href="<?php echo e(route('journals.index')); ?>">Journal Entry</a>
-                                    <a class="dropdown-item <?php echo e(request()->routeIs('cash-transactions.*') ? 'active' : ''); ?>"
-                                        href="<?php echo e(route('cash-transactions.index')); ?>">Cash Transactions</a>
-                                </div>
-                            </li>
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#navbar-extra" data-bs-toggle="dropdown"
-                                    role="button">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
-                                            height="24" viewBox="0 0 24 24" stroke-width="2"
-                                            stroke="currentColor" fill="none" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                            <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-                                            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                                            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M7 15h-3a1 1 0 0 1 -1 -1v-8a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v3"/>
+                                            <path d="M7 9m0 1a1 1 0 0 1 1 -1h12a1 1 0 0 1 1 1v8a1 1 0 0 1 -1 1h-12a1 1 0 0 1 -1 -1z"/>
+                                            <path d="M12 14a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/>
                                         </svg>
                                     </span>
-                                    <span class="nav-link-title">Laporan</span>
+                                    <span class="nav-link-title">Kas</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item" href="#trial-balance">Trial Balance</a>
-                                    <a class="dropdown-item" href="#income-statement">Income Statement</a>
-                                    <a class="dropdown-item" href="#balance-sheet">Balance Sheet</a>
-                                    <a class="dropdown-item" href="#cash-flow">Cash Flow</a>
+                                    <?php $__empty_1 = true; $__currentLoopData = $cashAccounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $account): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                        <a class="dropdown-item" href="#"><?php echo e($account->name); ?></a>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                        <span class="dropdown-item text-muted">No cash accounts available</span>
+                                    <?php endif; ?>
                                 </div>
                             </li>
+
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M3 21l18 0"/>
+                                            <path d="M3 10l18 0"/>
+                                            <path d="M5 6l7 -3l7 3"/>
+                                            <path d="M4 10l0 11"/>
+                                            <path d="M20 10l0 11"/>
+                                            <path d="M8 14l0 3"/>
+                                            <path d="M12 14l0 3"/>
+                                            <path d="M16 14l0 3"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Bank</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <?php $__empty_1 = true; $__currentLoopData = $bankAccounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $account): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                        <a class="dropdown-item" href="#"><?php echo e($account->name); ?></a>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                        <span class="dropdown-item text-muted">No bank accounts available</span>
+                                    <?php endif; ?>
+                                </div>
+                            </li>
+
+
+                            <?php if(\Spatie\Permission\PermissionServiceProvider::bladeMethodWrapper('hasRole', 'admin')): ?>
+                                <li class="nav-item dropdown <?php echo e(request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('users.*') || request()->routeIs('trial-balance.*') || request()->routeIs('cashflow.*') ? 'active' : ''); ?>">
+                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
+                                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                                <rect x="3" y="4" width="18" height="4" rx="2"/>
+                                                <path d="m5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10"/>
+                                                <line x1="10" y1="12" x2="14" y2="12"/>
+                                            </svg>
+                                        </span>
+                                        <span class="nav-link-title">Master Data</span>
+                                    </a>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item <?php echo e(request()->routeIs('users.*') ? 'active' : ''); ?>" href="<?php echo e(route('users.index')); ?>">User Management</a>
+                                        <a class="dropdown-item <?php echo e(request()->routeIs('accounts.*') ? 'active' : ''); ?>" href="<?php echo e(route('accounts.index')); ?>">List Account</a>
+                                        <a class="dropdown-item <?php echo e(request()->routeIs('user-accounts.*') ? 'active' : ''); ?>" href="<?php echo e(route('user-accounts.index')); ?>">User Accounts</a>
+                                        <a class="dropdown-item <?php echo e(request()->routeIs('trial-balance.*') ? 'active' : ''); ?>" href="<?php echo e(route('trial-balance.index')); ?>">Trial Balances</a>
+                                        <a class="dropdown-item <?php echo e(request()->routeIs('cashflow.*') ? 'active' : ''); ?>" href="<?php echo e(route('cashflow.index')); ?>">Cash Flow</a>
+                                    </div>
+                                </li>
+                            <?php endif; ?>
+
+                            
                         </ul>
                     </div>
                 </div>
@@ -167,11 +165,9 @@
                         <div class="alert alert-success alert-dismissible" role="alert">
                             <div class="d-flex">
                                 <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24"
-                                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                        fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                        <path d="M5 12l5 5l10 -10" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                        <path d="M5 12l5 5l10 -10"/>
                                     </svg>
                                 </div>
                                 <div><?php echo e(session('success')); ?></div>
@@ -184,13 +180,11 @@
                         <div class="alert alert-danger alert-dismissible" role="alert">
                             <div class="d-flex">
                                 <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24"
-                                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                        fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none" />
-                                        <circle cx="12" cy="12" r="9" />
-                                        <line x1="12" y1="8" x2="12" y2="12" />
-                                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                        <circle cx="12" cy="12" r="9"/>
+                                        <line x1="12" y1="8" x2="12" y2="12"/>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
                                     </svg>
                                 </div>
                                 <div><?php echo e(session('error')); ?></div>

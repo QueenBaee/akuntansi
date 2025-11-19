@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('code', 20)->unique();
             $table->string('name');
-            $table->enum('type', ['asset', 'liability', 'equity', 'revenue', 'expense']);
+            $table->enum('type', ['kas', 'bank', 'asset', 'liability', 'equity', 'revenue', 'expense']);
             $table->enum('category', ['current_asset', 'fixed_asset', 'current_liability', 'long_term_liability', 'equity', 'operating_revenue', 'other_revenue', 'operating_expense', 'other_expense']);
             $table->decimal('opening_balance', 15, 2)->default(0);
             $table->boolean('is_active')->default(true);
