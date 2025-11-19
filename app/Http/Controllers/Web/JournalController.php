@@ -31,17 +31,19 @@ class JournalController extends Controller
         return view('journals.index', compact('journals', 'accounts'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $accounts = Account::where('is_active', true)->orderBy('code')->get();
         $cashflowCategories = Cashflow::all();
         
-        $selectedAccountId = request('account_id') ?? session('selected_cash_account_id');
+        // Get account_id from request parameter or session
+        $selectedAccountId = $request->get('account_id') ?? session('selected_cash_account_id');
         $selectedAccount = null;
         $openingBalance = 0;
         $journalsHistory = collect();
         
         if ($selectedAccountId) {
+            // Store in session for persistence
             session(['selected_cash_account_id' => $selectedAccountId]);
             $selectedAccount = Account::find($selectedAccountId);
             

@@ -31,7 +31,7 @@
         <div class="col-12">
             <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="selected_cash_account_id" value="{{ $selectedAccount->id ?? '' }}">
+                <input type="hidden" name="selected_cash_account_id" value="{{ $selectedAccount ? $selectedAccount->id : '' }}">
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -117,7 +117,7 @@
             <script>
                 let lineIndex = 0;
                 let openingBalance = {{ $openingBalance }};
-                let selectedCashAccountId = {{ $selectedAccount->id }};
+                let selectedCashAccountId = {{ $selectedAccount ? $selectedAccount->id : 'null' }};
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 
