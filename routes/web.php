@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TrialBalanceController;
+use App\Http\Controllers\CashflowController;
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -39,6 +41,7 @@ Route::middleware('auth')->get('/', function () {
 
 // Protected routes
 Route::middleware('auth')->group(function () {
+
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         // User Management
@@ -59,9 +62,20 @@ Route::middleware('auth')->group(function () {
         // Journals
         Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
     });
+    // Cash Transactions
+    Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
+    
+    // Journals
+    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+
+    // Trial Balance
+    Route::resource('trial-balance', TrialBalanceController::class);
+
+    // Cashflow 
+    Route::resource('cashflow', CashflowController::class);
 });
 
-// Catch all route
+// Catch all route (HARUS PALING BAWAH)
 Route::get('/{any?}', function () {
     return view('dashboard.index');
 })->where('any', '.*');

@@ -19,6 +19,7 @@
                         <li><a href="/accounts" class="nav-link">Chart of Accounts</a></li>
                         <li><a href="/cash-transactions" class="nav-link">Transaksi Kas</a></li>
                         <li><a href="/reports" class="nav-link">Laporan</a></li>
+                        <li><a href="/trial_balance" class="nav-link">Laporan</a></li>
                         <li><button class="btn btn-secondary logout-btn">Logout</button></li>
                     </ul>
                 </div>
