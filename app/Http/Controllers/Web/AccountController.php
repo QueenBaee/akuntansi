@@ -10,7 +10,7 @@ class AccountController extends Controller
 {
     public function index(Request $request)
     {
-        $accounts = Account::orderBy('code')->paginate(20);
+        $accounts = Account::orderBy('code')->paginate(3);
         
         if ($request->ajax()) {
             return response()->json([
