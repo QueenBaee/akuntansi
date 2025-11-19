@@ -3,7 +3,7 @@
 @section('title', 'Tambah Akun')
 
 @section('page-header')
-    <div class="page-pretitle">Master Data</div>
+    <div class="page-pretitle">Jurnal</div>
     <h2 class="page-title">Tambah Akun</h2>
 @endsection
 
@@ -53,35 +53,6 @@
                                     @endforeach
                                 </select>
                                 @error('type')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Kategori</label>
-                                <input type="text" name="category" class="form-control @error('category') is-invalid @enderror" 
-                                       value="{{ old('category') }}" placeholder="current_asset, fixed_asset, dll">
-                                @error('category')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Parent Akun</label>
-                                <select name="parent_id" class="form-select @error('parent_id') is-invalid @enderror">
-                                    <option value="">Tidak ada parent</option>
-                                    @foreach($parentAccounts as $parent)
-                                        <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
-                                            {{ $parent->code }} - {{ $parent->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('parent_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

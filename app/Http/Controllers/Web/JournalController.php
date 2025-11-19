@@ -22,8 +22,9 @@ class JournalController extends Controller
         $journals = Journal::with('details.account')
             ->orderBy('date', 'desc')
             ->paginate(20);
+        $accounts = Account::where('is_active', true)->orderBy('code')->get();
             
-        return view('journals.index', compact('journals'));
+        return view('journals.index', compact('journals', 'accounts'));
     }
     
     public function create()

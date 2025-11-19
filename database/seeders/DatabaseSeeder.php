@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PermissionSeeder::class,
-            AccountSeeder::class,
+            KasBankAccountSeeder::class,
             CashflowCategorySeeder::class,
             UserSeeder::class,
         ]);
