@@ -31,7 +31,7 @@
         <div class="col-12">
             <form method="POST" action="<?php echo e(route('journals.store')); ?>" id="journalForm" enctype="multipart/form-data">
                 <?php echo csrf_field(); ?>
-                <input type="hidden" name="selected_cash_account_id" value="<?php echo e($selectedAccount->id ?? ''); ?>">
+                <input type="hidden" name="selected_cash_account_id" value="<?php echo e($selectedAccount ? $selectedAccount->id : ''); ?>">
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -125,7 +125,7 @@ unset($__errorArgs, $__bag); ?>
             <script>
                 let lineIndex = 0;
                 let openingBalance = <?php echo e($openingBalance); ?>;
-                let selectedCashAccountId = <?php echo e($selectedAccount->id); ?>;
+                let selectedCashAccountId = <?php echo e($selectedAccount ? $selectedAccount->id : 'null'); ?>;
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 

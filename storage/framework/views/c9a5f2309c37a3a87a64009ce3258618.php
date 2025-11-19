@@ -228,7 +228,8 @@
             document.querySelector(`[data-account-id="${accountId}"]`).classList.add('active');
             
             // Navigate to journal create page
-            window.location.href = '<?php echo e(route("journals.create")); ?>';
+            // window.location.href = '<?php echo e(route("journals.create")); ?>';
+            console.log(accountName)
         }
         
         // On page load, restore active state
