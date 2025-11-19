@@ -8,21 +8,41 @@
         <?php echo csrf_field(); ?>
 
         <div class="mb-3">
-            <label>Kode</label>
-            <input type="text" name="kode" class="form-control" required value="<?php echo e(old('kode')); ?>">
+            <label for="kode">Kode</label>
+            <input 
+                type="text" 
+                id="kode"
+                name="kode" 
+                class="form-control" 
+                required 
+                value="<?php echo e(old('kode')); ?>">
         </div>
 
         <div class="mb-3">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" class="form-control" required value="<?php echo e(old('keterangan')); ?>">
+            <label for="keterangan">Keterangan</label>
+            <input 
+                type="text" 
+                id="keterangan"
+                name="keterangan" 
+                class="form-control" 
+                required 
+                value="<?php echo e(old('keterangan')); ?>">
         </div>
 
         <div class="mb-3">
-            <label>Pilih Akun Trial Balance</label>
-            <select name="trial_balance_id" class="form-control" required>
+            <label for="trial_balance_id">Pilih Akun Trial Balance</label>
+            <select 
+                name="trial_balance_id" 
+                id="trial_balance_id" 
+                class="form-control" 
+                required>
+                
                 <option value="">-- Pilih Akun --</option>
+
                 <?php $__currentLoopData = $accounts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $acc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <option value="<?php echo e($acc->id); ?>">
+                    <option 
+                        value="<?php echo e($acc->id); ?>"
+                        <?php echo e(old('trial_balance_id') == $acc->id ? 'selected' : ''); ?>>
                         <?php echo e($acc->kode); ?> - <?php echo e($acc->keterangan); ?>
 
                     </option>

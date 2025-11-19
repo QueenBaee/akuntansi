@@ -20,10 +20,9 @@
             <tr>
                 <th>Kode</th>
                 <th>Keterangan</th>
-                <th>Kategori</th>
-                <th>Tipe</th>
-                <th>Nominal</th>
-                <th>Aksi</th>
+                <th>Kode TB</th>
+                <th>Akun Laporan Keuangan</th>
+                <th width="150">Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -31,16 +30,25 @@
                 <tr>
                     <td><?php echo e($row->kode); ?></td>
                     <td><?php echo e($row->keterangan); ?></td>
-                    <td><?php echo e(ucfirst($row->kategori)); ?></td>
-                    <td><?php echo e(ucfirst($row->tipe)); ?></td>
-                    <td>Rp <?php echo e(number_format($row->nominal, 0, ',', '.')); ?></td>
+
+                    
+                    <td>
+                        <?php echo e($row->trialBalance->kode ?? '-'); ?>
+
+                    </td>
+
+                    
+                    <td>
+                        <?php echo e($row->trialBalance->keterangan ?? '-'); ?>
+
+                    </td>
 
                     <td>
                         <a href="<?php echo e(route('cashflow.edit', $row->id)); ?>" 
-                        class="btn btn-warning btn-sm">Edit</a>
+                           class="btn btn-warning btn-sm">Edit</a>
 
                         <form action="<?php echo e(route('cashflow.destroy', $row->id)); ?>" 
-                            method="POST" style="display:inline-block">
+                              method="POST" style="display:inline-block">
                             <?php echo csrf_field(); ?>
                             <?php echo method_field('DELETE'); ?>
                             <button onclick="return confirm('Hapus data ini?')" 
@@ -50,7 +58,7 @@
                 </tr>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <tr>
-                    <td colspan="6" class="text-center">Tidak ada data</td>
+                    <td colspan="5" class="text-center">Tidak ada data</td>
                 </tr>
             <?php endif; ?>
         </tbody>

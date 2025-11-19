@@ -20,10 +20,9 @@
             <tr>
                 <th>Kode</th>
                 <th>Keterangan</th>
-                <th>Kategori</th>
-                <th>Tipe</th>
-                <th>Nominal</th>
-                <th>Aksi</th>
+                <th>Kode TB</th>
+                <th>Akun Laporan Keuangan</th>
+                <th width="150">Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -31,16 +30,23 @@
                 <tr>
                     <td>{{ $row->kode }}</td>
                     <td>{{ $row->keterangan }}</td>
-                    <td>{{ ucfirst($row->kategori) }}</td>
-                    <td>{{ ucfirst($row->tipe) }}</td>
-                    <td>Rp {{ number_format($row->nominal, 0, ',', '.') }}</td>
+
+                    {{-- Kode TB --}}
+                    <td>
+                        {{ $row->trialBalance->kode ?? '-' }}
+                    </td>
+
+                    {{-- Akun Laporan Keuangan dari TB --}}
+                    <td>
+                        {{ $row->trialBalance->keterangan ?? '-' }}
+                    </td>
 
                     <td>
                         <a href="{{ route('cashflow.edit', $row->id) }}" 
-                        class="btn btn-warning btn-sm">Edit</a>
+                           class="btn btn-warning btn-sm">Edit</a>
 
                         <form action="{{ route('cashflow.destroy', $row->id) }}" 
-                            method="POST" style="display:inline-block">
+                              method="POST" style="display:inline-block">
                             @csrf
                             @method('DELETE')
                             <button onclick="return confirm('Hapus data ini?')" 
@@ -50,7 +56,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">Tidak ada data</td>
+                    <td colspan="5" class="text-center">Tidak ada data</td>
                 </tr>
             @endforelse
         </tbody>

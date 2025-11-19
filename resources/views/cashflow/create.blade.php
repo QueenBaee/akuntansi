@@ -8,21 +8,41 @@
         @csrf
 
         <div class="mb-3">
-            <label>Kode</label>
-            <input type="text" name="kode" class="form-control" required value="{{ old('kode') }}">
+            <label for="kode">Kode</label>
+            <input 
+                type="text" 
+                id="kode"
+                name="kode" 
+                class="form-control" 
+                required 
+                value="{{ old('kode') }}">
         </div>
 
         <div class="mb-3">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" class="form-control" required value="{{ old('keterangan') }}">
+            <label for="keterangan">Keterangan</label>
+            <input 
+                type="text" 
+                id="keterangan"
+                name="keterangan" 
+                class="form-control" 
+                required 
+                value="{{ old('keterangan') }}">
         </div>
 
         <div class="mb-3">
-            <label>Pilih Akun Trial Balance</label>
-            <select name="trial_balance_id" class="form-control" required>
+            <label for="trial_balance_id">Pilih Akun Trial Balance</label>
+            <select 
+                name="trial_balance_id" 
+                id="trial_balance_id" 
+                class="form-control" 
+                required>
+                
                 <option value="">-- Pilih Akun --</option>
+
                 @foreach($accounts as $acc)
-                    <option value="{{ $acc->id }}">
+                    <option 
+                        value="{{ $acc->id }}"
+                        {{ old('trial_balance_id') == $acc->id ? 'selected' : '' }}>
                         {{ $acc->kode }} - {{ $acc->keterangan }}
                     </option>
                 @endforeach

@@ -9,12 +9,7 @@ class Cashflow extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'kode',
-        'keterangan',
-        'trial_balance_id',
-        'kategori'
-    ];
+    protected $fillable = ['kode', 'keterangan', 'trial_balance_id'];
 
     public function trialBalance()
     {
