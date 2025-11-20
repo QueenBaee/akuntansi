@@ -56,17 +56,23 @@ Route::middleware('auth')->group(function () {
     
     // Routes accessible by both admin and user
     Route::middleware('role:admin|user')->group(function () {
-        // Cash Transactions
-        Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
+        // Cash Transactions - temporarily disabled
+        // Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
         
-        // Journals
-        Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+        // Journals - temporarily disabled
+        // Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+        
+        // Ledgers
+        Route::get('ledgers', [\App\Http\Controllers\LedgerController::class, 'show'])->name('ledgers.index');
+        
+        // Ledger API routes (web-based)
+        Route::prefix('api/ledgers')->group(function () {
+            Route::get('{accountId}', [\App\Http\Controllers\LedgerController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\LedgerController::class, 'store']);
+            Route::put('{ledger}', [\App\Http\Controllers\LedgerController::class, 'update']);
+            Route::delete('{ledger}', [\App\Http\Controllers\LedgerController::class, 'destroy']);
+        });
     });
-    // Cash Transactions
-    Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
-    
-    // Journals
-    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
 
     // Trial Balance
     Route::resource('trial-balance', TrialBalanceController::class);

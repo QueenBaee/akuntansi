@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
+    @stack('styles')
 </head>
 
 <body>
@@ -58,6 +59,20 @@
                                         </svg>
                                     </span>
                                     <span class="nav-link-title">Dashboard</span>
+                                </a>
+                            </li>
+                            <li class="nav-item {{ request()->routeIs('ledgers.*') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ route('ledgers.index') }}">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                            <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z"/>
+                                            <path d="M3 10h18"/>
+                                            <path d="M7 7v10"/>
+                                            <path d="M17 7v10"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Buku Besar</span>
                                 </a>
                             </li>
                             <li class="nav-item dropdown">

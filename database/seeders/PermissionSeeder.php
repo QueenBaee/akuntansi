@@ -80,6 +80,12 @@ class PermissionSeeder extends Seeder
             'rent_expense.update',
             'rent_expense.delete',
             
+            // Ledger
+            'ledgers.view',
+            'ledgers.create',
+            'ledgers.update',
+            'ledgers.delete',
+            
             // Reports
             'reports.view',
             'reports.export',
@@ -93,8 +99,8 @@ class PermissionSeeder extends Seeder
         }
 
         // Create roles
-        $adminRole = Role::create(['name' => 'admin']);
-        $userRole = Role::create(['name' => 'user']);
+$adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+$userRole  = Role::firstOrCreate(['name' => 'user',  'guard_name' => 'web']);
 
         // Admin can access all features
         $adminRole->givePermissionTo(Permission::all());
@@ -109,6 +115,7 @@ class PermissionSeeder extends Seeder
             'maklon.view', 'maklon.create', 'maklon.update',
             'rent_income.view', 'rent_income.create', 'rent_income.update',
             'rent_expense.view', 'rent_expense.create', 'rent_expense.update',
+            'ledgers.view', 'ledgers.create', 'ledgers.update', 'ledgers.delete',
             'reports.view', 'reports.export',
             'dashboard.view',
         ]);
