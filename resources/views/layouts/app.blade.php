@@ -7,6 +7,16 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
+    <style>
+        .dropdown-item.active {
+            background-color: #206bc4;
+            color: white;
+        }
+        .dropdown-item.active:hover {
+            background-color: #1a5ba8;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
@@ -60,7 +70,7 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('journals.*') && session('selected_account_type') == 'kas' ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
@@ -74,14 +84,14 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     @forelse($cashAccounts as $account)
-                                        <a class="dropdown-item" href="#">{{ $account->name }}</a>
+                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->name }}', {{ $account->getCurrentBalance() }})">{{ $account->name }}</a>
                                     @empty
                                         <span class="dropdown-item text-muted">No cash accounts available</span>
                                     @endforelse
                                 </div>
                             </li>
 
-                            <li class="nav-item dropdown">
+                            <li class="nav-item dropdown {{ request()->routeIs('journals.*') && session('selected_account_type') == 'bank' ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
@@ -100,7 +110,7 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     @forelse($bankAccounts as $account)
-                                        <a class="dropdown-item" href="#">{{ $account->name }}</a>
+                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->name }}', {{ $account->getCurrentBalance() }})">{{ $account->name }}</a>
                                     @empty
                                         <span class="dropdown-item text-muted">No bank accounts available</span>
                                     @endforelse
@@ -200,6 +210,39 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script>
+        function selectCashAccount(accountId, accountName, currentBalance) {
+            // Store selected account in sessionStorage
+            sessionStorage.setItem('selectedCashAccount', JSON.stringify({
+                id: accountId,
+                name: accountName,
+                balance: currentBalance
+            }));
+            
+            // Remove active class from all account items
+            document.querySelectorAll('.cash-account-item, .bank-account-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected account
+            document.querySelector(`[data-account-id="${accountId}"]`).classList.add('active');
+            
+            // Navigate to journal create page with account_id parameter
+            window.location.href = '{{ route("journals.create") }}?account_id=' + accountId;
+        }
+        
+        // On page load, restore active state
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedAccount = sessionStorage.getItem('selectedCashAccount');
+            if (savedAccount) {
+                const account = JSON.parse(savedAccount);
+                const accountItem = document.querySelector(`[data-account-id="${account.id}"]`);
+                if (accountItem) {
+                    accountItem.classList.add('active');
+                }
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 

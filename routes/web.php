@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrialBalanceController;
 use App\Http\Controllers\CashflowController;
+use App\Http\Controllers\CashBankJournalController;
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -54,19 +55,20 @@ Route::middleware('auth')->group(function () {
         Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
     });
     
-    // Routes accessible by both admin and user
-    Route::middleware('role:admin|user')->group(function () {
-        // Cash Transactions
-        Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
-        
-        // Journals
-        Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
-    });
     // Cash Transactions
     Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
     
     // Journals
-    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class);
+    Route::get('journals/create', [\App\Http\Controllers\CashBankJournalController::class, 'create'])->name('journals.create');
+    Route::post('journals', [\App\Http\Controllers\CashBankJournalController::class, 'store'])->name('journals.store');
+    Route::get('journals/{id}/attachments', [\App\Http\Controllers\CashBankJournalController::class, 'getAttachments'])->name('journals.attachments');
+    Route::delete('journals/{id}', [\App\Http\Controllers\CashBankJournalController::class, 'destroy'])->name('journals.destroy');
+    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create', 'store', 'destroy']);
+    
+    // Routes accessible by both admin and user
+    Route::middleware('role:admin|user')->group(function () {
+        // Additional protected routes can go here
+    });
 
     // Trial Balance
     Route::resource('trial-balance', TrialBalanceController::class);

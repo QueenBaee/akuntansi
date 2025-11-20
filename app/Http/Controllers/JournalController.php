@@ -55,10 +55,21 @@ class JournalController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request);
         $validated = $request->validate([
             'date' => 'required|date',
-            'reference' => 'required|string|max:255',
+            'reference' => 'nullable|string|max:255',
             'description' => 'required|string',
+            'pic' => 'nullable|string|max:255',
+            'proof_number' => 'nullable|string|max:255',
+            'cash_in' => 'nullable|numeric|min:0',
+            'cash_out' => 'nullable|numeric|min:0',
+            'debit_account_id' => 'nullable|exists:accounts,id',
+            'credit_account_id' => 'nullable|exists:accounts,id',
+            'cashflow_id' => 'nullable|exists:cashflows,id',
+            'balance' => 'nullable|numeric',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:10240', // 10MB max per file
             'details' => 'required|array|min:2',
             'details.*.account_id' => 'required|exists:accounts,id',
             'details.*.debit' => 'required|numeric|min:0',
@@ -79,9 +90,21 @@ class JournalController extends Controller
 
         $journal = Journal::create([
             'date' => $validated['date'],
-            'reference' => $validated['reference'],
+            'number' => $this->generateJournalNumber(),
+            'reference' => $validated['reference'] ?? null,
             'description' => $validated['description'],
-            'status' => 'draft',
+            'pic' => $validated['pic'] ?? null,
+            'proof_number' => $validated['proof_number'] ?? null,
+            'cash_in' => $validated['cash_in'] ?? 0,
+            'cash_out' => $validated['cash_out'] ?? 0,
+            'debit_account_id' => $validated['debit_account_id'] ?? null,
+            'credit_account_id' => $validated['credit_account_id'] ?? null,
+            'cashflow_id' => $validated['cashflow_id'] ?? null,
+            'balance' => $validated['balance'] ?? 0,
+            'total_debit' => $totalDebit,
+            'total_credit' => $totalCredit,
+            'source_module' => 'manual',
+            'is_posted' => false,
             'created_by' => auth()->id()
         ]);
 
@@ -89,16 +112,31 @@ class JournalController extends Controller
             $journal->details()->create($detail);
         }
 
+        // Handle file attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $path = $file->storeAs('journal_attachments', $filename, 'public');
+                
+                $journal->attachments()->create([
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $path,
+                    'file_type' => $file->getClientMimeType(),
+                    'file_size' => $file->getSize(),
+                ]);
+            }
+        }
+
         return response()->json([
             'message' => 'Journal created successfully',
-            'data' => $journal->load('details.account')
+            'data' => $journal->load(['details.account', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ], 201);
     }
 
     public function show(Journal $journal)
     {
         return response()->json([
-            'data' => $journal->load('details.account', 'createdBy')
+            'data' => $journal->load(['details.account', 'creator', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ]);
     }
 
@@ -146,7 +184,7 @@ class JournalController extends Controller
 
         return response()->json([
             'message' => 'Journal updated successfully',
-            'data' => $journal->load('details.account')
+            'data' => $journal->load(['details.account', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ]);
     }
 
@@ -195,5 +233,23 @@ class JournalController extends Controller
             'message' => 'Journal unposted successfully',
             'data' => $journal
         ]);
+    }
+
+    private function generateJournalNumber()
+    {
+        $date = now();
+        $prefix = 'JRN-' . $date->format('Ym') . '-';
+        $lastJournal = Journal::where('number', 'like', $prefix . '%')
+                            ->orderBy('number', 'desc')
+                            ->first();
+        
+        if ($lastJournal) {
+            $lastNumber = intval(substr($lastJournal->number, -4));
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 }

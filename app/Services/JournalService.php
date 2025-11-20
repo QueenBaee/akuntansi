@@ -29,9 +29,10 @@ class JournalService
                 'date' => $data['date'],
                 'number' => $journalNumber,
                 'reference' => $data['reference'] ?? null,
-                'source_module' => $data['source_module'] ?? 'GENERAL',
+                'source_module' => $data['source_module'] ?? 'manual',
                 'description' => $data['description'],
-                'total_amount' => $totalDebit,
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
                 'is_posted' => true,
                 'created_by' => auth()->id(),
             ]);
@@ -70,6 +71,8 @@ class JournalService
                 'date' => $data['date'],
                 'reference' => $data['reference'] ?? null,
                 'description' => $data['description'],
+                'total_debit' => $totalDebit,
+                'total_credit' => $totalCredit,
                 'total_amount' => $totalDebit,
             ]);
             
@@ -91,7 +94,7 @@ class JournalService
     private function generateJournalNumber(string $date, string $module): string
     {
         $date = Carbon::parse($date);
-        $prefix = $module . '/' . $date->format('Ymd') . '/';
+        $prefix = strtoupper($module) . '/' . $date->format('Ymd') . '/';
         
         $lastNumber = Journal::where('number', 'like', $prefix . '%')
             ->whereDate('date', $date->toDateString())
