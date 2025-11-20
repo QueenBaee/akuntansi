@@ -84,6 +84,7 @@ class JournalController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
         $request->validate([
             'selected_cash_account_id' => 'required|exists:accounts,id',
             'entries' => 'required|array|min:1',

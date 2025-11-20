@@ -14,6 +14,14 @@ class Journal extends Model
         'number',
         'reference',
         'description',
+        'pic',
+        'proof_number',
+        'cash_in',
+        'cash_out',
+        'debit_account_id',
+        'credit_account_id',
+        'cashflow_id',
+        'balance',
         'source_module',
         'source_id',
         'total_debit',
@@ -26,6 +34,9 @@ class Journal extends Model
 
     protected $casts = [
         'date' => 'date',
+        'cash_in' => 'decimal:2',
+        'cash_out' => 'decimal:2',
+        'balance' => 'decimal:2',
         'total_debit' => 'decimal:2',
         'total_credit' => 'decimal:2',
         'total_amount' => 'decimal:2',
@@ -70,6 +81,26 @@ class Journal extends Model
     public function rentExpenseSchedule()
     {
         return $this->hasOne(RentExpenseSchedule::class);
+    }
+
+    public function debitAccount()
+    {
+        return $this->belongsTo(Account::class, 'debit_account_id');
+    }
+
+    public function creditAccount()
+    {
+        return $this->belongsTo(Account::class, 'credit_account_id');
+    }
+
+    public function cashflow()
+    {
+        return $this->belongsTo(Cashflow::class, 'cashflow_id');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(JournalAttachment::class);
     }
 
     public function scopePosted($query)
