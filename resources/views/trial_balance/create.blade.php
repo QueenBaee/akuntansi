@@ -22,6 +22,11 @@
             <input type="text" name="keterangan" class="form-control" required value="{{ old('keterangan') }}">
         </div>
 
+        <div class="mb-3">
+            <label>Tahun 2024</label>
+            <input type="number" name="tahun_2024" class="form-control" value="{{ old('tahun_2024', $trial_balance->tahun_2024 ?? '') }}">
+        </div>
+
         <button class="btn btn-primary">Simpan</button>
         <a href="{{ route('trial-balance.index') }}" class="btn btn-secondary">Batal</a>
     </form>
