@@ -12,12 +12,22 @@ class Cashflow extends Model
     protected $fillable = [
         'kode',
         'keterangan',
-        'trial_balance_id',
-        'kategori'
-    ];
+        'level',
+        'parent_id',
+        'trial_balance_id'];
+
+    public function parent()
+    {
+        return $this->belongsTo(Cashflow::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Cashflow::class, 'parent_id');
+    }
 
     public function trialBalance()
     {
-        return $this->belongsTo(TrialBalance::class);
+        return $this->belongsTo(TrialBalance::class, 'trial_balance_id');
     }
 }
