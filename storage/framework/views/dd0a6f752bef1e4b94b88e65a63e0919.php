@@ -133,7 +133,7 @@
             </div>
             <?php if($accounts->hasPages()): ?>
             <div class="card-footer">
-                <?php echo e($accounts->links()); ?>
+                <?php echo e($accounts->links('pagination.tabler')); ?>
 
             </div>
             <?php endif; ?>
@@ -275,9 +275,6 @@ async function doSaveAccount(id) {
             },
             body: formData
         });
-        
-        // Add _method for Laravel PUT
-        formData.append('_method', 'PUT');
         
         const data = await response.json();
         
