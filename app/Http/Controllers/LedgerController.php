@@ -2,75 +2,101 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreLedgerRequest;
-use App\Http\Requests\UpdateLedgerRequest;
 use App\Models\Ledger;
-use App\Services\LedgerService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LedgerController extends Controller
 {
-    protected LedgerService $ledgerService;
-
-    public function __construct(LedgerService $ledgerService)
-    {
-        $this->ledgerService = $ledgerService;
-    }
-
     public function index()
     {
-        $ledgers = $this->ledgerService->getAllLedgers();
-        return view('ledger.index', compact('ledgers'));
+        $ledgers = Ledger::orderBy('nama_ledger')->get();
+
+        return view('ledgers.index', compact('ledgers'));
     }
 
-    public function store(StoreLedgerRequest $request): JsonResponse
+    public function create()
     {
-        try {
-            $ledger = $this->ledgerService->createLedger($request->validated());
-            return response()->json([
+        return view('ledgers.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_ledger' => 'required|string|max:255',
+            'kode_ledger' => 'required|string|unique:ledgers',
+            'tipe_ledger' => 'required|in:kas,bank',
+            'deskripsi' => 'nullable|string'
+        ]);
+
+        $ledger = Ledger::create($validated);
+
+        return $request->expectsJson()
+            ? response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil ditambahkan',
                 'data' => $ledger
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menambahkan ledger: ' . $e->getMessage()
-            ], 500);
-        }
+            ], 201)
+            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil ditambahkan');
     }
 
-    public function update(UpdateLedgerRequest $request, Ledger $ledger): JsonResponse
+    public function show(Ledger $ledger)
     {
-        try {
-            $updatedLedger = $this->ledgerService->updateLedger($ledger, $request->validated());
-            return response()->json([
+        return request()->expectsJson()
+            ? response()->json([
+                'success' => true,
+                'data' => $ledger
+            ])
+            : view('ledgers.show', compact('ledger'));
+    }
+
+    public function edit(Ledger $ledger)
+    {
+        return view('ledgers.edit', compact('ledger'));
+    }
+
+    public function update(Request $request, Ledger $ledger)
+    {
+        $validated = $request->validate([
+            'nama_ledger' => 'required|string|max:255',
+            'kode_ledger' => 'required|string|unique:ledgers,kode_ledger,' . $ledger->id,
+            'tipe_ledger' => 'required|in:kas,bank',
+            'deskripsi' => 'nullable|string',
+            'is_active' => 'sometimes|boolean'
+        ]);
+
+        // pastikan unchecked checkbox = false
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $ledger->update($validated);
+
+        return $request->expectsJson()
+            ? response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil diupdate',
-                'data' => $updatedLedger
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengupdate ledger: ' . $e->getMessage()
-            ], 500);
-        }
+                'data' => $ledger->fresh()
+            ])
+            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil diupdate');
     }
 
-    public function destroy(Ledger $ledger): JsonResponse
+    public function destroy(Ledger $ledger)
     {
-        try {
-            $this->ledgerService->deleteLedger($ledger);
-            return response()->json([
+        // optional safety: cegah delete ledger yg terhubung jurnal
+        if ($ledger->journals()->exists()) {
+            return request()->expectsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => 'Ledger tidak dapat dihapus karena sedang digunakan.'
+                ], 409)
+                : back()->with('error', 'Ledger tidak dapat dihapus karena sedang digunakan.');
+        }
+
+        $ledger->delete();
+
+        return request()->expectsJson()
+            ? response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil dihapus'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus ledger: ' . $e->getMessage()
-            ], 500);
-        }
+            ])
+            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil dihapus');
     }
 }

@@ -29,6 +29,7 @@ class Journal extends Model
         'total_amount',
         'is_posted',
         'created_by',
+        'ledger_id',
         'file_path',
     ];
 
@@ -101,6 +102,11 @@ class Journal extends Model
     public function attachments()
     {
         return $this->hasMany(JournalAttachment::class);
+    }
+
+    public function ledger()
+    {
+        return $this->belongsTo(Ledger::class);
     }
 
     public function scopePosted($query)

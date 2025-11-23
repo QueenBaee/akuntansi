@@ -70,6 +70,19 @@
                                     <span class="nav-link-title">Dashboard</span>
                                 </a>
                             </li>
+                            <li class="nav-item {{ request()->routeIs('ledgers.*') ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ route('ledgers.index') }}">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-11a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1m3 0v18"/>
+                                            <line x1="13" y1="8" x2="15" y2="8"/>
+                                            <line x1="13" y1="12" x2="15" y2="12"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Ledger</span>
+                                </a>
+                            </li>
                             <li class="nav-item dropdown {{ request()->routeIs('journals.*') && session('selected_account_type') == 'kas' ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -84,7 +97,7 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     @forelse($cashAccounts as $account)
-                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->name }}', {{ $account->getCurrentBalance() }})">{{ $account->name }}</a>
+                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->nama_ledger }}', {{ $account->getCurrentBalance() }})">{{ $account->nama_ledger }}</a>
                                     @empty
                                         <span class="dropdown-item text-muted">No cash accounts available</span>
                                     @endforelse
@@ -110,7 +123,7 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     @forelse($bankAccounts as $account)
-                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->name }}', {{ $account->getCurrentBalance() }})">{{ $account->name }}</a>
+                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->nama_ledger }}', {{ $account->getCurrentBalance() }})">{{ $account->nama_ledger }}</a>
                                     @empty
                                         <span class="dropdown-item text-muted">No bank accounts available</span>
                                     @endforelse
@@ -135,6 +148,7 @@
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">User Management</a>
                                         <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a>
                                         <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}" href="{{ route('user-accounts.index') }}">User Accounts</a>
+                                        <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balances</a>
                                         <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Cash Flow</a>
                                     </div>

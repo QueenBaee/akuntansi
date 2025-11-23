@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TrialBalanceController;
 use App\Http\Controllers\CashflowController;
 use App\Http\Controllers\CashBankJournalController;
+use App\Http\Controllers\CashAccountController;
+use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\LedgerController;
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
@@ -53,6 +56,15 @@ Route::middleware('auth')->group(function () {
         
         // User Accounts (master data)
         Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
+        
+        // Cash Accounts
+        Route::resource('cash-accounts', CashAccountController::class);
+        
+        // Bank Accounts
+        Route::resource('bank-accounts', BankAccountController::class);
+        
+        // Ledgers
+        Route::resource('ledgers', LedgerController::class);
     });
     
     // Cash Transactions
