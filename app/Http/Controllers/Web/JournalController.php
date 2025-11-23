@@ -34,7 +34,7 @@ class JournalController extends Controller
     public function create(Request $request)
     {
         $accounts = Account::where('is_active', true)->orderBy('code')->get();
-        $cashflowCategories = Cashflow::all();
+        $cashflows = Cashflow::all();
         
         // Get account_id from request parameter or session
         $selectedAccountId = $request->get('account_id') ?? session('selected_cash_account_id');
@@ -51,35 +51,66 @@ class JournalController extends Controller
                 $openingBalance = $selectedAccount->opening_balance ?? 0;
                 
                 // Get journal history for this account
-                $journals = Journal::with('details')
-                    ->whereHas('details', function($q) use ($selectedAccountId) {
-                        $q->where('account_id', $selectedAccountId);
+                $journals = Journal::with(['details.account', 'cashflow', 'debitAccount', 'creditAccount', 'attachments'])
+                    ->where(function($q) use ($selectedAccountId) {
+                        $q->where('debit_account_id', $selectedAccountId)
+                          ->orWhere('credit_account_id', $selectedAccountId)
+                          ->orWhereHas('details', function($subQ) use ($selectedAccountId) {
+                              $subQ->where('account_id', $selectedAccountId);
+                          });
                     })
                     ->orderBy('date', 'asc')
                     ->orderBy('created_at', 'asc')
                     ->get();
                 
                 $runningBalance = $openingBalance;
-                $journalsHistory = $journals->map(function($journal) use ($selectedAccountId, &$runningBalance) {
-                    $cashDetail = $journal->details->where('account_id', $selectedAccountId)->first();
-                    $cashIn = $cashDetail ? $cashDetail->debit : 0;
-                    $cashOut = $cashDetail ? $cashDetail->credit : 0;
+                $journalsHistory = $journals->map(function($journal) use ($selectedAccountId, &$runningBalance, $selectedAccount) {
+                    // Handle both old format (using debit_account_id/credit_account_id) and new format (using details)
+                    $cashIn = 0;
+                    $cashOut = 0;
+                    $debitAccountName = '';
+                    $creditAccountName = '';
+                    
+                    if ($journal->details->count() > 0) {
+                        // New format with journal details
+                        $cashDetail = $journal->details->where('account_id', $selectedAccountId)->first();
+                        $cashIn = $cashDetail ? $cashDetail->debit : 0;
+                        $cashOut = $cashDetail ? $cashDetail->credit : 0;
+                        
+                        $contraDetail = $journal->details->where('account_id', '!=', $selectedAccountId)->first();
+                        $debitAccountName = $cashIn > 0 ? ($selectedAccount->code . ' - ' . $selectedAccount->name) : ($contraDetail ? $contraDetail->account->code . ' - ' . $contraDetail->account->name : '');
+                        $creditAccountName = $cashOut > 0 ? ($selectedAccount->code . ' - ' . $selectedAccount->name) : ($contraDetail ? $contraDetail->account->code . ' - ' . $contraDetail->account->name : '');
+                    } else {
+                        // Old format using direct fields
+                        $cashIn = ($journal->debit_account_id == $selectedAccountId) ? $journal->cash_in : 0;
+                        $cashOut = ($journal->credit_account_id == $selectedAccountId) ? $journal->cash_out : 0;
+                        
+                        $debitAccountName = $journal->debitAccount ? ($journal->debitAccount->code . ' - ' . $journal->debitAccount->name) : '';
+                        $creditAccountName = $journal->creditAccount ? ($journal->creditAccount->code . ' - ' . $journal->creditAccount->name) : '';
+                    }
+                    
                     $runningBalance += $cashIn - $cashOut;
                     
                     return [
                         'journal_id' => $journal->id,
                         'date' => $journal->date->format('Y-m-d'),
                         'description' => $journal->description,
+                        'pic' => $journal->pic,
                         'proof_number' => $journal->reference ?? $journal->number,
                         'cash_in' => $cashIn,
                         'cash_out' => $cashOut,
+                        'cashflow_code' => $journal->cashflow?->kode,
+                        'cashflow_desc' => $journal->cashflow?->keterangan,
+                        'debit_account' => $debitAccountName,
+                        'credit_account' => $creditAccountName,
+                        'attachments' => $journal->attachments,
                         'balance' => $runningBalance
                     ];
                 });
             }
         }
         
-        return view('journals.create', compact('accounts', 'cashflowCategories', 'selectedAccount', 'openingBalance', 'journalsHistory'));
+        return view('journals.create', compact('accounts', 'cashflows', 'selectedAccount', 'openingBalance', 'journalsHistory'));
     }
 
     public function store(Request $request)
@@ -204,8 +235,8 @@ class JournalController extends Controller
     {
         $journal->load('details.account');
         $accounts = Account::where('is_active', true)->orderBy('code')->get();
-        $cashflowCategories = Cashflow::all();
-        return view('journals.edit', compact('journal', 'accounts', 'cashflowCategories'));
+        $cashflows = Cashflow::all();
+        return view('journals.edit', compact('journal', 'accounts', 'cashflows'));
     }
 
     public function update(JournalRequest $request, Journal $journal)

@@ -57,19 +57,6 @@
                 <div class="navbar navbar-light">
                     <div class="container-xl">
                         <ul class="navbar-nav">
-                            <li class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ route('dashboard') }}">
-                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-                                            <polyline points="5 12 3 12 12 3 21 12 19 12"/>
-                                            <path d="m5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/>
-                                            <path d="m9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/>
-                                        </svg>
-                                    </span>
-                                    <span class="nav-link-title">Dashboard</span>
-                                </a>
-                            </li>
                             <li class="nav-item dropdown {{ request()->routeIs('journals.*') && session('selected_account_type') == 'kas' ? 'active' : '' }}">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -117,6 +104,51 @@
                                 </div>
                             </li>
 
+                            <!-- Memorial -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="#">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+                                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/>
+                                            <line x1="9" y1="9" x2="10" y2="9"/>
+                                            <line x1="9" y1="13" x2="15" y2="13"/>
+                                            <line x1="9" y1="17" x2="15" y2="17"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Memorial</span>
+                                </a>
+                            </li>
+
+                            <!-- Laporan -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
+                                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                            <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
+                                            <rect x="9" y="3" width="6" height="4" rx="2"/>
+                                            <path d="M14 11h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5"/>
+                                            <path d="M12 17v1m0 -8v1"/>
+                                        </svg>
+                                    </span>
+                                    <span class="nav-link-title">Laporan</span>
+                                </a>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Cashflow</a>
+                                    <div class="dropdown-divider"></div>
+                                    <h6 class="dropdown-header">Laporan Keuangan</h6>
+                                    <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
+                                    <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan Laba Rugi</a>
+                                    <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
+                                    <div class="dropdown-divider"></div>
+                                    <h6 class="dropdown-header">Pendukung</h6>
+                                    <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balance</a>
+                                    <a class="dropdown-item" href="#">Asset</a>
+                                    <a class="dropdown-item" href="#">Buku Besar</a>
+                                </div>
+                            </li>
 
                             @role('admin')
                                 <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('users.*') || request()->routeIs('trial-balance.*') || request()->routeIs('cashflow.*') ? 'active' : '' }}">
@@ -135,8 +167,7 @@
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">User Management</a>
                                         <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a>
                                         <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}" href="{{ route('user-accounts.index') }}">User Accounts</a>
-                                        <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balances</a>
-                                        <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Cash Flow</a>
+
                                     </div>
                                 </li>
                             @endrole

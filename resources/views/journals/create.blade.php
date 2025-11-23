@@ -22,7 +22,7 @@
 
 @section('content')
     <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
-    
+
     @if ($errors->any())
         <div class="alert alert-danger">
             @foreach ($errors->all() as $error)
@@ -30,7 +30,7 @@
             @endforeach
         </div>
     @endif
-    
+
     @if (!$selectedAccount)
         <div class="alert alert-warning">
             <strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.
@@ -69,16 +69,17 @@
                                     <thead class="table-light">
                                         <tr style="border: 1px solid #dee2e6;">
                                             <th style="border: 1px solid #dee2e6; width: 80px;">Tanggal</th>
-                                            <th style="border: 1px solid #dee2e6; width: 200px;">Deskripsi</th>
+                                            <th style="border: 1px solid #dee2e6; width: 200px;">Keterangan</th>
                                             <th style="border: 1px solid #dee2e6; width: 100px;">PIC</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px;">File</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">Bukti</th>
                                             <th style="border: 1px solid #dee2e6; width: 100px;">No. Bukti</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Kas Masuk</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Kas Keluar</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Cashflow</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Masuk</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Keluar</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
+                                            <th style="border: 1px solid #dee2e6; width: 80px;">Kode CF</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Arus Kas</th>
                                             <th style="border: 1px solid #dee2e6; width: 150px;">Akun Debit</th>
                                             <th style="border: 1px solid #dee2e6; width: 150px;">Akun Kredit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
                                             <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
                                         </tr>
                                     </thead>
@@ -114,16 +115,19 @@
                                                     style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">
                                                     {{ $history['cash_out'] > 0 ? number_format($history['cash_out'], 0, ',', '.') : '' }}
                                                 </td>
+                                                <td
+                                                    style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right; background: #e3f2fd;">
+                                                    {{ number_format($history['balance'], 0, ',', '.') }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
-                                                    {{ $history['cashflow'] }}</td>
+                                                    {{ $history['cashflow_code'] ?? '-' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
+                                                    {{ $history['cashflow_desc'] ?? '-' }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
                                                     {{ $history['debit_account'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
                                                     {{ $history['credit_account'] }}</td>
 
-                                                <td
-                                                    style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right; background: #e3f2fd;">
-                                                    {{ number_format($history['balance'], 0, ',', '.') }}</td>
+
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="deleteTransaction({{ $history['journal_id'] }})"
@@ -176,11 +180,20 @@
                 `;
 
                 const cashflowOptions = `
-                    <option value="">Pilih Cashflow</option>
+                    <option value="">Pilih Kode</option>
                     @foreach ($cashflows as $cashflow)
-                        <option value="{{ $cashflow->id }}">{{ $cashflow->keterangan }}</option>
+                        <option value="{{ $cashflow->id }}" data-description="{{ $cashflow->keterangan }}">{{ $cashflow->kode }}</option>
                     @endforeach
                 `;
+
+                const cashflowData = {
+                    @foreach ($cashflows as $cashflow)
+                        {{ $cashflow->id }}: {
+                            code: '{{ $cashflow->kode }}',
+                            description: '{{ $cashflow->keterangan }}'
+                        },
+                    @endforeach
+                };
 
                 document.addEventListener('DOMContentLoaded', function() {
                     // Calculate current balance from history
@@ -194,12 +207,14 @@
 
                     // Form will submit normally to server
                 });
-                
+
                 function showError(message) {
                     const errorAlert = document.getElementById('errorAlert');
                     errorAlert.textContent = message;
                     errorAlert.style.display = 'block';
-                    errorAlert.scrollIntoView({ behavior: 'smooth' });
+                    errorAlert.scrollIntoView({
+                        behavior: 'smooth'
+                    });
                     setTimeout(() => {
                         errorAlert.style.display = 'none';
                     }, 5000);
@@ -231,10 +246,16 @@
                         <td style="border: 1px solid #dee2e6; padding: 2px;">
                             <input type="number" name="entries[${lineIndex}][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, 'out')">
                         </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">
+                            <span class="balance-display" style="font-size: 12px; font-weight: bold;">${formatter.format(currentBalance)}</span>
+                        </td>
                         <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[${lineIndex}][cashflow_id]" class="form-control form-control-sm" style="border: none; font-size: 12px;">
+                            <select name="entries[${lineIndex}][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this)">
                                 ${cashflowOptions}
                             </select>
+                        </td>
+                        <td style="border: 1px solid #dee2e6; padding: 2px;">
+                            <input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>
                         </td>
                         <td style="border: 1px solid #dee2e6; padding: 2px;">
                             <select name="entries[${lineIndex}][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">
@@ -247,9 +268,7 @@
                             </select>
                         </td>
                       
-                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">
-                            <span class="balance-display" style="font-size: 12px; font-weight: bold;">${formatter.format(currentBalance)}</span>
-                        </td>
+                        
                         <td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">
                             <button type="button" class="btn btn-sm btn-success" onclick="addJournalLine()" style="font-size: 10px; padding: 2px 6px;">+</button>
                         </td>
@@ -506,14 +525,27 @@
                     });
                 }
 
+                function updateCashflowDescription(selectElement) {
+                    const row = selectElement.closest('tr');
+                    const descInput = row.querySelector('.cashflow-desc');
+                    const selectedId = selectElement.value;
+
+                    if (selectedId && cashflowData[selectedId]) {
+                        descInput.value = cashflowData[selectedId].description;
+                    } else {
+                        descInput.value = '';
+                    }
+                }
+
                 function deleteTransaction(journalId) {
                     if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
                         const xhr = new XMLHttpRequest();
                         xhr.open('DELETE', `/journals/${journalId}`);
                         xhr.setRequestHeader('Content-Type', 'application/json');
-                        xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                        xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content'));
                         xhr.setRequestHeader('Accept', 'application/json');
-                        
+
                         xhr.onload = function() {
                             if (xhr.status === 200) {
                                 const response = JSON.parse(xhr.responseText);
@@ -525,11 +557,11 @@
                                 alert('Error: ' + (error.message || 'Gagal menghapus transaksi'));
                             }
                         };
-                        
+
                         xhr.onerror = function() {
                             alert('Error: Gagal menghapus transaksi');
                         };
-                        
+
                         xhr.send();
                     }
                 }
