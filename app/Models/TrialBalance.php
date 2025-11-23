@@ -14,7 +14,8 @@ class TrialBalance extends Model
         'keterangan',
         'parent_id',
         'level',
-        'tahun_2024'
+        'tahun_2024',
+        'is_kas_bank'
     ];
 
     public function parent()

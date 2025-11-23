@@ -8,21 +8,25 @@ use Illuminate\Http\Request;
 
 class CashflowController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $cashflows = Cashflow::with('trialBalance', 'parent')
-            ->orderBy('kode')
-            ->get();
+        $query = Cashflow::with('trialBalance', 'parent')->orderBy('kode');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('kode', 'like', "%{$request->search}%")
+                  ->orWhere('keterangan', 'like', "%{$request->search}%");
+            });
+        }
+
+        $cashflows = $query->get();
 
         return view('cashflow.index', compact('cashflows'));
     }
 
     public function create()
     {
-        // Ambil TB level 4 saja
         $parentsTB = TrialBalance::where('level', 4)->orderBy('kode')->get();
-
-        // Ambil parent cashflow level 1 & 2
         $cashflowParents = Cashflow::where('level', '<', 3)->get();
 
         return view('cashflow.create', compact('parentsTB', 'cashflowParents'));
@@ -45,12 +49,10 @@ class CashflowController extends Controller
     {
         $cashflow = Cashflow::findOrFail($id);
 
-        // Ambil parent cashflow untuk level < 3
         $cashflowParents = Cashflow::where('id', '<>', $id)
             ->where('level', '<', 3)
             ->get();
 
-        // TB hanya untuk level 3
         $parentsTB = ($cashflow->level == 3)
             ? TrialBalance::where('level', 4)->orderBy('kode')->get()
             : collect();

@@ -25,8 +25,8 @@
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Daftar Trial Balance</h3>
+
                 <div class="card-actions">
-                    {{-- Search --}}
                     <form method="GET" class="d-flex">
                         <input type="text" name="search"
                             value="{{ request('search') }}"
@@ -45,6 +45,7 @@
                             <th>Keterangan</th>
                             <th>Parent</th>
                             <th>Level</th>
+                            <th>Kas/Bank</th>
                             <th>2024 (Rp)</th>
                             <th class="w-1">Aksi</th>
                         </tr>
@@ -60,7 +61,18 @@
                                     echo '<td>' . $prefix . $item->keterangan . '</td>';
                                     echo '<td>' . ($item->parent?->kode ?? '-') . '</td>';
                                     echo '<td>' . $item->level . '</td>';
-                                    echo '<td>'.number_format($item->tahun_2024 ?? 0, 0, ',', '.').'</td>';
+
+                                    // Kas/Bank hanya untuk level 3
+                                    echo '<td>';
+                                    if ($item->level == 3) {
+                                        echo $item->is_kas_bank ? ucfirst($item->is_kas_bank) : '-';
+                                    } else {
+                                        echo '-';
+                                    }
+                                    echo '</td>';
+
+                                    echo '<td>' . number_format($item->tahun_2024 ?? 0, 0, ',', '.') . '</td>';
+
                                     echo '<td>
                                             <div class="btn-list flex-nowrap">
                                                 <a href="' . route('trial-balance.edit', $item->id) . '" class="btn btn-sm btn-outline-primary">Edit</a>
@@ -86,14 +98,16 @@
             </div>
         </div>
 
-        {{-- Bagian Beban (E Group) --}}
+        {{-- Bagian Beban --}}
         <div class="card mt-4">
             <div class="card-header">
                 <h3 class="card-title">Beban (E) Group</h3>
             </div>
+
             <div class="card-body p-0">
                 @foreach($bebanItems as $group => $groupItems)
                     <h5 class="m-3">{{ $group }}</h5>
+
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">
                             <thead>
@@ -102,6 +116,7 @@
                                     <th>Keterangan</th>
                                     <th>Parent</th>
                                     <th>Level</th>
+                                    <th>Kas/Bank</th>
                                     <th>2024 (Rp)</th>
                                     <th class="w-1">Aksi</th>
                                 </tr>
@@ -113,7 +128,18 @@
                                     <td>{{ $item->keterangan }}</td>
                                     <td>{{ $item->parent?->kode ?? '-' }}</td>
                                     <td>{{ $item->level }}</td>
+
+                                    {{-- Kas/Bank di beban --}}
+                                    <td>
+                                        @if ($item->level == 3)
+                                            {{ $item->is_kas_bank ? ucfirst($item->is_kas_bank) : '-' }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+
                                     <td>{{ number_format($item->tahun_2024 ?? 0, 0, ',', '.') }}</td>
+
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a href="{{ route('trial-balance.edit', $item->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>

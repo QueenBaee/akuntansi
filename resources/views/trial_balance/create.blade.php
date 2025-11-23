@@ -14,18 +14,40 @@
 
         <div class="mb-3">
             <label>Kode</label>
-            <input type="text" name="kode" class="form-control" required value="{{ old('kode') }}">
+            <input type="text" name="kode" class="form-control"
+                value="{{ old('kode') }}" required>
         </div>
 
         <div class="mb-3">
             <label>Keterangan</label>
-            <input type="text" name="keterangan" class="form-control" required value="{{ old('keterangan') }}">
+            <input type="text" name="keterangan" class="form-control"
+                value="{{ old('keterangan') }}" required>
         </div>
 
         <div class="mb-3">
             <label>Tahun 2024</label>
-            <input type="number" name="tahun_2024" class="form-control" value="{{ old('tahun_2024', $trial_balance->tahun_2024 ?? '') }}">
+            <input type="number" name="tahun_2024" class="form-control"
+                value="{{ old('tahun_2024') }}">
         </div>
+
+        {{-- Tampilkan Kas/Bank jika level calon anak = 3 --}}
+        @php
+            $nextLevel = $parent ? $parent->level + 1 : 1;
+        @endphp
+
+        @if ($nextLevel == 3)
+            <div class="mb-3">
+                <label>Jenis (Kas / Bank)</label>
+                <select name="is_kas_bank" class="form-control">
+                    <option value="">-- Pilih --</option>
+                    <option value="kas" {{ old('is_kas_bank') == 'kas' ? 'selected' : '' }}>Kas</option>
+                    <option value="bank" {{ old('is_kas_bank') == 'bank' ? 'selected' : '' }}>Bank</option>
+                </select>
+                <small class="text-muted">
+                    Hanya muncul untuk akun level 3 (rekening kas & bank).
+                </small>
+            </div>
+        @endif
 
         <button class="btn btn-primary">Simpan</button>
         <a href="{{ route('trial-balance.index') }}" class="btn btn-secondary">Batal</a>

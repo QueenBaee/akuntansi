@@ -56,36 +56,41 @@
                             function renderCashflow($items, $prefix = '')
                             {
                                 foreach ($items as $item) {
-                                    echo '<tr>';
-                                    echo '<td>' . ($item->kode ?? '-') . '</td>';
-                                    echo '<td>' . $prefix . $item->keterangan . '</td>';
-                                    echo '<td>' . ($item->parent?->keterangan ?? '-') . '</td>';
+                                    echo "<tr>";
+                                    echo "<td>{$item->kode}</td>";
+                                    echo "<td>{$prefix}{$item->keterangan}</td>";
+                                    echo "<td>" . ($item->parent->keterangan ?? '-') . "</td>";
 
-                                    // Ambil akun TB (hanya level 3)
+                                    // tampilkan TB hanya level 3
                                     if ($item->level == 3 && $item->trialBalance) {
-                                        echo '<td>' . $item->trialBalance->kode . ' - ' . $item->trialBalance->keterangan . '</td>';
+                                        echo "<td>{$item->trialBalance->kode} - {$item->trialBalance->keterangan}</td>";
                                     } else {
-                                        echo '<td>-</td>';
+                                        echo "<td>-</td>";
                                     }
 
-                                    echo '<td>' . $item->level . '</td>';
+                                    echo "<td>{$item->level}</td>";
 
-                                    echo '<td>
-                                            <div class="btn-list flex-nowrap">
-                                                <a href="' . route('cashflow.edit', $item->id) . '" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <a href="' . route('cashflow.create') . '?parent_id=' . $item->id . '" class="btn btn-sm btn-outline-success">Tambah</a>
+                                    echo "<td>
+                                            <div class='btn-list flex-nowrap'>
+                                                <a href='" . route('cashflow.edit', $item->id) . "' 
+                                                   class='btn btn-sm btn-outline-primary'>Edit</a>
 
-                                                <form action="' . route('cashflow.destroy', $item->id) . '" 
-                                                      method="POST" class="d-inline">
-                                                    ' . csrf_field() . '
-                                                    ' . method_field('DELETE') . '
-                                                    <button class="btn btn-sm btn-outline-danger" 
-                                                            onclick="return confirm(\'Hapus?\')">Hapus</button>
+                                                <a href='" . route('cashflow.create') . "?parent_id={$item->id}' 
+                                                   class='btn btn-sm btn-outline-success'>Tambah</a>
+
+                                                <form action='" . route('cashflow.destroy', $item->id) . "' 
+                                                      method='POST' class='d-inline'>
+                                                    " . csrf_field() . "
+                                                    " . method_field('DELETE') . "
+                                                    <button class='btn btn-sm btn-outline-danger'
+                                                            onclick=\"return confirm('Hapus?')\">
+                                                        Hapus
+                                                    </button>
                                                 </form>
                                             </div>
-                                          </td>';
+                                          </td>";
 
-                                    echo '</tr>';
+                                    echo "</tr>";
 
                                     if ($item->children->count()) {
                                         renderCashflow($item->children, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
