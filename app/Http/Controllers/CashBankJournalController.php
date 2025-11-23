@@ -218,7 +218,8 @@ class CashBankJournalController extends Controller
                 'cash_out' => $journal->cash_out,
                 'debit_account' => $journal->debitAccount ? $journal->debitAccount->code . ' - ' . $journal->debitAccount->name : '-',
                 'credit_account' => $journal->creditAccount ? $journal->creditAccount->code . ' - ' . $journal->creditAccount->name : '-',
-                'cashflow' => $journal->cashflow ? $journal->cashflow->kode . ' - ' . $journal->cashflow->keterangan : '-',
+                'cashflow_code' => $journal->cashflow ? $journal->cashflow->kode : null,
+                'cashflow_desc' => $journal->cashflow ? $journal->cashflow->keterangan : null,
                 'attachments' => $journal->attachments,
                 'balance' => $runningBalance,
             ];
