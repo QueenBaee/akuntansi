@@ -2,51 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Cashflow;
 use App\Models\TrialBalance;
+use Illuminate\Http\Request;
 
 class CashflowController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $data = Cashflow::with('trialBalance')->orderBy('kode')->get();
-        return view('cashflow.index', compact('data'));
+        $query = Cashflow::with('trialBalance', 'parent')->orderBy('kode');
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('kode', 'like', "%{$request->search}%")
+                  ->orWhere('keterangan', 'like', "%{$request->search}%");
+            });
+        }
+
+        $cashflows = $query->get();
+
+        return view('cashflow.index', compact('cashflows'));
     }
 
     public function create()
     {
-        $accounts = TrialBalance::orderBy('kode')->get();
-        return view('cashflow.create', compact('accounts'));
+        $parentsTB = TrialBalance::where('level', 4)->orderBy('kode')->get();
+        $cashflowParents = Cashflow::where('level', '<', 3)->get();
+
+        return view('cashflow.create', compact('parentsTB', 'cashflowParents'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'kode' => 'required',
-            'keterangan' => 'required',
-            'trial_balance_id' => 'required',
+        Cashflow::create([
+            'kode' => $request->kode,
+            'keterangan' => $request->keterangan,
+            'parent_id' => $request->parent_id,
+            'trial_balance_id' => $request->trial_balance_id,
+            'level' => $request->level
         ]);
 
-        Cashflow::create($request->all());
         return redirect()->route('cashflow.index');
     }
 
-    public function edit(Cashflow $cashflow)
+    public function edit($id)
     {
-        $accounts =  TrialBalance::orderBy('kode')->get();
-        return view('cashflow.edit', compact('cashflow', 'accounts'));
+        $cashflow = Cashflow::findOrFail($id);
+
+        $cashflowParents = Cashflow::where('id', '<>', $id)
+            ->where('level', '<', 3)
+            ->get();
+
+        $parentsTB = ($cashflow->level == 3)
+            ? TrialBalance::where('level', 4)->orderBy('kode')->get()
+            : collect();
+
+        return view('cashflow.edit', compact('cashflow', 'cashflowParents', 'parentsTB'));
     }
 
-    public function update(Request $request, Cashflow $cashflow)
+    public function update(Request $request, $id)
     {
-        $cashflow->update($request->all());
+        $cashflow = Cashflow::findOrFail($id);
+
+        $cashflow->update([
+            'kode' => $request->kode,
+            'keterangan' => $request->keterangan,
+            'parent_id' => $request->parent_id,
+            'trial_balance_id' => $cashflow->level == 3 ? $request->trial_balance_id : null,
+        ]);
+
         return redirect()->route('cashflow.index');
     }
 
-    public function destroy(Cashflow $cashflow)
+    public function destroy($id)
     {
-        $cashflow->delete();
+        Cashflow::findOrFail($id)->delete();
+
         return redirect()->route('cashflow.index');
     }
 }

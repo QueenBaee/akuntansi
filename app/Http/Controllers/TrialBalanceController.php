@@ -12,9 +12,9 @@ class TrialBalanceController extends Controller
     {
         $query = TrialBalance::with('children')->whereNull('parent_id')->orderBy('kode');
 
-        if ($request->has('search') && $request->search != '') {
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query = TrialBalance::where(function($q) use ($search){
+            $query->where(function($q) use ($search){
                 $q->where('kode', 'like', "%$search%")
                 ->orWhere('keterangan', 'like', "%$search%");
             });
@@ -61,6 +61,8 @@ class TrialBalanceController extends Controller
             'kode' => 'required',
             'keterangan' => 'required',
             'parent_id' => 'nullable|exists:trial_balances,id',
+            'tahun_2024' => 'nullable|numeric',
+            'is_kas_bank' => 'nullable|in:kas,bank'
         ]);
 
         $level = $request->parent_id ? TrialBalance::find($request->parent_id)->level + 1 : 1;
@@ -70,6 +72,8 @@ class TrialBalanceController extends Controller
             'keterangan' => $request->keterangan,
             'parent_id' => $request->parent_id,
             'level' => $level,
+            'tahun_2024' => $request->tahun_2024,
+            'is_kas_bank' => $level == 3 ? $request->is_kas_bank : null,
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Berhasil ditambahkan.');
@@ -85,11 +89,15 @@ class TrialBalanceController extends Controller
         $request->validate([
             'kode' => 'required',
             'keterangan' => 'required',
+            'tahun_2024' => 'nullable|numeric',
+            'is_kas_bank' => 'nullable|in:kas,bank'
         ]);
 
         $trial_balance->update([
             'kode' => $request->kode,
             'keterangan' => $request->keterangan,
+            'tahun_2024' => $request->tahun_2024,
+            'is_kas_bank' => $trial_balance->level == 3 ? $request->is_kas_bank : null,
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Berhasil diupdate.');
