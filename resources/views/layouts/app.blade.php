@@ -124,7 +124,7 @@
                                             <path d="M16 14l0 3"/>
                                         </svg>
                                     </span>
-                                    <span class="nav-link-title">Akun</span>
+                                    <span class="nav-link-title">Bank</span>
                                 </a>
                                 <div class="dropdown-menu">
                                     <h6 class="dropdown-header">List</h6>
@@ -172,7 +172,7 @@
                                     <span class="nav-link-title">Laporan</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Cashflow</a>
+                                    <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Laporan Arus Kas</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
                                     <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
