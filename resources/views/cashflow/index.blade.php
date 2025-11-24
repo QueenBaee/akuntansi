@@ -52,66 +52,59 @@
                             <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
-
                     <tbody>
-                        @php
-                            function renderCashflow($items, $prefix = '')
-                            {
-                                foreach ($items as $item) {
-                                    echo "<tr>";
+                    @php
+                        function renderCashflow($items, $prefix = '')
+                        {
+                            foreach ($items as $item) {
+                                echo "<tr>";
+                                echo "<td>{$item->kode}</td>";
+                                echo "<td>{$prefix}{$item->keterangan}</td>";
+                                echo "<td>" . ($item->parent->keterangan ?? '-') . "</td>";
 
-                                    echo "<td>{$item->kode}</td>";
-                                    echo "<td>{$prefix}{$item->keterangan}</td>";
-                                    echo "<td>" . ($item->parent->keterangan ?? '-') . "</td>";
+                                // ==============================
+                                //  PISAHKAN KODE TB DAN AKUN TB
+                                // ==============================
+                                if ($item->level == 3 && $item->trialBalance) {
+                                    echo "<td>{$item->trialBalance->kode}</td>";           // Kode TB
+                                    echo "<td>{$item->trialBalance->keterangan}</td>";     // Akun TB
+                                } else {
+                                    echo "<td>-</td>"; // Kode TB
+                                    echo "<td>-</td>"; // Akun TB
+                                }
 
-                                    // Kode TB
-                                    if ($item->level == 3 && $item->trialBalance) {
-                                        echo "<td>{$item->trialBalance->kode}</td>";
-                                    } else {
-                                        echo "<td>-</td>";
-                                    }
+                                echo "<td>{$item->level}</td>";
 
-                                    // Akun TB
-                                    if ($item->level == 3 && $item->trialBalance) {
-                                        echo "<td>{$item->trialBalance->keterangan}</td>";
-                                    } else {
-                                        echo "<td>-</td>";
-                                    }
+                                echo "<td>
+                                        <div class='btn-list flex-nowrap'>
+                                            <a href='" . route('cashflow.edit', $item->id) . "' 
+                                                class='btn btn-sm btn-outline-primary'>Edit</a>
 
-                                    echo "<td>{$item->level}</td>";
+                                            <a href='" . route('cashflow.create') . "?parent_id={$item->id}' 
+                                                class='btn btn-sm btn-outline-success'>Tambah</a>
 
-                                    // Action buttons
-                                    echo "<td>
-                                            <div class='btn-list flex-nowrap'>
-                                                <a href='" . route('cashflow.edit', $item->id) . "' 
-                                                   class='btn btn-sm btn-outline-primary'>Edit</a>
+                                            <form action='" . route('cashflow.destroy', $item->id) . "' 
+                                                method='POST' class='d-inline'>
+                                                " . csrf_field() . "
+                                                " . method_field('DELETE') . "
+                                                <button class='btn btn-sm btn-outline-danger'
+                                                    onclick=\"return confirm('Hapus?')\">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>";
 
-                                                <a href='" . route('cashflow.create') . "?parent_id={$item->id}' 
-                                                   class='btn btn-sm btn-outline-success'>Tambah</a>
+                                echo "</tr>";
 
-                                                <form action='" . route('cashflow.destroy', $item->id) . "' 
-                                                      method='POST' class='d-inline'>
-                                                    " . csrf_field() . "
-                                                    " . method_field('DELETE') . "
-                                                    <button class='btn btn-sm btn-outline-danger'
-                                                            onclick=\"return confirm('Hapus?')\">
-                                                        Hapus
-                                                    </button>
-                                                </form>
-                                            </div>
-                                          </td>";
-
-                                    echo "</tr>";
-
-                                    // Rekursif anak
-                                    if ($item->children->count()) {
-                                        renderCashflow($item->children, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
-                                    }
+                                if ($item->children->count()) {
+                                    renderCashflow($item->children, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
                                 }
                             }
+                        }
 
-                            renderCashflow($cashflows->whereNull('parent_id'));
-                        @endphp
+                        renderCashflow($cashflows->whereNull('parent_id'));
+                    @endphp
                     </tbody>
 
                 </table>

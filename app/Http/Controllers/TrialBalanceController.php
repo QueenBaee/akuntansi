@@ -18,7 +18,7 @@ class TrialBalanceController extends Controller
             });
         }
 
-        $items = $query->get();
+        $items = $query->with('parent', 'children')->get();
 
         return view('trial_balance.index', compact('items'));
     }
@@ -26,7 +26,6 @@ class TrialBalanceController extends Controller
     public function create()
     {
         $parents = TrialBalance::orderBy('kode')->get();
-
         return view('trial_balance.create', compact('parents'));
     }
 
@@ -38,9 +37,8 @@ class TrialBalanceController extends Controller
             'level' => 'required|integer',
             'parent_id' => 'nullable|integer',
             'is_kas_bank' => 'nullable|in:kas,bank',
-            'tahun_2024' => 'nullable|numeric', // ← TAMBAHKAN
+            'tahun_2024' => 'nullable|numeric',
         ]);
-
 
         TrialBalance::create($request->all());
 
@@ -64,9 +62,8 @@ class TrialBalanceController extends Controller
             'level' => 'required|integer',
             'parent_id' => 'nullable|integer',
             'is_kas_bank' => 'nullable|in:kas,bank',
-            'tahun_2024' => 'nullable|numeric', // ← TAMBAHKAN
+            'tahun_2024' => 'nullable|numeric',
         ]);
-
 
         $item = TrialBalance::findOrFail($id);
         $item->update($request->all());

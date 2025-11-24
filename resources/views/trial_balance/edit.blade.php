@@ -9,46 +9,44 @@
         @method('PUT')
 
         <div class="mb-3">
-            <label>Kode</label>
-            <input type="text" name="kode" value="{{ $item->kode }}" class="form-control" required>
+            <label class="form-label">Kode TB</label>
+            <input type="text" name="kode" class="form-control" value="{{ $item->kode }}">
         </div>
 
         <div class="mb-3">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" value="{{ $item->keterangan }}" class="form-control" required>
+            <label class="form-label">Akun TB</label>
+            <input type="text" name="keterangan" class="form-control" value="{{ $item->keterangan }}">
         </div>
 
         <div class="mb-3">
-            <label>Level</label>
-            <input type="number" name="level" value="{{ $item->level }}" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label>Parent</label>
-            <select name="parent_id" class="form-control">
-                <option value="">Tidak Ada</option>
-
-                @foreach ($parents as $p)
-                    <option value="{{ $p->id }}" 
-                        {{ $item->parent_id == $p->id ? 'selected' : '' }}>
+            <label class="form-label">Parent</label>
+            <select name="parent_id" class="form-select">
+                <option value="">-- Tidak Ada --</option>
+                @foreach($parents as $p)
+                    <option value="{{ $p->id }}" {{ $item->parent_id == $p->id ? 'selected' : '' }}>
                         {{ $p->kode }} - {{ $p->keterangan }}
                     </option>
                 @endforeach
             </select>
         </div>
+
         <div class="mb-3">
-            <label>Tahun 2024</label>
-            <input type="number" name="tahun_2024" value="{{ $item->tahun_2024 }}" class="form-control">
+            <label class="form-label">Level</label>
+            <input type="number" name="level" class="form-control" value="{{ $item->level }}">
         </div>
 
-
         <div class="mb-3">
-            <label>Kas / Bank</label>
-            <select name="is_kas_bank" class="form-control">
-                <option value="">-</option>
-                <option value="kas" {{ $item->is_kas_bank == 'kas' ? 'selected' : '' }}>Kas</option>
+            <label class="form-label">Kas / Bank</label>
+            <select name="is_kas_bank" class="form-select">
+                <option value="">-- Pilih --</option>
+                <option value="kas"  {{ $item->is_kas_bank == 'kas' ? 'selected' : '' }}>Kas</option>
                 <option value="bank" {{ $item->is_kas_bank == 'bank' ? 'selected' : '' }}>Bank</option>
             </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tahun 2024</label>
+            <input type="number" name="tahun_2024" class="form-control" value="{{ $item->tahun_2024 }}">
         </div>
 
         <button class="btn btn-primary">Update</button>

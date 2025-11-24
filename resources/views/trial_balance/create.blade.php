@@ -8,41 +8,42 @@
         @csrf
 
         <div class="mb-3">
-            <label>Kode</label>
-            <input type="text" name="kode" class="form-control" required>
+            <label class="form-label">Kode TB</label>
+            <input type="text" name="kode" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label>Keterangan</label>
-            <input type="text" name="keterangan" class="form-control" required>
+            <label class="form-label">Akun TB</label>
+            <input type="text" name="keterangan" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label>Level</label>
-            <input type="number" name="level" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
-            <label>Parent</label>
-            <select name="parent_id" class="form-control">
-                <option value="">Tidak Ada</option>
-                @foreach ($parents as $p)
+            <label class="form-label">Parent</label>
+            <select name="parent_id" class="form-select">
+                <option value="">-- Tidak Ada --</option>
+                @foreach($parents as $p)
                     <option value="{{ $p->id }}">{{ $p->kode }} - {{ $p->keterangan }}</option>
                 @endforeach
             </select>
         </div>
+
         <div class="mb-3">
-            <label>Tahun 2024</label>
-            <input type="number" name="tahun_2024" class="form-control">
+            <label class="form-label">Level</label>
+            <input type="number" name="level" class="form-control">
         </div>
 
         <div class="mb-3">
-            <label>Kas / Bank</label>
-            <select name="is_kas_bank" class="form-control">
-                <option value="">-</option>
+            <label class="form-label">Kas / Bank</label>
+            <select name="is_kas_bank" class="form-select">
+                <option value="">-- Pilih --</option>
                 <option value="kas">Kas</option>
                 <option value="bank">Bank</option>
             </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Tahun 2024</label>
+            <input type="number" name="tahun_2024" class="form-control">
         </div>
 
         <button class="btn btn-primary">Simpan</button>

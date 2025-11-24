@@ -19,13 +19,13 @@
                     @method('PUT')
 
                     <div class="mb-3">
-                        <label class="form-label">Kode</label>
+                        <label class="form-label">Kode Cash Flow</label>
                         <input type="text" name="kode" class="form-control"
                                value="{{ $cashflow->kode }}" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Keterangan</label>
+                        <label class="form-label">Akun Cash Flow</label>
                         <input type="text" name="keterangan" class="form-control"
                                value="{{ $cashflow->keterangan }}" required>
                     </div>
