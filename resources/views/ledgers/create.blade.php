@@ -41,6 +41,21 @@
                 </div>
                 
                 <div class="mb-3">
+                    <label class="form-label">Trial Balance</label>
+                    <select class="form-select @error('trial_balance_id') is-invalid @enderror" name="trial_balance_id">
+                        <option value="">Pilih Trial Balance</option>
+                        @foreach($trialBalances as $trialBalance)
+                            <option value="{{ $trialBalance->id }}" {{ old('trial_balance_id') == $trialBalance->id ? 'selected' : '' }}>
+                                {{ $trialBalance->kode }} - {{ $trialBalance->keterangan }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('trial_balance_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                
+                <div class="mb-3">
                     <label class="form-label">Deskripsi</label>
                     <textarea class="form-control" name="deskripsi" rows="3">{{ old('deskripsi') }}</textarea>
                 </div>

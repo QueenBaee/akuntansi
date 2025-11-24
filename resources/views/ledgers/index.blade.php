@@ -45,7 +45,18 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Trial Balance</label>
+                            <select class="form-select" id="trialBalanceId">
+                                <option value="">Pilih</option>
+                                @foreach($trialBalances as $trialBalance)
+                                    <option value="{{ $trialBalance->id }}">{{ $trialBalance->kode }} - {{ $trialBalance->keterangan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
                         <div class="mb-3">
                             <label class="form-label">Deskripsi</label>
                             <input type="text" class="form-control" id="deskripsi">
@@ -74,6 +85,7 @@
                         <th>Nama Ledger</th>
                         <th>Kode Ledger</th>
                         <th>Tipe</th>
+                        <th>Trial Balance</th>
                         <th>Deskripsi</th>
                         <th>Status</th>
                         <th class="w-1">Aksi</th>
@@ -89,6 +101,7 @@
                                 {{ ucfirst($ledger->tipe_ledger) }}
                             </span>
                         </td>
+                        <td class="editable" data-field="trial_balance_id">{{ $ledger->trialBalance ? $ledger->trialBalance->kode . ' - ' . $ledger->trialBalance->keterangan : '-' }}</td>
                         <td class="editable" data-field="deskripsi">{{ $ledger->deskripsi }}</td>
                         <td class="editable" data-field="is_active">
                             <span class="badge bg-{{ $ledger->is_active ? 'success' : 'danger' }}">
@@ -167,6 +180,14 @@ function editRow(id) {
                     <option value="bank" ${currentType === 'bank' ? 'selected' : ''}>Bank</option>
                 </select>
             `;
+        } else if (field === 'trial_balance_id') {
+            const trialBalances = @json($trialBalances);
+            let options = '<option value="">Pilih</option>';
+            trialBalances.forEach(tb => {
+                const selected = currentValue.includes(tb.kode) ? 'selected' : '';
+                options += `<option value="${tb.id}" ${selected}>${tb.kode} - ${tb.keterangan}</option>`;
+            });
+            cell.innerHTML = `<select class="form-select form-select-sm">${options}</select>`;
         } else if (field === 'is_active') {
             const isActive = currentValue === 'Aktif';
             cell.innerHTML = `
@@ -331,6 +352,7 @@ document.getElementById('ledgerForm').addEventListener('submit', function(e) {
         nama_ledger: document.getElementById('namaLedger').value,
         kode_ledger: document.getElementById('kodeLedger').value,
         tipe_ledger: document.getElementById('tipeLedger').value,
+        trial_balance_id: document.getElementById('trialBalanceId').value || null,
         deskripsi: document.getElementById('deskripsi').value
     };
     

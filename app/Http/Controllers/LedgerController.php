@@ -3,20 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ledger;
+use App\Models\TrialBalance;
 use Illuminate\Http\Request;
 
 class LedgerController extends Controller
 {
     public function index()
     {
-        $ledgers = Ledger::orderBy('nama_ledger')->get();
+        $ledgers = Ledger::with('trialBalance')->orderBy('nama_ledger')->get();
+        $trialBalances = TrialBalance::orderBy('kode')->get();
 
-        return view('ledgers.index', compact('ledgers'));
+        return view('ledgers.index', compact('ledgers', 'trialBalances'));
     }
 
     public function create()
     {
-        return view('ledgers.create');
+        $trialBalances = TrialBalance::orderBy('kode')->get();
+        return view('ledgers.create', compact('trialBalances'));
     }
 
     public function store(Request $request)
@@ -25,7 +28,8 @@ class LedgerController extends Controller
             'nama_ledger' => 'required|string|max:255',
             'kode_ledger' => 'required|string|unique:ledgers',
             'tipe_ledger' => 'required|in:kas,bank',
-            'deskripsi' => 'nullable|string'
+            'deskripsi' => 'nullable|string',
+            'trial_balance_id' => 'nullable|exists:trial_balances,id'
         ]);
 
         $ledger = Ledger::create($validated);
@@ -51,7 +55,8 @@ class LedgerController extends Controller
 
     public function edit(Ledger $ledger)
     {
-        return view('ledgers.edit', compact('ledger'));
+        $trialBalances = TrialBalance::orderBy('kode')->get();
+        return view('ledgers.edit', compact('ledger', 'trialBalances'));
     }
 
     public function update(Request $request, Ledger $ledger)
@@ -61,7 +66,8 @@ class LedgerController extends Controller
             'kode_ledger' => 'required|string|unique:ledgers,kode_ledger,' . $ledger->id,
             'tipe_ledger' => 'required|in:kas,bank',
             'deskripsi' => 'nullable|string',
-            'is_active' => 'sometimes|boolean'
+            'is_active' => 'sometimes|boolean',
+            'trial_balance_id' => 'nullable|exists:trial_balances,id'
         ]);
 
         // pastikan unchecked checkbox = false
