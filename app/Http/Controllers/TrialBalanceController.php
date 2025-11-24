@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\TrialBalance;
 use Illuminate\Http\Request;
 
@@ -10,49 +9,25 @@ class TrialBalanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TrialBalance::with('children')->whereNull('parent_id')->orderBy('kode');
+        $query = TrialBalance::orderBy('kode');
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search){
-                $q->where('kode', 'like', "%$search%")
-                ->orWhere('keterangan', 'like', "%$search%");
+        if ($request->has('search') && $request->search != '') {
+            $query->where(function ($q) use ($request) {
+                $q->where('kode', 'LIKE', '%' . $request->search . '%')
+                  ->orWhere('keterangan', 'LIKE', '%' . $request->search . '%');
             });
         }
 
-        $items = $query->with('children')->get();
+        $items = $query->get();
 
-        // Ambil Beban (E) untuk group
-        $bebanItems = TrialBalance::where('kode', 'like', 'E%')
-            ->orderBy('kode')
-            ->get()
-            ->groupBy(function($item){
-                return substr($item->kode, 0, 2); // E1, E2, E3, E9
-            });
-
-        return view('trial_balance.index', compact('items', 'bebanItems'));
+        return view('trial_balance.index', compact('items'));
     }
 
-    // Recursive function for flatten hierarchy
-    private function flatten($items, $prefix = '')
+    public function create()
     {
-        $result = [];
-        foreach ($items as $item) {
-            $result[] = ['item' => $item, 'prefix' => $prefix];
-            if ($item->children->count() > 0) {
-                $result = array_merge($result, $this->flatten($item->children, $prefix . '    ')); // spasi indentasi
-            }
-        }
-        return $result;
-    }
+        $parents = TrialBalance::orderBy('kode')->get();
 
-    public function create(Request $request)
-    {
-        // Get parent_id from query string if you want to add child  
-        $parent_id = $request->query('parent_id');
-        $parent = $parent_id ? TrialBalance::find($parent_id) : null;
-
-        return view('trial_balance.create', compact('parent'));
+        return view('trial_balance.create', compact('parents'));
     }
 
     public function store(Request $request)
@@ -60,52 +35,51 @@ class TrialBalanceController extends Controller
         $request->validate([
             'kode' => 'required',
             'keterangan' => 'required',
-            'parent_id' => 'nullable|exists:trial_balances,id',
-            'tahun_2024' => 'nullable|numeric',
-            'is_kas_bank' => 'nullable|in:kas,bank'
+            'level' => 'required|integer',
+            'parent_id' => 'nullable|integer',
+            'is_kas_bank' => 'nullable|in:kas,bank',
+            'tahun_2024' => 'nullable|numeric', // ← TAMBAHKAN
         ]);
 
-        $level = $request->parent_id ? TrialBalance::find($request->parent_id)->level + 1 : 1;
 
-        TrialBalance::create([
-            'kode' => $request->kode,
-            'keterangan' => $request->keterangan,
-            'parent_id' => $request->parent_id,
-            'level' => $level,
-            'tahun_2024' => $request->tahun_2024,
-            'is_kas_bank' => $level == 3 ? $request->is_kas_bank : null,
-        ]);
+        TrialBalance::create($request->all());
 
-        return redirect()->route('trial-balance.index')->with('success', 'Berhasil ditambahkan.');
+        return redirect()->route('trial-balance.index')
+            ->with('success', 'Data berhasil ditambahkan');
     }
 
-    public function edit(TrialBalance $trial_balance)
+    public function edit($id)
     {
-        return view('trial_balance.edit', compact('trial_balance'));
+        $item = TrialBalance::findOrFail($id);
+        $parents = TrialBalance::orderBy('kode')->get();
+
+        return view('trial_balance.edit', compact('item', 'parents'));
     }
 
-    public function update(Request $request, TrialBalance $trial_balance)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'kode' => 'required',
             'keterangan' => 'required',
-            'tahun_2024' => 'nullable|numeric',
-            'is_kas_bank' => 'nullable|in:kas,bank'
+            'level' => 'required|integer',
+            'parent_id' => 'nullable|integer',
+            'is_kas_bank' => 'nullable|in:kas,bank',
+            'tahun_2024' => 'nullable|numeric', // ← TAMBAHKAN
         ]);
 
-        $trial_balance->update([
-            'kode' => $request->kode,
-            'keterangan' => $request->keterangan,
-            'tahun_2024' => $request->tahun_2024,
-            'is_kas_bank' => $trial_balance->level == 3 ? $request->is_kas_bank : null,
-        ]);
 
-        return redirect()->route('trial-balance.index')->with('success', 'Berhasil diupdate.');
+        $item = TrialBalance::findOrFail($id);
+        $item->update($request->all());
+
+        return redirect()->route('trial-balance.index')
+            ->with('success', 'Data berhasil diupdate');
     }
 
-    public function destroy(TrialBalance $trial_balance)
+    public function destroy($id)
     {
-        $trial_balance->delete();
-        return redirect()->route('trial-balance.index')->with('success', 'Berhasil dihapus.');
+        TrialBalance::findOrFail($id)->delete();
+
+        return redirect()->route('trial-balance.index')
+            ->with('success', 'Data berhasil dihapus');
     }
 }
