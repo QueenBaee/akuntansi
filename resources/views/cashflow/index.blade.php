@@ -43,8 +43,8 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th>Kode</th>
-                            <th>Keterangan</th>
+                            <th>Kode Cash Flow</th>
+                            <th>Akun Cash Flow</th>
                             <th>Parent</th>
                             <th>Akun TB</th>
                             <th>Level</th>
