@@ -188,7 +188,8 @@
                     @foreach ($cashflows as $cashflow)
                         '{{ $cashflow->id }}': {
                             code: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}',
-                            description: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}'
+                            description: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}',
+                            trial_balance_id: {{ $cashflow->trial_balance_id ?? 'null' }}
                         }@if(!$loop->last),@endif
                     @endforeach
                 };
@@ -241,7 +242,7 @@
                             '<span class="balance-display" style="font-size: 12px; font-weight: bold;">' + formatter.format(currentBalance) + '</span>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                            '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this)">' +
+                            '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">' +
                                 cashflowOptions +
                             '</select>' +
                         '</td>' +
@@ -272,6 +273,7 @@
                     const cashOutInput = row.querySelector('.cash-out');
                     const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
                     const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
+                    const cashflowSelect = row.querySelector('.cashflow-select');
 
                     if (input.value && parseFloat(input.value) > 0) {
                         if (type === 'in') {
@@ -292,6 +294,11 @@
                             creditSelect.style.backgroundColor = '';
                             const hiddenCredit = row.querySelector('.hidden-credit');
                             if (hiddenCredit) hiddenCredit.remove();
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
                         } else {
                             cashInInput.value = '';
                             creditSelect.value = selectedCashAccountId;
@@ -310,6 +317,11 @@
                             debitSelect.style.backgroundColor = '';
                             const hiddenDebit = row.querySelector('.hidden-debit');
                             if (hiddenDebit) hiddenDebit.remove();
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
                         }
                     } else {
                         debitSelect.disabled = false;
@@ -473,8 +485,40 @@
 
                     if (selectedId && cashflowData && cashflowData[selectedId]) {
                         descInput.value = cashflowData[selectedId].description;
+                        
+                        // Auto-set trial balance account if available
+                        if (cashflowData[selectedId].trial_balance_id) {
+                            setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
+                        }
                     } else {
                         descInput.value = '';
+                    }
+                }
+
+                function setTrialBalanceAccount(row, trialBalanceId) {
+                    const cashInInput = row.querySelector('.cash-in');
+                    const cashOutInput = row.querySelector('.cash-out');
+                    const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
+                    const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
+                    
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    
+                    if (cashIn > 0) {
+                        // For cash in, set credit account to trial balance account
+                        creditSelect.value = trialBalanceId;
+                    } else if (cashOut > 0) {
+                        // For cash out, set debit account to trial balance account
+                        debitSelect.value = trialBalanceId;
+                    }
+                }
+
+                function updateTrialBalanceFromCashflow(selectElement) {
+                    const row = selectElement.closest('tr');
+                    const selectedId = selectElement.value;
+                    
+                    if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
+                        setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
                     }
                 }
 
