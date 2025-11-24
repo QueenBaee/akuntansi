@@ -21,19 +21,37 @@
 @endsection
 
 @section('content')
-    <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
+    <!-- Alert Messages -->
+    <div id="alert-container"></div>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
-            @foreach ($errors->all() as $error)
-                {{ $error }}<br>
-            @endforeach
+        <div class="alert alert-danger alert-dismissible">
+            <div class="d-flex">
+                <div>
+                    @foreach ($errors->all() as $error)
+                        {{ $error }}<br>
+                    @endforeach
+                </div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible">
+            <div class="d-flex">
+                <div>{{ session('success') }}</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
         </div>
     @endif
 
     @if (!$selectedAccount)
-        <div class="alert alert-warning">
-            <strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.
+        <div class="alert alert-warning alert-dismissible">
+            <div class="d-flex">
+                <div><strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
         </div>
     @endif
 
@@ -193,6 +211,27 @@
                         }@if(!$loop->last),@endif
                     @endforeach
                 };
+
+                function showAlert(type, message) {
+                    const container = document.getElementById('alert-container');
+                    const alert = document.createElement('div');
+                    alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible`;
+                    alert.innerHTML = `
+                        <div class="d-flex">
+                            <div>${message}</div>
+                        </div>
+                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                    `;
+                    
+                    container.innerHTML = '';
+                    container.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        if (alert.parentNode) {
+                            alert.remove();
+                        }
+                    }, 5000);
+                }
 
                 document.addEventListener('DOMContentLoaded', function() {
                     console.log('Cashflow data:', cashflowData);
@@ -523,24 +562,127 @@
                 }
 
                 function deleteTransaction(journalId) {
-                    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                        fetch(`/journals/${journalId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert('Transaksi berhasil dihapus!');
-                            window.location.reload();
-                        })
-                        .catch(error => {
-                            alert('Error: Gagal menghapus transaksi');
-                        });
-                    }
+                    showConfirmModal(
+                        'Konfirmasi Hapus',
+                        'Apakah Anda yakin ingin menghapus transaksi ini?',
+                        () => {
+                            fetch(`/journals/${journalId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                showSuccessModal('Berhasil!', 'Transaksi berhasil dihapus!', () => {
+                                    window.location.reload();
+                                });
+                            })
+                            .catch(error => {
+                                showErrorModal('Error!', 'Gagal menghapus transaksi');
+                            });
+                        }
+                    );
+                }
+
+                function showConfirmModal(title, message, onConfirm) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-danger" id="confirm-btn">Ya, Hapus</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.querySelector('#confirm-btn').addEventListener('click', () => {
+                        bsModal.hide();
+                        onConfirm();
+                    });
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                    });
+                }
+
+                function showSuccessModal(title, message, onClose = null) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body text-center">
+                                    <div class="text-success mb-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                            <path d="m5 12l5 5l10 -10"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                        if (onClose) onClose();
+                    });
+                }
+
+                function showErrorModal(title, message) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body text-center">
+                                    <div class="text-danger mb-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                            <path d="m18 6l-12 12"></path>
+                                            <path d="m6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                    });
                 }
             </script>
         @endpush
