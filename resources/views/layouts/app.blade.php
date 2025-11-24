@@ -201,7 +201,7 @@
                                     </a>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">User Management</a>
-                                        <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a>
+                                        {{-- <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a> --}}
                                         <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}" href="{{ route('user-accounts.index') }}">User Accounts</a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balances</a>
