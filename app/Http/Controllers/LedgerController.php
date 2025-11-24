@@ -8,18 +8,34 @@ use Illuminate\Http\Request;
 
 class LedgerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $ledgers = Ledger::with('trialBalance')->orderBy('nama_ledger')->get();
+        $type = null;
+        
+        // Check if this is a type-specific route
+        if ($request->route()->getName() === 'ledgers.cash') {
+            $type = 'kas';
+        } elseif ($request->route()->getName() === 'ledgers.bank') {
+            $type = 'bank';
+        }
+        
+        $query = Ledger::with('trialBalance')->orderBy('nama_ledger');
+        
+        if ($type) {
+            $query->where('tipe_ledger', $type);
+        }
+        
+        $ledgers = $query->get();
         $trialBalances = TrialBalance::orderBy('kode')->get();
 
-        return view('ledgers.index', compact('ledgers', 'trialBalances'));
+        return view('ledgers.index', compact('ledgers', 'trialBalances', 'type'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $type = $request->get('type');
         $trialBalances = TrialBalance::orderBy('kode')->get();
-        return view('ledgers.create', compact('trialBalances'));
+        return view('ledgers.create', compact('trialBalances', 'type'));
     }
 
     public function store(Request $request)
@@ -34,13 +50,22 @@ class LedgerController extends Controller
 
         $ledger = Ledger::create($validated);
 
-        return $request->expectsJson()
-            ? response()->json([
+        if ($request->expectsJson()) {
+            return response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil ditambahkan',
                 'data' => $ledger
-            ], 201)
-            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil ditambahkan');
+            ], 201);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($validated['tipe_ledger']) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil ditambahkan');
     }
 
     public function show(Ledger $ledger)
@@ -53,10 +78,11 @@ class LedgerController extends Controller
             : view('ledgers.show', compact('ledger'));
     }
 
-    public function edit(Ledger $ledger)
+    public function edit(Ledger $ledger, Request $request)
     {
+        $type = $request->get('type');
         $trialBalances = TrialBalance::orderBy('kode')->get();
-        return view('ledgers.edit', compact('ledger', 'trialBalances'));
+        return view('ledgers.edit', compact('ledger', 'trialBalances', 'type'));
     }
 
     public function update(Request $request, Ledger $ledger)
@@ -75,13 +101,22 @@ class LedgerController extends Controller
 
         $ledger->update($validated);
 
-        return $request->expectsJson()
-            ? response()->json([
+        if ($request->expectsJson()) {
+            return response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil diupdate',
                 'data' => $ledger->fresh('trialBalance')
-            ])
-            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil diupdate');
+            ]);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($validated['tipe_ledger']) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil diupdate');
     }
 
     public function destroy(Ledger $ledger)
@@ -96,13 +131,23 @@ class LedgerController extends Controller
                 : back()->with('error', 'Ledger tidak dapat dihapus karena sedang digunakan.');
         }
 
+        $ledgerType = $ledger->tipe_ledger;
         $ledger->delete();
 
-        return request()->expectsJson()
-            ? response()->json([
+        if (request()->expectsJson()) {
+            return response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil dihapus'
-            ])
-            : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil dihapus');
+            ]);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($ledgerType) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil dihapus');
     }
 }

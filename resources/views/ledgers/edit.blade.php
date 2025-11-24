@@ -4,7 +4,7 @@
 
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
-    <h2 class="page-title">Edit Ledger</h2>
+    <h2 class="page-title">Edit Ledger {{ $type ? '- ' . ucfirst($type) : '' }}</h2>
 @endsection
 
 @section('content')
@@ -31,11 +31,16 @@
                 
                 <div class="mb-3">
                     <label class="form-label">Tipe Ledger</label>
-                    <select class="form-select @error('tipe_ledger') is-invalid @enderror" name="tipe_ledger" required>
-                        <option value="">Pilih Tipe</option>
-                        <option value="kas" {{ old('tipe_ledger', $ledger->tipe_ledger) == 'kas' ? 'selected' : '' }}>Kas</option>
-                        <option value="bank" {{ old('tipe_ledger', $ledger->tipe_ledger) == 'bank' ? 'selected' : '' }}>Bank</option>
-                    </select>
+                    @if($type)
+                        <input type="text" class="form-control" value="{{ ucfirst($ledger->tipe_ledger) }}" readonly>
+                        <input type="hidden" name="tipe_ledger" value="{{ $ledger->tipe_ledger }}">
+                    @else
+                        <select class="form-select @error('tipe_ledger') is-invalid @enderror" name="tipe_ledger" required>
+                            <option value="">Pilih Tipe</option>
+                            <option value="kas" {{ old('tipe_ledger', $ledger->tipe_ledger) == 'kas' ? 'selected' : '' }}>Kas</option>
+                            <option value="bank" {{ old('tipe_ledger', $ledger->tipe_ledger) == 'bank' ? 'selected' : '' }}>Bank</option>
+                        </select>
+                    @endif
                     @error('tipe_ledger')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -70,7 +75,7 @@
                 
                 <div class="form-footer">
                     <button type="submit" class="btn btn-primary">Update</button>
-                    <a href="{{ route('ledgers.index') }}" class="btn btn-secondary">Batal</a>
+                    <a href="{{ $type ? ($type == 'kas' ? route('ledgers.cash') : route('ledgers.bank')) : route('ledgers.index') }}" class="btn btn-secondary">Batal</a>
                 </div>
             </form>
         </div>

@@ -65,6 +65,10 @@ Route::middleware('auth')->group(function () {
         
         // Ledgers
         Route::resource('ledgers', LedgerController::class);
+        
+        // Ledgers with type filter
+        Route::get('ledgers-cash', [LedgerController::class, 'index'])->name('ledgers.cash');
+        Route::get('ledgers-bank', [LedgerController::class, 'index'])->name('ledgers.bank');
     });
     
     // Cash Transactions
