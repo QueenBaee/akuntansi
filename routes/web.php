@@ -73,6 +73,7 @@ Route::middleware('auth')->group(function () {
     // Journals
     Route::get('journals/create', [\App\Http\Controllers\CashBankJournalController::class, 'create'])->name('journals.create');
     Route::post('journals', [\App\Http\Controllers\CashBankJournalController::class, 'store'])->name('journals.store');
+    Route::put('journals/{id}', [\App\Http\Controllers\CashBankJournalController::class, 'update'])->name('journals.update');
     Route::get('journals/{id}/attachments', [\App\Http\Controllers\CashBankJournalController::class, 'getAttachments'])->name('journals.attachments');
     Route::delete('journals/{id}', [\App\Http\Controllers\CashBankJournalController::class, 'destroy'])->name('journals.destroy');
     Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create', 'store', 'destroy']);

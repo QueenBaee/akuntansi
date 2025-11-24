@@ -57,7 +57,7 @@
 
     <div class="row">
         <div class="col-12">
-            <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data" onsubmit="return validateForm()">
                 @csrf
                 <input type="hidden" name="selected_cash_account_id"
                     value="{{ $selectedAccount ? $selectedAccount->id : '' }}">
@@ -147,6 +147,9 @@
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
                                                     {{ $history['credit_account'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
+                                                    <button type="button" class="btn btn-sm btn-warning me-1"
+                                                        onclick="editTransaction(this, {{ $history['journal_id'] }})"
+                                                        style="font-size: 10px; padding: 2px 6px;">✎</button>
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="deleteTransaction({{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">×</button>
@@ -299,7 +302,7 @@
                             '</select>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">' +
-                            '<button type="button" class="btn btn-sm btn-success" onclick="addJournalLine()" style="font-size: 10px; padding: 2px 6px;">+</button>' +
+                            '-' +
                         '</td>';
                     
                     tbody.appendChild(row);
@@ -561,6 +564,179 @@
                     }
                 }
 
+                function editTransaction(button, journalId) {
+                    const row = button.closest('tr');
+                    const isEditing = row.classList.contains('editing');
+                    
+                    if (isEditing) {
+                        // Save changes
+                        saveTransaction(row, journalId);
+                    } else {
+                        // Enter edit mode
+                        enterEditMode(row, button);
+                    }
+                }
+
+                function enterEditMode(row, editButton) {
+                    row.classList.add('editing');
+                    row.style.backgroundColor = '#fff3cd';
+                    
+                    const cells = row.children;
+                    const journalId = row.getAttribute('data-journal-id');
+                    
+                    // Get current values
+                    const currentDate = cells[0].textContent.trim();
+                    const description = cells[1].textContent.trim();
+                    const pic = cells[2].textContent.trim() === '-' ? '' : cells[2].textContent.trim();
+                    const proofNumber = cells[4].textContent.trim() === '-' ? '' : cells[4].textContent.trim();
+                    const cashIn = cells[5].textContent.replace(/[^0-9]/g, '') || '0';
+                    const cashOut = cells[6].textContent.replace(/[^0-9]/g, '') || '0';
+                    const cashflowCode = cells[8].textContent.trim();
+                    const debitAccount = cells[10].textContent.trim();
+                    const creditAccount = cells[11].textContent.trim();
+                    
+                    // Convert date format from d/m/Y to Y-m-d
+                    const dateParts = currentDate.split('/');
+                    const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}` : currentDate;
+                    
+                    // Convert to editable fields
+                    cells[0].innerHTML = `<input type="date" class="form-control form-control-sm edit-date" value="${formattedDate}" style="font-size: 12px; border: none;">`;
+                    cells[1].innerHTML = `<input type="text" class="form-control form-control-sm edit-description" value="${description}" style="font-size: 12px; border: none;">`;
+                    cells[2].innerHTML = `<input type="text" class="form-control form-control-sm edit-pic" value="${pic}" style="font-size: 12px; border: none;">`;
+                    cells[3].innerHTML = `<input type="file" class="form-control form-control-sm edit-attachments" accept=".jpg,.jpeg,.png,.pdf" multiple style="font-size: 11px; border: none;">`;
+                    cells[4].innerHTML = `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
+                    cells[5].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-in cash-in" value="${cashIn}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'in')">`;
+                    cells[6].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-out cash-out" value="${cashOut}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'out')">`;
+                    cells[8].innerHTML = `<select class="form-control form-control-sm edit-cashflow cashflow-select" style="font-size: 12px; border: none;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">${cashflowOptions}</select>`;
+                    cells[9].innerHTML = `<input type="text" class="form-control form-control-sm edit-cashflow-desc cashflow-desc" value="${cells[9].textContent.trim()}" style="font-size: 12px; border: none; background-color: #f8f9fa;" readonly>`;
+                    cells[10].innerHTML = `<select class="form-control form-control-sm edit-debit debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    cells[11].innerHTML = `<select class="form-control form-control-sm edit-credit credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    
+                    // Set current selections
+                    setTimeout(() => {
+                        // Set cashflow selection by code
+                        const cashflowSelect = row.querySelector('.edit-cashflow');
+                        for (let option of cashflowSelect.options) {
+                            if (option.text === cashflowCode) {
+                                cashflowSelect.value = option.value;
+                                break;
+                            }
+                        }
+                        
+                        // Set account selections by text
+                        const debitSelect = row.querySelector('.edit-debit');
+                        const creditSelect = row.querySelector('.edit-credit');
+                        
+                        for (let option of debitSelect.options) {
+                            if (option.text === debitAccount) {
+                                debitSelect.value = option.value;
+                                break;
+                            }
+                        }
+                        
+                        for (let option of creditSelect.options) {
+                            if (option.text === creditAccount) {
+                                creditSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }, 10);
+                    
+                    // Change button to save
+                    editButton.innerHTML = '✓';
+                    editButton.className = 'btn btn-sm btn-success me-1';
+                    editButton.title = 'Simpan';
+                }
+
+                function saveTransaction(row, journalId) {
+                    const formData = new FormData();
+                    
+                    formData.append('date', row.querySelector('.edit-date').value);
+                    formData.append('description', row.querySelector('.edit-description').value);
+                    formData.append('pic', row.querySelector('.edit-pic').value);
+                    formData.append('proof_number', row.querySelector('.edit-proof').value);
+                    formData.append('cash_in', row.querySelector('.edit-cash-in').value || 0);
+                    formData.append('cash_out', row.querySelector('.edit-cash-out').value || 0);
+                    formData.append('cashflow_id', row.querySelector('.edit-cashflow').value);
+                    formData.append('debit_account_id', row.querySelector('.edit-debit').value);
+                    formData.append('credit_account_id', row.querySelector('.edit-credit').value);
+                    formData.append('_method', 'PUT');
+                    
+                    // Handle file attachments
+                    const fileInput = row.querySelector('.edit-attachments');
+                    if (fileInput.files.length > 0) {
+                        for (let i = 0; i < fileInput.files.length; i++) {
+                            formData.append('attachments[]', fileInput.files[i]);
+                        }
+                    }
+                    
+                    fetch(`/journals/${journalId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccessModal('Berhasil!', 'Transaksi berhasil diperbarui!', () => {
+                                window.location.reload();
+                            });
+                        } else {
+                            showErrorModal('Error!', data.message || 'Gagal memperbarui transaksi');
+                        }
+                    })
+                    .catch(error => {
+                        showErrorModal('Error!', 'Gagal memperbarui transaksi');
+                    });
+                }
+
+                function handleEditCashInput(input, type) {
+                    const row = input.closest('tr');
+                    const cashInInput = row.querySelector('.edit-cash-in');
+                    const cashOutInput = row.querySelector('.edit-cash-out');
+                    const debitSelect = row.querySelector('.edit-debit');
+                    const creditSelect = row.querySelector('.edit-credit');
+                    const cashflowSelect = row.querySelector('.edit-cashflow');
+
+                    if (input.value && parseFloat(input.value) > 0) {
+                        if (type === 'in') {
+                            cashOutInput.value = '';
+                            debitSelect.value = selectedCashAccountId;
+                            debitSelect.disabled = true;
+                            debitSelect.style.backgroundColor = '#e9ecef';
+                            creditSelect.disabled = false;
+                            creditSelect.style.backgroundColor = '';
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
+                        } else {
+                            cashInInput.value = '';
+                            creditSelect.value = selectedCashAccountId;
+                            creditSelect.disabled = true;
+                            creditSelect.style.backgroundColor = '#e9ecef';
+                            debitSelect.disabled = false;
+                            debitSelect.style.backgroundColor = '';
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
+                        }
+                    } else {
+                        debitSelect.disabled = false;
+                        creditSelect.disabled = false;
+                        debitSelect.style.backgroundColor = '';
+                        creditSelect.style.backgroundColor = '';
+                        debitSelect.value = '';
+                        creditSelect.value = '';
+                    }
+                }
+
                 function deleteTransaction(journalId) {
                     showConfirmModal(
                         'Konfirmasi Hapus',
@@ -683,6 +859,52 @@
                     modal.addEventListener('hidden.bs.modal', () => {
                         document.body.removeChild(modal);
                     });
+                }
+
+                function validateForm() {
+                    const rows = document.querySelectorAll('#journalLines tr:not([data-existing])');
+                    let hasValidEntry = false;
+                    let errors = [];
+
+                    rows.forEach((row, index) => {
+                        const date = row.querySelector('input[name*="[date]"]')?.value;
+                        const description = row.querySelector('input[name*="[description]"]')?.value;
+                        const pic = row.querySelector('input[name*="[pic]"]')?.value;
+                        const cashIn = row.querySelector('input[name*="[cash_in]"]')?.value;
+                        const cashOut = row.querySelector('input[name*="[cash_out]"]')?.value;
+                        const cashflowId = row.querySelector('select[name*="[cashflow_id]"]')?.value;
+
+                        const hasCashValue = (cashIn && parseFloat(cashIn) > 0) || (cashOut && parseFloat(cashOut) > 0);
+                        
+                        if (hasCashValue) {
+                            hasValidEntry = true;
+                            
+                            if (!date) {
+                                errors.push(`Baris ${index + 1}: Tanggal wajib diisi`);
+                            }
+                            if (!description || description.trim() === '') {
+                                errors.push(`Baris ${index + 1}: Keterangan wajib diisi`);
+                            }
+                            if (!pic || pic.trim() === '') {
+                                errors.push(`Baris ${index + 1}: PIC wajib diisi`);
+                            }
+                            if (!cashflowId) {
+                                errors.push(`Baris ${index + 1}: Kode Cashflow wajib dipilih`);
+                            }
+                        }
+                    });
+
+                    if (!hasValidEntry) {
+                        showErrorModal('Validasi Error', 'Minimal satu baris harus diisi dengan nilai kas masuk atau keluar.');
+                        return false;
+                    }
+
+                    if (errors.length > 0) {
+                        showErrorModal('Validasi Error', errors.join('<br>'));
+                        return false;
+                    }
+
+                    return true;
                 }
             </script>
         @endpush

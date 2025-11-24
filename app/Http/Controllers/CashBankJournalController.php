@@ -267,6 +267,65 @@ class CashBankJournalController extends Controller
         return response()->json(['attachments' => $journal->attachments]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $rules = [
+            'date' => 'required|date',
+            'description' => 'required|string|max:255',
+            'pic' => 'nullable|string|max:255',
+            'proof_number' => 'nullable|string|max:255',
+            'cash_in' => 'nullable|numeric|min:0',
+            'cash_out' => 'nullable|numeric|min:0',
+            'cashflow_id' => 'nullable|exists:cashflows,id',
+            'debit_account_id' => 'nullable|exists:trial_balances,id',
+            'credit_account_id' => 'nullable|exists:trial_balances,id',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($request, $id) {
+                $journal = Journal::findOrFail($id);
+                
+                $journal->update([
+                    'date' => $request->date,
+                    'description' => $request->description,
+                    'pic' => $request->pic,
+                    'proof_number' => $request->proof_number,
+                    'cash_in' => $request->cash_in ?? 0,
+                    'cash_out' => $request->cash_out ?? 0,
+                    'cashflow_id' => $request->cashflow_id,
+                    'debit_account_id' => $request->debit_account_id,
+                    'credit_account_id' => $request->credit_account_id,
+                ]);
+
+                // Handle new attachments
+                if ($request->hasFile('attachments')) {
+                    foreach ($request->file('attachments') as $file) {
+                        $filename = time() . '_' . $file->getClientOriginalName();
+                        $path = $file->storeAs('journal_attachments', $filename, 'public');
+
+                        $journal->attachments()->create([
+                            'original_name' => $file->getClientOriginalName(),
+                            'file_path' => $path,
+                            'file_type' => $file->getClientMimeType(),
+                            'file_size' => $file->getSize(),
+                        ]);
+                    }
+                }
+            });
+
+            return response()->json(['success' => true, 'message' => 'Journal updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to update journal: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function destroy($id)
     {
         try {
