@@ -291,6 +291,14 @@ function updateRowDisplay(id, data) {
             const badgeClass = isActive ? 'success' : 'danger';
             const text = isActive ? 'Aktif' : 'Tidak Aktif';
             cell.innerHTML = `<span class="badge bg-${badgeClass}">${text}</span>`;
+        } else if (field === 'trial_balance_id') {
+            if (value) {
+                const trialBalances = @json($trialBalances);
+                const selectedTB = trialBalances.find(tb => tb.id == value);
+                cell.textContent = selectedTB ? `${selectedTB.kode} - ${selectedTB.keterangan}` : '-';
+            } else {
+                cell.textContent = '-';
+            }
         } else {
             cell.textContent = value;
         }

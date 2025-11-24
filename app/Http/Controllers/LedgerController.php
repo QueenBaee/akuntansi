@@ -79,7 +79,7 @@ class LedgerController extends Controller
             ? response()->json([
                 'success' => true,
                 'message' => 'Ledger berhasil diupdate',
-                'data' => $ledger->fresh()
+                'data' => $ledger->fresh('trialBalance')
             ])
             : redirect()->route('ledgers.index')->with('success', 'Ledger berhasil diupdate');
     }

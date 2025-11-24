@@ -190,8 +190,7 @@
 
                     if (result.success) {
                         this.showAlert('success', result.message);
-                        this.addRowToTable(result.data);
-                        form.reset();
+                        setTimeout(() => window.location.reload(), 1000);
                     } else {
                         this.showAlert('error', result.message);
                     }
@@ -266,9 +265,7 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        this.showAlert('success', result.message);
-                        this.updateRowDisplay(row, result.data);
-                        this.exitEditMode(row);
+                        this.showAlertWithReload('success', result.message);
                     } else {
                         this.showAlert('error', result.message);
                     }
@@ -329,7 +326,7 @@
 
                     if (result.success) {
                         this.showAlert('success', result.message);
-                        document.querySelector(`tr[data-id="${this.deleteId}"]`).remove();
+                        setTimeout(() => window.location.reload(), 1000);
                     } else {
                         this.showAlert('error', result.message);
                     }
@@ -360,6 +357,12 @@
                     </td>
                 `;
                 tbody.appendChild(row);
+            }
+
+            showAlertWithReload(type, message) {
+                if (confirm(message)) {
+                    location.reload();
+                }
             }
 
             showAlert(type, message) {
