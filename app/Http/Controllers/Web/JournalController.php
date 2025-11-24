@@ -33,6 +33,7 @@ class JournalController extends Controller
 
     public function create(Request $request)
     {
+        // dd($request->get('account_id'));
         $accounts = Account::where('is_active', true)->orderBy('code')->get();
         $cashflows = Cashflow::all();
         
@@ -115,7 +116,6 @@ class JournalController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
         $request->validate([
             'selected_cash_account_id' => 'required|exists:accounts,id',
             'entries' => 'required|array|min:1',

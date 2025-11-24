@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use App\Models\Account;
+use App\Models\Ledger;
 use App\Models\Cashflow;
+use App\Models\TrialBalance;
 use App\Models\JournalDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,26 +16,33 @@ class CashBankJournalController extends Controller
 {
     public function create(Request $request)
     {
+        $selectedLedger = null;
         $selectedAccount = null;
         $openingBalance = 0;
         $journalsHistory = [];
 
-        if ($request->has('account_id')) {
-            $selectedAccount = Account::find($request->account_id);
-            if ($selectedAccount) {
-                // Calculate opening balance and get history
+        if ($request->filled('ledger_id')) {
+
+            // Pakai eager loading trialBalance
+            $selectedLedger = Ledger::with('trialBalance')->find($request->ledger_id);
+
+            if ($selectedLedger && $selectedLedger->trialBalance) {
+
+                $selectedAccount = $selectedLedger->trialBalance;
+
+                // Hitung opening balance
                 $openingBalance = $this->calculateOpeningBalance($selectedAccount->id);
-                $journalsHistory = $this->getJournalsHistory($selectedAccount->id);
+
+                // Ambil history jurnal
+                $journalsHistory = $this->getJournalsHistory($selectedLedger->id);
             }
         }
 
-        $accounts = Account::whereIn('type', ['kas', 'bank'])
-            ->orderBy('code')
-            ->get();
-
+        $accounts = TrialBalance::orderBy('kode')->get();
         $cashflows = Cashflow::orderBy('keterangan')->get();
 
         return view('journals.create', compact(
+            'selectedLedger',
             'selectedAccount',
             'openingBalance',
             'journalsHistory',
@@ -46,7 +55,7 @@ class CashBankJournalController extends Controller
     {
         // rules dasar (files di-handle sebagai entries.*.attachments.*)
         $rules = [
-            'selected_cash_account_id' => 'required|exists:accounts,id',
+            'selected_cash_account_id' => 'required|exists:trial_balances,id',
             'entries' => 'required|array|min:1',
 
             'entries.*.date' => 'nullable|date',
@@ -57,8 +66,8 @@ class CashBankJournalController extends Controller
             'entries.*.cash_in' => 'nullable|numeric|min:0',
             'entries.*.cash_out' => 'nullable|numeric|min:0',
 
-            'entries.*.debit_account_id' => 'nullable|exists:accounts,id',
-            'entries.*.credit_account_id' => 'nullable|exists:accounts,id',
+            'entries.*.debit_account_id' => 'nullable|exists:trial_balances,id',
+            'entries.*.credit_account_id' => 'nullable|exists:trial_balances,id',
             'entries.*.cashflow_id' => 'nullable|exists:cashflows,id',
 
             // file rule untuk attachments array
@@ -141,6 +150,7 @@ class CashBankJournalController extends Controller
                     'source_module' => 'manual',
                     'is_posted' => true,
                     'created_by' => auth()->id(),
+                    'ledger_id' => $request->input('ledger_id'),
                 ]);
 
                 // handle attachments
@@ -164,15 +174,20 @@ class CashBankJournalController extends Controller
         });
 
         return redirect()
-            ->route('journals.create', ['account_id' => $validated['selected_cash_account_id']])
+            ->route('journals.create', ['ledger_id' => $request->input('ledger_id')])
             ->with('success', 'Jurnal berhasil disimpan');
     }
 
 
-    private function calculateOpeningBalance($accountId)
+    // private function calculateOpeningBalance($accountId)
+    // {
+    //     $account = Account::find($accountId);
+    //     return $account ? $account->opening_balance : 0;
+    // }
+    private function calculateOpeningBalance($tbId)
     {
-        $account = Account::find($accountId);
-        return $account ? $account->opening_balance : 0;
+        $trialBalance = TrialBalance::find($tbId);
+        return $trialBalance ? $trialBalance->tahun_2024 : 0;
     }
 
     private function calculateCurrentBalance($accountId)
@@ -191,19 +206,17 @@ class CashBankJournalController extends Controller
         return $balance;
     }
 
-    private function getJournalsHistory($accountId)
+    private function getJournalsHistory($ledgerId)
     {
         $journals = Journal::with(['debitAccount', 'creditAccount', 'cashflow', 'attachments'])
-            ->where(function ($query) use ($accountId) {
-                $query->where('debit_account_id', $accountId)
-                    ->orWhere('credit_account_id', $accountId);
-            })
+            ->where('ledger_id', $ledgerId)
             ->orderBy('date')
             ->orderBy('created_at')
             ->get();
 
         $history = [];
-        $runningBalance = $this->calculateOpeningBalance($accountId);
+        $ledger = Ledger::with('trialBalance')->find($ledgerId);
+        $runningBalance = $ledger && $ledger->trialBalance ? $ledger->trialBalance->tahun_2024 : 0;
 
         foreach ($journals as $journal) {
             $runningBalance += $journal->cash_in - $journal->cash_out;
@@ -216,15 +229,15 @@ class CashBankJournalController extends Controller
                 'proof_number' => $journal->proof_number,
                 'cash_in' => $journal->cash_in,
                 'cash_out' => $journal->cash_out,
-                'debit_account' => $journal->debitAccount ? $journal->debitAccount->code . ' - ' . $journal->debitAccount->name : '-',
-                'credit_account' => $journal->creditAccount ? $journal->creditAccount->code . ' - ' . $journal->creditAccount->name : '-',
+                'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
+                'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
                 'cashflow_code' => $journal->cashflow ? $journal->cashflow->kode : null,
                 'cashflow_desc' => $journal->cashflow ? $journal->cashflow->keterangan : null,
                 'attachments' => $journal->attachments,
                 'balance' => $runningBalance,
             ];
         }
-
+        
         return $history;
     }
 

@@ -14,12 +14,18 @@ class BankAccount extends Model
         'bank_name',
         'account_number',
         'description',
-        'is_active'
+        'is_active',
+        'trial_balance_id'
     ];
 
     protected $casts = [
         'is_active' => 'boolean'
     ];
+
+    public function trialBalance()
+    {
+        return $this->belongsTo(TrialBalance::class);
+    }
 
     public function getCurrentBalance()
     {

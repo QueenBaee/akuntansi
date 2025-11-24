@@ -96,10 +96,10 @@
                                     <span class="nav-link-title">Kas</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    @forelse($cashAccounts as $account)
-                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->nama_ledger }}', {{ $account->getCurrentBalance() }})">{{ $account->nama_ledger }}</a>
+                                    @forelse($cashAccounts as $ledger)
+                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $ledger->id }}" onclick="selectCashAccount({{ $ledger->id }}, '{{ $ledger->nama_ledger }}', {{ $ledger->getCurrentBalance() }})">{{ $ledger->nama_ledger }}</a>
                                     @empty
-                                        <span class="dropdown-item text-muted">No cash accounts available</span>
+                                        <span class="dropdown-item text-muted">No cash ledger available</span>
                                     @endforelse
                                 </div>
                             </li>
@@ -122,10 +122,10 @@
                                     <span class="nav-link-title">Bank</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    @forelse($bankAccounts as $account)
-                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $account->id }}" onclick="selectCashAccount({{ $account->id }}, '{{ $account->nama_ledger }}', {{ $account->getCurrentBalance() }})">{{ $account->nama_ledger }}</a>
+                                    @forelse($bankAccounts as $ledger)
+                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $ledger->id }}" onclick="selectCashAccount({{ $ledger->id }}, '{{ $ledger->nama_ledger }}', {{ $ledger->getCurrentBalance() }})">{{ $ledger->nama_ledger }}</a>
                                     @empty
-                                        <span class="dropdown-item text-muted">No bank accounts available</span>
+                                        <span class="dropdown-item text-muted">No bank ledger available</span>
                                     @endforelse
                                 </div>
                             </li>
@@ -270,10 +270,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script>
-        function selectCashAccount(accountId, accountName, currentBalance) {
+        function selectCashAccount(ledgerId, accountName, currentBalance) {
             // Store selected account in sessionStorage
             sessionStorage.setItem('selectedCashAccount', JSON.stringify({
-                id: accountId,
+                id: ledgerId,
                 name: accountName,
                 balance: currentBalance
             }));
@@ -284,10 +284,10 @@
             });
             
             // Add active class to selected account
-            document.querySelector(`[data-account-id="${accountId}"]`).classList.add('active');
+            document.querySelector(`[data-account-id="${ledgerId}"]`).classList.add('active');
             
-            // Navigate to journal create page with account_id parameter
-            window.location.href = '{{ route("journals.create") }}?account_id=' + accountId;
+            // Navigate to journal create page with ledger_id parameter
+            window.location.href = '{{ route("journals.create") }}?ledger_id=' + ledgerId;
         }
         
         // On page load, restore active state
