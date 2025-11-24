@@ -39,7 +39,14 @@ class CashBankJournalController extends Controller
         }
 
         $accounts = TrialBalance::orderBy('kode')->get();
-        $cashflows = Cashflow::orderBy('keterangan')->get();
+        $cashflows = Cashflow::orderBy('kode')->get();
+        
+        // Debug: Check if data exists
+        \Log::info('Accounts count: ' . $accounts->count());
+        \Log::info('Cashflows count: ' . $cashflows->count());
+        if ($cashflows->count() > 0) {
+            \Log::info('First cashflow: ' . json_encode($cashflows->first()->toArray()));
+        }
 
         return view('journals.create', compact(
             'selectedLedger',

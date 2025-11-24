@@ -171,30 +171,34 @@
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 
-                const accountOptions = `
-                    <option value="">Pilih Akun</option>
-                    @foreach ($accounts as $account)
-                        <option value="{{ $account->id }}">{{ $account->kode }} - {{ $account->keterangan }}</option>
-                    @endforeach
-                `;
+                // Build account options
+                let accountOptions = '<option value="">Pilih Akun</option>';
+                @foreach ($accounts as $account)
+                    accountOptions += '<option value="{{ $account->id }}">{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}</option>';
+                @endforeach
 
-                const cashflowOptions = `
-                    <option value="">Pilih Kode</option>
-                    @foreach ($cashflows as $cashflow)
-                        <option value="{{ $cashflow->id }}" data-description="{{ $cashflow->keterangan }}">{{ $cashflow->kode }}</option>
-                    @endforeach
-                `;
+                // Build cashflow options
+                let cashflowOptions = '<option value="">Pilih Kode</option>';
+                @foreach ($cashflows as $cashflow)
+                    cashflowOptions += '<option value="{{ $cashflow->id }}" data-description="{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}">{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}</option>';
+                @endforeach
 
+                // Build cashflow data object
                 const cashflowData = {
                     @foreach ($cashflows as $cashflow)
-                        {{ $cashflow->id }}: {
-                            code: '{{ $cashflow->kode }}',
-                            description: '{{ $cashflow->keterangan }}'
-                        },
+                        '{{ $cashflow->id }}': {
+                            code: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}',
+                            description: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}'
+                        }@if(!$loop->last),@endif
                     @endforeach
                 };
 
                 document.addEventListener('DOMContentLoaded', function() {
+                    console.log('Cashflow data:', cashflowData);
+                    console.log('Account options length:', accountOptions.length);
+                    console.log('Cashflow options length:', cashflowOptions.length);
+                    console.log('Selected account ID:', selectedCashAccountId);
+                    
                     const historyRows = document.querySelectorAll('tr[data-existing="1"]');
                     if (historyRows.length > 0) {
                         const lastRow = historyRows[historyRows.length - 1];
@@ -207,53 +211,57 @@
                     const tbody = document.getElementById('journalLines');
                     const row = document.createElement('tr');
                     row.style.border = '1px solid #dee2e6';
-                    row.innerHTML = `
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="date" name="entries[\${lineIndex}][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="{{ date('Y-m-d') }}">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[\${lineIndex}][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[\${lineIndex}][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="file" name="entries[\${lineIndex}][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" multiple onchange="generateProofNumber(this, \${lineIndex})">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[\${lineIndex}][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="number" name="entries[\${lineIndex}][cash_in]" class="form-control form-control-sm cash-in" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, 'in')">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="number" name="entries[\${lineIndex}][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, 'out')">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">
-                            <span class="balance-display" style="font-size: 12px; font-weight: bold;">${formatter.format(currentBalance)}</span>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[\${lineIndex}][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this)">
-                                \${cashflowOptions}
-                            </select>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[\${lineIndex}][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">
-                                \${accountOptions}
-                            </select>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[\${lineIndex}][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">
-                                \${accountOptions}
-                            </select>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">
-                            <button type="button" class="btn btn-sm btn-success" onclick="addJournalLine()" style="font-size: 10px; padding: 2px 6px;">+</button>
-                        </td>
-                    `;
+                    
+                    const currentDate = '{{ date('Y-m-d') }}';
+                    const currentIndex = lineIndex;
+                    
+                    row.innerHTML = 
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="date" name="entries[' + currentIndex + '][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="' + currentDate + '">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="file" name="entries[' + currentIndex + '][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" multiple onchange="generateProofNumber(this, ' + currentIndex + ')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="number" name="entries[' + currentIndex + '][cash_in]" class="form-control form-control-sm cash-in" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, \'in\')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="number" name="entries[' + currentIndex + '][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, \'out\')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">' +
+                            '<span class="balance-display" style="font-size: 12px; font-weight: bold;">' + formatter.format(currentBalance) + '</span>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this)">' +
+                                cashflowOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">' +
+                                accountOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">' +
+                                accountOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">' +
+                            '<button type="button" class="btn btn-sm btn-success" onclick="addJournalLine()" style="font-size: 10px; padding: 2px 6px;">+</button>' +
+                        '</td>';
+                    
                     tbody.appendChild(row);
                     lineIndex++;
                 }
@@ -463,7 +471,7 @@
                     const descInput = row.querySelector('.cashflow-desc');
                     const selectedId = selectElement.value;
 
-                    if (selectedId && cashflowData[selectedId]) {
+                    if (selectedId && cashflowData && cashflowData[selectedId]) {
                         descInput.value = cashflowData[selectedId].description;
                     } else {
                         descInput.value = '';
