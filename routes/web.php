@@ -57,6 +57,15 @@ Route::middleware('auth')->group(function () {
         // User Accounts (master data)
         Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
         
+        // User Ledgers (master data) - SPA routes
+        Route::get('user-ledgers', [\App\Http\Controllers\Web\UserLedgerController::class, 'index'])->name('user-ledgers.index');
+        Route::get('user-ledgers/create', [\App\Http\Controllers\UserLedgerController::class, 'create']);
+        Route::post('user-ledgers', [\App\Http\Controllers\UserLedgerController::class, 'store']);
+        Route::get('user-ledgers/data', [\App\Http\Controllers\UserLedgerController::class, 'index']);
+        Route::get('user-ledgers/{userLedger}/edit', [\App\Http\Controllers\UserLedgerController::class, 'edit']);
+        Route::put('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'update']);
+        Route::delete('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'destroy']);
+        
         // Cash Accounts
         Route::resource('cash-accounts', CashAccountController::class);
         

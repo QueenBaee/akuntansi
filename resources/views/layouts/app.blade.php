@@ -187,7 +187,7 @@
                             </li>
 
                             @role('admin')
-                                <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('users.*') || request()->routeIs('trial-balance.*') || request()->routeIs('cashflow.*') ? 'active' : '' }}">
+                                <li class="nav-item dropdown {{ request()->routeIs('accounts.*') || request()->routeIs('user-accounts.*') || request()->routeIs('user-ledgers.*') || request()->routeIs('users.*') || request()->routeIs('trial-balance.*') || request()->routeIs('cashflow.*') ? 'active' : '' }}">
                                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -203,6 +203,7 @@
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">User Management</a>
                                         <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a>
                                         <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}" href="{{ route('user-accounts.index') }}">User Accounts</a>
+                                        <a class="dropdown-item {{ request()->routeIs('user-ledgers.*') ? 'active' : '' }}" href="{{ route('user-ledgers.index') }}">User Ledgers</a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balances</a>
                                         <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}" href="{{ route('cashflow.index') }}">Cash Flow</a>

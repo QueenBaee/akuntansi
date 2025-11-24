@@ -74,6 +74,8 @@ class User extends Authenticatable
 
     public function ledgers()
     {
-        return $this->belongsToMany(Ledger::class, 'user_ledgers');
+        return $this->belongsToMany(Ledger::class, 'user_ledgers')
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
     }
 }
