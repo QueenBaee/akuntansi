@@ -37,14 +37,7 @@
         </div>
     @endif
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible">
-            <div class="d-flex">
-                <div>{{ session('success') }}</div>
-            </div>
-            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-        </div>
-    @endif
+
 
     @if (!$selectedAccount)
         <div class="alert alert-warning alert-dismissible">
@@ -681,15 +674,14 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            showSuccessModal('Berhasil!', 'Transaksi berhasil diperbarui!', () => {
-                                window.location.reload();
-                            });
+                            showAlert('success', 'Transaksi berhasil diperbarui!');
+                            setTimeout(() => window.location.reload(), 1500);
                         } else {
-                            showErrorModal('Error!', data.message || 'Gagal memperbarui transaksi');
+                            showAlert('error', data.message || 'Gagal memperbarui transaksi');
                         }
                     })
                     .catch(error => {
-                        showErrorModal('Error!', 'Gagal memperbarui transaksi');
+                        showAlert('error', 'Gagal memperbarui transaksi');
                     });
                 }
 
@@ -752,12 +744,11 @@
                             })
                             .then(response => response.json())
                             .then(data => {
-                                showSuccessModal('Berhasil!', 'Transaksi berhasil dihapus!', () => {
-                                    window.location.reload();
-                                });
+                                showAlert('success', 'Transaksi berhasil dihapus!');
+                                setTimeout(() => window.location.reload(), 1500);
                             })
                             .catch(error => {
-                                showErrorModal('Error!', 'Gagal menghapus transaksi');
+                                showAlert('error', 'Gagal menghapus transaksi');
                             });
                         }
                     );
@@ -895,12 +886,12 @@
                     });
 
                     if (!hasValidEntry) {
-                        showErrorModal('Validasi Error', 'Minimal satu baris harus diisi dengan nilai kas masuk atau keluar.');
+                        showAlert('error', 'Minimal satu baris harus diisi dengan nilai kas masuk atau keluar.');
                         return false;
                     }
 
                     if (errors.length > 0) {
-                        showErrorModal('Validasi Error', errors.join('<br>'));
+                        showAlert('error', errors.join('<br>'));
                         return false;
                     }
 

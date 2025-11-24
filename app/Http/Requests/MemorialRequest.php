@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class MemorialRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+    
+    public function rules(): array
+    {
+        return [
+            'date' => 'required|date',
+            'description' => 'required|string|max:255',
+            'reference' => 'nullable|string|max:100',
+            'details' => 'required|array|min:2',
+            'details.*.account_id' => 'required|exists:trial_balances,id',
+            'details.*.debit' => 'nullable|numeric|min:0',
+            'details.*.credit' => 'nullable|numeric|min:0',
+            'details.*.description' => 'nullable|string|max:255',
+        ];
+    }
+    
+    public function messages(): array
+    {
+        return [
+            'date.required' => 'Tanggal wajib diisi',
+            'description.required' => 'Deskripsi wajib diisi',
+            'details.required' => 'Detail memorial wajib diisi',
+            'details.min' => 'Minimal 2 baris detail memorial',
+            'details.*.account_id.required' => 'Akun wajib dipilih',
+        ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $details = $this->input('details', []);
+            $totalDebit = collect($details)->sum('debit');
+            $totalCredit = collect($details)->sum('credit');
+            
+            if ($totalDebit != $totalCredit) {
+                $validator->errors()->add('details', 'Total debit harus sama dengan total kredit');
+            }
+            
+            foreach ($details as $index => $detail) {
+                $debit = floatval($detail['debit'] ?? 0);
+                $credit = floatval($detail['credit'] ?? 0);
+                
+                if ($debit > 0 && $credit > 0) {
+                    $validator->errors()->add("details.{$index}", 'Baris tidak boleh memiliki debit dan kredit sekaligus');
+                }
+                
+                if ($debit == 0 && $credit == 0) {
+                    $validator->errors()->add("details.{$index}", 'Baris harus memiliki debit atau kredit');
+                }
+            }
+        });
+    }
+}
