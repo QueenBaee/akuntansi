@@ -355,10 +355,10 @@
                 const description = cells[1].textContent.trim();
                 const pic = cells[2].textContent.trim() === '-' ? '' : cells[2].textContent.trim();
                 const proofNumber = cells[4].textContent.trim() === '-' ? '' : cells[4].textContent.trim();
-                const debitAmount = cells[5].textContent.replace(/[^0-9]/g, '') || '0';
-                const creditAmount = cells[6].textContent.replace(/[^0-9]/g, '') || '0';
-                const debitAccount = cells[7].textContent.trim();
-                const creditAccount = cells[8].textContent.trim();
+                const debitAccount = cells[5].textContent.trim();
+                const debitAmount = cells[6].textContent.replace(/[^0-9]/g, '') || '0';
+                const creditAccount = cells[7].textContent.trim();
+                const creditAmount = cells[8].textContent.replace(/[^0-9]/g, '') || '0';
 
                 // Convert date format from d/m/Y to Y-m-d
                 const dateParts = currentDate.split('/');
@@ -377,13 +377,13 @@
                 cells[4].innerHTML =
                     `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
                 cells[5].innerHTML =
-                    `<input type="number" class="form-control form-control-sm edit-debit debit-amount" value="${debitAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'debit')">`;
-                cells[6].innerHTML =
-                    `<input type="number" class="form-control form-control-sm edit-credit credit-amount" value="${creditAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'credit')">`;
-                cells[7].innerHTML =
                     `<select class="form-control form-control-sm edit-debit-account debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
-                cells[8].innerHTML =
+                cells[6].innerHTML =
+                    `<input type="number" class="form-control form-control-sm edit-debit debit-amount" value="${debitAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'debit')">`;
+                cells[7].innerHTML =
                     `<select class="form-control form-control-sm edit-credit-account credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                cells[8].innerHTML =
+                    `<input type="number" class="form-control form-control-sm edit-credit credit-amount" value="${creditAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'credit')">`;
 
                 // Set current selections
                 setTimeout(() => {
@@ -419,8 +419,8 @@
                 formData.append('description', row.querySelector('.edit-description').value);
                 formData.append('pic', row.querySelector('.edit-pic').value);
                 formData.append('proof_number', row.querySelector('.edit-proof').value);
-                formData.append('debit_amount', row.querySelector('.edit-debit').value || 0);
-                formData.append('credit_amount', row.querySelector('.edit-credit').value || 0);
+                formData.append('debit_amount', row.querySelector('.debit-amount').value || 0);
+                formData.append('credit_amount', row.querySelector('.credit-amount').value || 0);
                 formData.append('debit_account_id', row.querySelector('.edit-debit-account').value);
                 formData.append('credit_account_id', row.querySelector('.edit-credit-account').value);
                 formData.append('_method', 'PUT');
@@ -441,8 +441,14 @@
                         },
                         body: formData
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
                     .then(data => {
+                        console.log('Response:', data);
                         if (data.success) {
                             showAlert('success', 'Memorial berhasil diperbarui!');
                             setTimeout(() => window.location.reload(), 1500);
@@ -451,7 +457,8 @@
                         }
                     })
                     .catch(error => {
-                        showAlert('error', 'Gagal memperbarui memorial');
+                        console.error('Error:', error);
+                        showAlert('error', 'Gagal memperbarui memorial: ' + error.message);
                     });
             }
 
