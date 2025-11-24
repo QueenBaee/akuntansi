@@ -14,7 +14,8 @@ class Ledger extends Model
         'kode_ledger',
         'tipe_ledger',
         'deskripsi',
-        'is_active'
+        'is_active',
+        'trial_balance_id'
     ];
 
     protected $casts = [
@@ -39,5 +40,10 @@ class Ledger extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_ledgers');
+    }
+
+    public function trialBalance()
+    {
+        return $this->belongsTo(TrialBalance::class);
     }
 }

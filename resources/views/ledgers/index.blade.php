@@ -4,7 +4,7 @@
 
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
-    <h2 class="page-title">Kelola Ledger</h2>
+    <h2 class="page-title">Kelola Ledger {{ $type ? '- ' . ucfirst($type) : '' }}</h2>
 @endsection
 
 @section('page-actions')
@@ -12,6 +12,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span id="toggleText">Tambah Ledger</span>
     </button>
+
 @endsection
 
 @section('content')
@@ -38,14 +39,30 @@
                     <div class="col-md-2">
                         <div class="mb-3">
                             <label class="form-label">Tipe</label>
-                            <select class="form-select" id="tipeLedger" required>
+                            @if($type)
+                                <input type="text" class="form-control" value="{{ ucfirst($type) }}" readonly>
+                                <input type="hidden" id="tipeLedger" value="{{ $type }}">
+                            @else
+                                <select class="form-select" id="tipeLedger" required>
+                                    <option value="">Pilih</option>
+                                    <option value="kas">Kas</option>
+                                    <option value="bank">Bank</option>
+                                </select>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Trial Balance</label>
+                            <select class="form-select" id="trialBalanceId">
                                 <option value="">Pilih</option>
-                                <option value="kas">Kas</option>
-                                <option value="bank">Bank</option>
+                                @foreach($trialBalances as $trialBalance)
+                                    <option value="{{ $trialBalance->id }}">{{ $trialBalance->kode }} - {{ $trialBalance->keterangan }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="mb-3">
                             <label class="form-label">Deskripsi</label>
                             <input type="text" class="form-control" id="deskripsi">
@@ -74,6 +91,7 @@
                         <th>Nama Ledger</th>
                         <th>Kode Ledger</th>
                         <th>Tipe</th>
+                        <th>Trial Balance</th>
                         <th>Deskripsi</th>
                         <th>Status</th>
                         <th class="w-1">Aksi</th>
@@ -89,6 +107,7 @@
                                 {{ ucfirst($ledger->tipe_ledger) }}
                             </span>
                         </td>
+                        <td class="editable" data-field="trial_balance_id">{{ $ledger->trialBalance ? $ledger->trialBalance->kode . ' - ' . $ledger->trialBalance->keterangan : '-' }}</td>
                         <td class="editable" data-field="deskripsi">{{ $ledger->deskripsi }}</td>
                         <td class="editable" data-field="is_active">
                             <span class="badge bg-{{ $ledger->is_active ? 'success' : 'danger' }}">
@@ -98,6 +117,7 @@
                         <td>
                             <div class="btn-list flex-nowrap">
                                 <button class="btn btn-sm edit-btn" onclick="editRow({{ $ledger->id }})">Edit</button>
+
                                 <button class="btn btn-sm btn-success save-btn" onclick="saveRow({{ $ledger->id }})" style="display: none;">Simpan</button>
                                 <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit({{ $ledger->id }})" style="display: none;">Batal</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteLedger({{ $ledger->id }})">Hapus</button>
@@ -132,6 +152,34 @@
 @push('scripts')
 <script>
 let originalData = {};
+const currentType = '{{ $type ?? "" }}';
+
+function refreshTableData() {
+    const currentUrl = window.location.pathname;
+    fetch(currentUrl, {
+        headers: {
+            'Accept': 'text/html',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newTableBody = doc.querySelector('#ledgerTableBody');
+        if (newTableBody) {
+            document.getElementById('ledgerTableBody').innerHTML = newTableBody.innerHTML;
+        }
+        // Also refresh the menu by reloading the page
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
+    })
+    .catch(error => {
+        console.error('Error refreshing table:', error);
+        window.location.reload();
+    });
+}
 
 function toggleCreateForm() {
     const form = document.getElementById('createForm');
@@ -161,12 +209,25 @@ function editRow(id) {
         
         if (field === 'tipe_ledger') {
             const currentType = currentValue.toLowerCase();
-            cell.innerHTML = `
-                <select class="form-select form-select-sm">
-                    <option value="kas" ${currentType === 'kas' ? 'selected' : ''}>Kas</option>
-                    <option value="bank" ${currentType === 'bank' ? 'selected' : ''}>Bank</option>
-                </select>
-            `;
+            const isTypeLocked = {{ $type ? 'true' : 'false' }};
+            if (isTypeLocked) {
+                cell.innerHTML = `<span class="badge bg-${currentType === 'kas' ? 'primary' : 'success'}">${currentValue}</span>`;
+            } else {
+                cell.innerHTML = `
+                    <select class="form-select form-select-sm">
+                        <option value="kas" ${currentType === 'kas' ? 'selected' : ''}>Kas</option>
+                        <option value="bank" ${currentType === 'bank' ? 'selected' : ''}>Bank</option>
+                    </select>
+                `;
+            }
+        } else if (field === 'trial_balance_id') {
+            const trialBalances = @json($trialBalances);
+            let options = '<option value="">Pilih</option>';
+            trialBalances.forEach(tb => {
+                const selected = currentValue.includes(tb.kode) ? 'selected' : '';
+                options += `<option value="${tb.id}" ${selected}>${tb.kode} - ${tb.keterangan}</option>`;
+            });
+            cell.innerHTML = `<select class="form-select form-select-sm">${options}</select>`;
         } else if (field === 'is_active') {
             const isActive = currentValue === 'Aktif';
             cell.innerHTML = `
@@ -194,7 +255,13 @@ function saveRow(id) {
     editables.forEach(cell => {
         const field = cell.dataset.field;
         const input = cell.querySelector('input, select');
-        formData[field] = input.value;
+        if (input) {
+            formData[field] = input.value;
+        } else if (field === 'tipe_ledger') {
+            // For locked type, get from original data
+            const badgeText = cell.querySelector('.badge')?.textContent?.toLowerCase();
+            formData[field] = badgeText === 'kas' ? 'kas' : 'bank';
+        }
     });
     
     fetch(`/ledgers/${id}`, {
@@ -215,8 +282,8 @@ function saveRow(id) {
     })
     .then(data => {
         if (data.success) {
-            updateRowDisplay(id, formData);
             showAlert('success', data.message || 'Data berhasil diupdate');
+            refreshTableData();
         } else {
             showAlert('error', data.message || 'Gagal mengupdate data');
             cancelEdit(id);
@@ -270,6 +337,14 @@ function updateRowDisplay(id, data) {
             const badgeClass = isActive ? 'success' : 'danger';
             const text = isActive ? 'Aktif' : 'Tidak Aktif';
             cell.innerHTML = `<span class="badge bg-${badgeClass}">${text}</span>`;
+        } else if (field === 'trial_balance_id') {
+            if (value) {
+                const trialBalances = @json($trialBalances);
+                const selectedTB = trialBalances.find(tb => tb.id == value);
+                cell.textContent = selectedTB ? `${selectedTB.kode} - ${selectedTB.keterangan}` : '-';
+            } else {
+                cell.textContent = '-';
+            }
         } else {
             cell.textContent = value;
         }
@@ -308,8 +383,8 @@ function deleteLedger(id) {
         })
         .then(data => {
             if (data.success) {
-                document.getElementById(`row-${id}`).remove();
                 showAlert('success', data.message || 'Data berhasil dihapus');
+                refreshTableData();
             } else {
                 showAlert('error', data.message || 'Gagal menghapus data');
             }
@@ -327,10 +402,12 @@ function deleteLedger(id) {
 document.getElementById('ledgerForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
+    const tipeLedgerElement = document.getElementById('tipeLedger');
     const formData = {
         nama_ledger: document.getElementById('namaLedger').value,
         kode_ledger: document.getElementById('kodeLedger').value,
-        tipe_ledger: document.getElementById('tipeLedger').value,
+        tipe_ledger: tipeLedgerElement.tagName === 'INPUT' ? tipeLedgerElement.value : tipeLedgerElement.value,
+        trial_balance_id: document.getElementById('trialBalanceId').value || null,
         deskripsi: document.getElementById('deskripsi').value
     };
     
@@ -353,9 +430,9 @@ document.getElementById('ledgerForm').addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             showAlert('success', data.message || 'Data berhasil ditambahkan');
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            document.getElementById('ledgerForm').reset();
+            toggleCreateForm();
+            refreshTableData();
         } else {
             showAlert('error', data.message || 'Gagal menambahkan data');
         }

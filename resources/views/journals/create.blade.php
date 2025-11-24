@@ -6,7 +6,7 @@
     <div class="page-pretitle">Transaksi</div>
     <h2 class="page-title" id="pageTitle">
         @if ($selectedAccount)
-            Jurnal {{ $selectedAccount->name }}
+            Jurnal {{ $selectedAccount->keterangan }}
         @else
             Jurnal Kas/Bank
         @endif
@@ -21,35 +21,55 @@
 @endsection
 
 @section('content')
-    <div id="errorAlert" class="alert alert-danger" style="display: none;"></div>
+    <!-- Alert Messages -->
+    <div id="alert-container"></div>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
-            @foreach ($errors->all() as $error)
-                {{ $error }}<br>
-            @endforeach
+        <div class="alert alert-danger alert-dismissible">
+            <div class="d-flex">
+                <div>
+                    @foreach ($errors->all() as $error)
+                        {{ $error }}<br>
+                    @endforeach
+                </div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible">
+            <div class="d-flex">
+                <div>{{ session('success') }}</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
         </div>
     @endif
 
     @if (!$selectedAccount)
-        <div class="alert alert-warning">
-            <strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.
+        <div class="alert alert-warning alert-dismissible">
+            <div class="d-flex">
+                <div><strong>Perhatian!</strong> Pilih akun kas/bank dari menu di atas untuk memulai membuat jurnal.</div>
+            </div>
+            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
         </div>
     @endif
 
     <div class="row">
         <div class="col-12">
-            <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('journals.store') }}" id="journalForm" enctype="multipart/form-data" onsubmit="return validateForm()">
                 @csrf
                 <input type="hidden" name="selected_cash_account_id"
                     value="{{ $selectedAccount ? $selectedAccount->id : '' }}">
+                <input type="hidden" name="ledger_id"
+                    value="{{ $selectedLedger ? $selectedLedger->id : '' }}">
 
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="card-title">
                                 @if ($selectedAccount)
-                                    {{ $selectedAccount->code }} - {{ $selectedAccount->name }}
+                                    {{ $selectedAccount->kode }} - {{ $selectedAccount->keterangan }}
                                 @else
                                     Jurnal Kas/Bank
                                 @endif
@@ -126,9 +146,10 @@
                                                     {{ $history['debit_account'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
                                                     {{ $history['credit_account'] }}</td>
-
-
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
+                                                    <button type="button" class="btn btn-sm btn-warning me-1"
+                                                        onclick="editTransaction(this, {{ $history['journal_id'] }})"
+                                                        style="font-size: 10px; padding: 2px 6px;">✎</button>
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="deleteTransaction({{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">×</button>
@@ -150,7 +171,6 @@
                         @enderror
                     </div>
                     <div class="card-footer text-end">
-                        {{-- <a href="{{ route('journals.index') }}" class="btn btn-secondary me-2">Batal</a> --}}
                         @if ($selectedAccount)
                             <button type="button" class="btn btn-success me-2" onclick="addJournalLine()">+ Tambah
                                 Baris</button>
@@ -168,112 +188,123 @@
                 let lineIndex = 0;
                 let openingBalance = {{ $openingBalance }};
                 let selectedCashAccountId = {{ $selectedAccount ? $selectedAccount->id : 'null' }};
-                let selectedAccountName = '{{ $selectedAccount ? $selectedAccount->name : '' }}';
+                let selectedAccountName = {!! json_encode($selectedAccount ? $selectedAccount->keterangan : '') !!};
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 
-                const accountOptions = `
-                    <option value="">Pilih Akun</option>
-                    @foreach ($accounts as $account)
-                        <option value="{{ $account->id }}">{{ $account->code }} - {{ $account->name }}</option>
-                    @endforeach
-                `;
+                // Build account options
+                let accountOptions = '<option value="">Pilih Akun</option>';
+                @foreach ($accounts as $account)
+                    accountOptions += '<option value="{{ $account->id }}">{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}</option>';
+                @endforeach
 
-                const cashflowOptions = `
-                    <option value="">Pilih Kode</option>
-                    @foreach ($cashflows as $cashflow)
-                        <option value="{{ $cashflow->id }}" data-description="{{ $cashflow->keterangan }}">{{ $cashflow->kode }}</option>
-                    @endforeach
-                `;
+                // Build cashflow options
+                let cashflowOptions = '<option value="">Pilih Kode</option>';
+                @foreach ($cashflows as $cashflow)
+                    cashflowOptions += '<option value="{{ $cashflow->id }}" data-description="{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}">{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}</option>';
+                @endforeach
 
+                // Build cashflow data object
                 const cashflowData = {
                     @foreach ($cashflows as $cashflow)
-                        {{ $cashflow->id }}: {
-                            code: '{{ $cashflow->kode }}',
-                            description: '{{ $cashflow->keterangan }}'
-                        },
+                        '{{ $cashflow->id }}': {
+                            code: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}',
+                            description: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}',
+                            trial_balance_id: {{ $cashflow->trial_balance_id ?? 'null' }}
+                        }@if(!$loop->last),@endif
                     @endforeach
                 };
 
+                function showAlert(type, message) {
+                    const container = document.getElementById('alert-container');
+                    const alert = document.createElement('div');
+                    alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible`;
+                    alert.innerHTML = `
+                        <div class="d-flex">
+                            <div>${message}</div>
+                        </div>
+                        <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                    `;
+                    
+                    container.innerHTML = '';
+                    container.appendChild(alert);
+                    
+                    setTimeout(() => {
+                        if (alert.parentNode) {
+                            alert.remove();
+                        }
+                    }, 5000);
+                }
+
                 document.addEventListener('DOMContentLoaded', function() {
-                    // Calculate current balance from history
+                    console.log('Cashflow data:', cashflowData);
+                    console.log('Account options length:', accountOptions.length);
+                    console.log('Cashflow options length:', cashflowOptions.length);
+                    console.log('Selected account ID:', selectedCashAccountId);
+                    
                     const historyRows = document.querySelectorAll('tr[data-existing="1"]');
                     if (historyRows.length > 0) {
                         const lastRow = historyRows[historyRows.length - 1];
                         currentBalance = parseFloat(lastRow.getAttribute('data-balance'));
                     }
-
                     addJournalLine();
-
-                    // Form will submit normally to server
                 });
-
-                function showError(message) {
-                    const errorAlert = document.getElementById('errorAlert');
-                    errorAlert.textContent = message;
-                    errorAlert.style.display = 'block';
-                    errorAlert.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                    setTimeout(() => {
-                        errorAlert.style.display = 'none';
-                    }, 5000);
-                }
 
                 function addJournalLine() {
                     const tbody = document.getElementById('journalLines');
                     const row = document.createElement('tr');
                     row.style.border = '1px solid #dee2e6';
-                    row.innerHTML = `
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="date" name="entries[${lineIndex}][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="{{ date('Y-m-d') }}">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[${lineIndex}][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[${lineIndex}][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="file" name="entries[${lineIndex}][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" onchange="generateProofNumber(this, ${lineIndex})">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" name="entries[${lineIndex}][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="number" name="entries[${lineIndex}][cash_in]" class="form-control form-control-sm cash-in" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, 'in')">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="number" name="entries[${lineIndex}][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, 'out')">
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">
-                            <span class="balance-display" style="font-size: 12px; font-weight: bold;">${formatter.format(currentBalance)}</span>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[${lineIndex}][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this)">
-                                ${cashflowOptions}
-                            </select>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[${lineIndex}][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">
-                                ${accountOptions}
-                            </select>
-                        </td>
-                        <td style="border: 1px solid #dee2e6; padding: 2px;">
-                            <select name="entries[${lineIndex}][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">
-                                ${accountOptions}
-                            </select>
-                        </td>
-                      
-                        
-                        <td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">
-                            <button type="button" class="btn btn-sm btn-success" onclick="addJournalLine()" style="font-size: 10px; padding: 2px 6px;">+</button>
-                        </td>
-                    `;
-
+                    
+                    const currentDate = '{{ date('Y-m-d') }}';
+                    const currentIndex = lineIndex;
+                    
+                    row.innerHTML = 
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="date" name="entries[' + currentIndex + '][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="' + currentDate + '">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="file" name="entries[' + currentIndex + '][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" multiple onchange="generateProofNumber(this, ' + currentIndex + ')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" name="entries[' + currentIndex + '][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="number" name="entries[' + currentIndex + '][cash_in]" class="form-control form-control-sm cash-in" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, \'in\')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="number" name="entries[' + currentIndex + '][cash_out]" class="form-control form-control-sm cash-out" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" onchange="calculateBalance(this); updateProofNumber(this)" oninput="handleCashInput(this, \'out\')">' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: right; background: #e8f5e8;">' +
+                            '<span class="balance-display" style="font-size: 12px; font-weight: bold;">' + formatter.format(currentBalance) + '</span>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">' +
+                                cashflowOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">' +
+                                accountOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                            '<select name="entries[' + currentIndex + '][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">' +
+                                accountOptions +
+                            '</select>' +
+                        '</td>' +
+                        '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">' +
+                            '-' +
+                        '</td>';
+                    
                     tbody.appendChild(row);
                     lineIndex++;
                 }
@@ -284,16 +315,14 @@
                     const cashOutInput = row.querySelector('.cash-out');
                     const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
                     const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
+                    const cashflowSelect = row.querySelector('.cashflow-select');
 
-                    // Clear the other field when this one has a value
                     if (input.value && parseFloat(input.value) > 0) {
                         if (type === 'in') {
                             cashOutInput.value = '';
-                            // Kas masuk: debit = akun aktif (tidak bisa diedit), kredit = bisa pilih
                             debitSelect.value = selectedCashAccountId;
                             debitSelect.disabled = true;
                             debitSelect.style.backgroundColor = '#e9ecef';
-                            // Add hidden input for disabled field
                             let hiddenDebit = row.querySelector('.hidden-debit');
                             if (!hiddenDebit) {
                                 hiddenDebit = document.createElement('input');
@@ -303,19 +332,20 @@
                                 row.appendChild(hiddenDebit);
                             }
                             hiddenDebit.value = selectedCashAccountId;
-
                             creditSelect.disabled = false;
                             creditSelect.style.backgroundColor = '';
-                            // Remove hidden credit if exists
                             const hiddenCredit = row.querySelector('.hidden-credit');
                             if (hiddenCredit) hiddenCredit.remove();
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
                         } else {
                             cashInInput.value = '';
-                            // Kas keluar: kredit = akun aktif (tidak bisa diedit), debit = bisa pilih
                             creditSelect.value = selectedCashAccountId;
                             creditSelect.disabled = true;
                             creditSelect.style.backgroundColor = '#e9ecef';
-                            // Add hidden input for disabled field
                             let hiddenCredit = row.querySelector('.hidden-credit');
                             if (!hiddenCredit) {
                                 hiddenCredit = document.createElement('input');
@@ -325,22 +355,23 @@
                                 row.appendChild(hiddenCredit);
                             }
                             hiddenCredit.value = selectedCashAccountId;
-
                             debitSelect.disabled = false;
                             debitSelect.style.backgroundColor = '';
-                            // Remove hidden debit if exists
                             const hiddenDebit = row.querySelector('.hidden-debit');
                             if (hiddenDebit) hiddenDebit.remove();
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
                         }
                     } else {
-                        // Reset jika input kosong
                         debitSelect.disabled = false;
                         creditSelect.disabled = false;
                         debitSelect.style.backgroundColor = '';
                         creditSelect.style.backgroundColor = '';
                         debitSelect.value = '';
                         creditSelect.value = '';
-                        // Remove hidden inputs
                         const hiddenDebit = row.querySelector('.hidden-debit');
                         const hiddenCredit = row.querySelector('.hidden-credit');
                         if (hiddenDebit) hiddenDebit.remove();
@@ -354,7 +385,6 @@
                     const cashOutInput = row.querySelector('.cash-out');
                     const balanceDisplay = row.querySelector('.balance-display');
 
-                    // Get previous balance
                     let prevBalance = currentBalance;
                     const prevRow = row.previousElementSibling;
                     if (prevRow) {
@@ -374,7 +404,6 @@
 
                     balanceDisplay.textContent = formatter.format(newBalance);
 
-                    // Recalculate all subsequent rows
                     let nextRow = row.nextElementSibling;
                     let runningBalance = newBalance;
 
@@ -387,17 +416,14 @@
                         if (nextBalanceDisplay) {
                             nextBalanceDisplay.textContent = formatter.format(runningBalance);
                         }
-
                         nextRow = nextRow.nextElementSibling;
                     }
                 }
 
                 function generateProofNumber(input, index) {
-                    // Only generate proof number when file is attached
                     if (input.files.length > 0) {
                         updateProofNumber(input);
                     } else {
-                        // Clear proof number if no file
                         const row = input.closest('tr');
                         const proofInput = row.querySelector('.proof-number');
                         proofInput.value = '';
@@ -411,25 +437,18 @@
                     const proofInput = row.querySelector('.proof-number');
                     const dateInput = row.querySelector('input[name*="[date]"]');
 
-                    // Only generate if there's a transaction amount
                     if (cashIn > 0 || cashOut > 0) {
-                        // Determine transaction type: M (Masuk/Debit) or K (Keluar/Credit)
                         const transactionType = cashIn > 0 ? 'M' : 'K';
-
-                        // Use date from input field, not current date
                         const transactionDate = new Date(dateInput.value);
                         const day = transactionDate.getDate().toString().padStart(2, '0');
                         const month = (transactionDate.getMonth() + 1).toString().padStart(2, '0');
                         const year = transactionDate.getFullYear().toString().slice(-2);
                         const dateStr = `${day}-${month}-${year}`;
 
-                        // Count ALL existing proof numbers (including history and current entries)
                         let sameTypeCount = 1;
-
-                        // Count from history rows
                         const historyRows = document.querySelectorAll('tr[data-existing="1"]');
                         historyRows.forEach(historyRow => {
-                            const historyProofCell = historyRow.children[4]; // proof_number column
+                            const historyProofCell = historyRow.children[4];
                             if (historyProofCell && historyProofCell.textContent) {
                                 const proofText = historyProofCell.textContent.trim();
                                 if (proofText.includes(`/${transactionType}/`) && proofText.includes(dateStr)) {
@@ -438,43 +457,25 @@
                             }
                         });
 
-                        // Count from current entry rows (excluding this one)
                         const currentRows = document.querySelectorAll('input[name*="[proof_number]"]');
                         currentRows.forEach(inp => {
-                            if (inp !== proofInput && inp.value && inp.value.includes(`/${transactionType}/`) && inp.value
-                                .includes(dateStr)) {
+                            if (inp !== proofInput && inp.value && inp.value.includes(`/${transactionType}/`) && inp.value.includes(dateStr)) {
                                 sameTypeCount++;
                             }
                         });
 
                         const transactionNumber = sameTypeCount.toString().padStart(3, '0');
                         const proofNumber = `${selectedAccountName}/${transactionType}/${transactionNumber}-${dateStr}`;
-
                         proofInput.value = proofNumber;
                     } else {
                         proofInput.value = '';
                     }
                 }
 
-                function removeRow(button) {
-                    const row = button.closest('tr');
-                    const allEditableRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
-
-                    if (allEditableRows.length > 1) {
-                        row.remove();
-
-                        // Recalculate balances for remaining rows
-                        const remainingRows = document.querySelectorAll('#journalLines tr:not([data-existing="1"])');
-                        remainingRows.forEach((r, index) => {
-                            calculateBalance(r.querySelector('.cash-in'));
-                        });
-                    }
-                }
-
                 function viewAttachments(journalId) {
-                    // Create modal to show attachments
                     const modal = document.createElement('div');
                     modal.className = 'modal fade';
+                    modal.id = 'attachmentModal';
                     modal.innerHTML = `
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
@@ -490,17 +491,13 @@
                     `;
                     document.body.appendChild(modal);
 
-                    // Show modal
                     const bsModal = new bootstrap.Modal(modal);
                     bsModal.show();
 
-                    // Load attachments using XMLHttpRequest
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('GET', `/journals/${journalId}/attachments`);
-                    xhr.onload = function() {
-                        const list = document.getElementById('attachmentsList');
-                        if (xhr.status === 200) {
-                            const data = JSON.parse(xhr.responseText);
+                    fetch(`/journals/${journalId}/attachments`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const list = document.getElementById('attachmentsList');
                             if (data.attachments && data.attachments.length > 0) {
                                 list.innerHTML = data.attachments.map(att => `
                                     <div class="mb-2">
@@ -513,13 +510,11 @@
                             } else {
                                 list.innerHTML = '<p class="text-muted">Tidak ada file lampiran</p>';
                             }
-                        } else {
-                            list.innerHTML = '<p class="text-danger">Error loading attachments</p>';
-                        }
-                    };
-                    xhr.send();
+                        })
+                        .catch(error => {
+                            document.getElementById('attachmentsList').innerHTML = '<p class="text-danger">Error loading attachments</p>';
+                        });
 
-                    // Remove modal when closed
                     modal.addEventListener('hidden.bs.modal', () => {
                         document.body.removeChild(modal);
                     });
@@ -530,40 +525,386 @@
                     const descInput = row.querySelector('.cashflow-desc');
                     const selectedId = selectElement.value;
 
-                    if (selectedId && cashflowData[selectedId]) {
+                    if (selectedId && cashflowData && cashflowData[selectedId]) {
                         descInput.value = cashflowData[selectedId].description;
+                        
+                        // Auto-set trial balance account if available
+                        if (cashflowData[selectedId].trial_balance_id) {
+                            setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
+                        }
                     } else {
                         descInput.value = '';
                     }
                 }
 
-                function deleteTransaction(journalId) {
-                    if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
-                        const xhr = new XMLHttpRequest();
-                        xhr.open('DELETE', `/journals/${journalId}`);
-                        xhr.setRequestHeader('Content-Type', 'application/json');
-                        xhr.setRequestHeader('X-CSRF-TOKEN', document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content'));
-                        xhr.setRequestHeader('Accept', 'application/json');
-
-                        xhr.onload = function() {
-                            if (xhr.status === 200) {
-                                const response = JSON.parse(xhr.responseText);
-                                alert('Transaksi berhasil dihapus!');
-                                // Reload the page to refresh the data
-                                window.location.reload();
-                            } else {
-                                const error = JSON.parse(xhr.responseText);
-                                alert('Error: ' + (error.message || 'Gagal menghapus transaksi'));
-                            }
-                        };
-
-                        xhr.onerror = function() {
-                            alert('Error: Gagal menghapus transaksi');
-                        };
-
-                        xhr.send();
+                function setTrialBalanceAccount(row, trialBalanceId) {
+                    const cashInInput = row.querySelector('.cash-in');
+                    const cashOutInput = row.querySelector('.cash-out');
+                    const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
+                    const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
+                    
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    
+                    if (cashIn > 0) {
+                        // For cash in, set credit account to trial balance account
+                        creditSelect.value = trialBalanceId;
+                    } else if (cashOut > 0) {
+                        // For cash out, set debit account to trial balance account
+                        debitSelect.value = trialBalanceId;
                     }
+                }
+
+                function updateTrialBalanceFromCashflow(selectElement) {
+                    const row = selectElement.closest('tr');
+                    const selectedId = selectElement.value;
+                    
+                    if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
+                        setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
+                    }
+                }
+
+                function editTransaction(button, journalId) {
+                    const row = button.closest('tr');
+                    const isEditing = row.classList.contains('editing');
+                    
+                    if (isEditing) {
+                        // Save changes
+                        saveTransaction(row, journalId);
+                    } else {
+                        // Enter edit mode
+                        enterEditMode(row, button);
+                    }
+                }
+
+                function enterEditMode(row, editButton) {
+                    row.classList.add('editing');
+                    row.style.backgroundColor = '#fff3cd';
+                    
+                    const cells = row.children;
+                    const journalId = row.getAttribute('data-journal-id');
+                    
+                    // Get current values
+                    const currentDate = cells[0].textContent.trim();
+                    const description = cells[1].textContent.trim();
+                    const pic = cells[2].textContent.trim() === '-' ? '' : cells[2].textContent.trim();
+                    const proofNumber = cells[4].textContent.trim() === '-' ? '' : cells[4].textContent.trim();
+                    const cashIn = cells[5].textContent.replace(/[^0-9]/g, '') || '0';
+                    const cashOut = cells[6].textContent.replace(/[^0-9]/g, '') || '0';
+                    const cashflowCode = cells[8].textContent.trim();
+                    const debitAccount = cells[10].textContent.trim();
+                    const creditAccount = cells[11].textContent.trim();
+                    
+                    // Convert date format from d/m/Y to Y-m-d
+                    const dateParts = currentDate.split('/');
+                    const formattedDate = dateParts.length === 3 ? `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}` : currentDate;
+                    
+                    // Convert to editable fields
+                    cells[0].innerHTML = `<input type="date" class="form-control form-control-sm edit-date" value="${formattedDate}" style="font-size: 12px; border: none;">`;
+                    cells[1].innerHTML = `<input type="text" class="form-control form-control-sm edit-description" value="${description}" style="font-size: 12px; border: none;">`;
+                    cells[2].innerHTML = `<input type="text" class="form-control form-control-sm edit-pic" value="${pic}" style="font-size: 12px; border: none;">`;
+                    cells[3].innerHTML = `<input type="file" class="form-control form-control-sm edit-attachments" accept=".jpg,.jpeg,.png,.pdf" multiple style="font-size: 11px; border: none;">`;
+                    cells[4].innerHTML = `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
+                    cells[5].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-in cash-in" value="${cashIn}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'in')">`;
+                    cells[6].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-out cash-out" value="${cashOut}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'out')">`;
+                    cells[8].innerHTML = `<select class="form-control form-control-sm edit-cashflow cashflow-select" style="font-size: 12px; border: none;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">${cashflowOptions}</select>`;
+                    cells[9].innerHTML = `<input type="text" class="form-control form-control-sm edit-cashflow-desc cashflow-desc" value="${cells[9].textContent.trim()}" style="font-size: 12px; border: none; background-color: #f8f9fa;" readonly>`;
+                    cells[10].innerHTML = `<select class="form-control form-control-sm edit-debit debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    cells[11].innerHTML = `<select class="form-control form-control-sm edit-credit credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    
+                    // Set current selections
+                    setTimeout(() => {
+                        // Set cashflow selection by code
+                        const cashflowSelect = row.querySelector('.edit-cashflow');
+                        for (let option of cashflowSelect.options) {
+                            if (option.text === cashflowCode) {
+                                cashflowSelect.value = option.value;
+                                break;
+                            }
+                        }
+                        
+                        // Set account selections by text
+                        const debitSelect = row.querySelector('.edit-debit');
+                        const creditSelect = row.querySelector('.edit-credit');
+                        
+                        for (let option of debitSelect.options) {
+                            if (option.text === debitAccount) {
+                                debitSelect.value = option.value;
+                                break;
+                            }
+                        }
+                        
+                        for (let option of creditSelect.options) {
+                            if (option.text === creditAccount) {
+                                creditSelect.value = option.value;
+                                break;
+                            }
+                        }
+                    }, 10);
+                    
+                    // Change button to save
+                    editButton.innerHTML = '✓';
+                    editButton.className = 'btn btn-sm btn-success me-1';
+                    editButton.title = 'Simpan';
+                }
+
+                function saveTransaction(row, journalId) {
+                    const formData = new FormData();
+                    
+                    formData.append('date', row.querySelector('.edit-date').value);
+                    formData.append('description', row.querySelector('.edit-description').value);
+                    formData.append('pic', row.querySelector('.edit-pic').value);
+                    formData.append('proof_number', row.querySelector('.edit-proof').value);
+                    formData.append('cash_in', row.querySelector('.edit-cash-in').value || 0);
+                    formData.append('cash_out', row.querySelector('.edit-cash-out').value || 0);
+                    formData.append('cashflow_id', row.querySelector('.edit-cashflow').value);
+                    formData.append('debit_account_id', row.querySelector('.edit-debit').value);
+                    formData.append('credit_account_id', row.querySelector('.edit-credit').value);
+                    formData.append('_method', 'PUT');
+                    
+                    // Handle file attachments
+                    const fileInput = row.querySelector('.edit-attachments');
+                    if (fileInput.files.length > 0) {
+                        for (let i = 0; i < fileInput.files.length; i++) {
+                            formData.append('attachments[]', fileInput.files[i]);
+                        }
+                    }
+                    
+                    fetch(`/journals/${journalId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showSuccessModal('Berhasil!', 'Transaksi berhasil diperbarui!', () => {
+                                window.location.reload();
+                            });
+                        } else {
+                            showErrorModal('Error!', data.message || 'Gagal memperbarui transaksi');
+                        }
+                    })
+                    .catch(error => {
+                        showErrorModal('Error!', 'Gagal memperbarui transaksi');
+                    });
+                }
+
+                function handleEditCashInput(input, type) {
+                    const row = input.closest('tr');
+                    const cashInInput = row.querySelector('.edit-cash-in');
+                    const cashOutInput = row.querySelector('.edit-cash-out');
+                    const debitSelect = row.querySelector('.edit-debit');
+                    const creditSelect = row.querySelector('.edit-credit');
+                    const cashflowSelect = row.querySelector('.edit-cashflow');
+
+                    if (input.value && parseFloat(input.value) > 0) {
+                        if (type === 'in') {
+                            cashOutInput.value = '';
+                            debitSelect.value = selectedCashAccountId;
+                            debitSelect.disabled = true;
+                            debitSelect.style.backgroundColor = '#e9ecef';
+                            creditSelect.disabled = false;
+                            creditSelect.style.backgroundColor = '';
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
+                        } else {
+                            cashInInput.value = '';
+                            creditSelect.value = selectedCashAccountId;
+                            creditSelect.disabled = true;
+                            creditSelect.style.backgroundColor = '#e9ecef';
+                            debitSelect.disabled = false;
+                            debitSelect.style.backgroundColor = '';
+                            
+                            // Auto-set trial balance account if cashflow is selected
+                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
+                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            }
+                        }
+                    } else {
+                        debitSelect.disabled = false;
+                        creditSelect.disabled = false;
+                        debitSelect.style.backgroundColor = '';
+                        creditSelect.style.backgroundColor = '';
+                        debitSelect.value = '';
+                        creditSelect.value = '';
+                    }
+                }
+
+                function deleteTransaction(journalId) {
+                    showConfirmModal(
+                        'Konfirmasi Hapus',
+                        'Apakah Anda yakin ingin menghapus transaksi ini?',
+                        () => {
+                            fetch(`/journals/${journalId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                showSuccessModal('Berhasil!', 'Transaksi berhasil dihapus!', () => {
+                                    window.location.reload();
+                                });
+                            })
+                            .catch(error => {
+                                showErrorModal('Error!', 'Gagal menghapus transaksi');
+                            });
+                        }
+                    );
+                }
+
+                function showConfirmModal(title, message, onConfirm) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-danger" id="confirm-btn">Ya, Hapus</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.querySelector('#confirm-btn').addEventListener('click', () => {
+                        bsModal.hide();
+                        onConfirm();
+                    });
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                    });
+                }
+
+                function showSuccessModal(title, message, onClose = null) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body text-center">
+                                    <div class="text-success mb-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                            <path d="m5 12l5 5l10 -10"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                        if (onClose) onClose();
+                    });
+                }
+
+                function showErrorModal(title, message) {
+                    const modal = document.createElement('div');
+                    modal.className = 'modal modal-blur fade';
+                    modal.innerHTML = `
+                        <div class="modal-dialog modal-sm modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-body text-center">
+                                    <div class="text-danger mb-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                            <path d="m18 6l-12 12"></path>
+                                            <path d="m6 6l12 12"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="modal-title">${title}</div>
+                                    <div>${message}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                    
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                    
+                    modal.addEventListener('hidden.bs.modal', () => {
+                        document.body.removeChild(modal);
+                    });
+                }
+
+                function validateForm() {
+                    const rows = document.querySelectorAll('#journalLines tr:not([data-existing])');
+                    let hasValidEntry = false;
+                    let errors = [];
+
+                    rows.forEach((row, index) => {
+                        const date = row.querySelector('input[name*="[date]"]')?.value;
+                        const description = row.querySelector('input[name*="[description]"]')?.value;
+                        const pic = row.querySelector('input[name*="[pic]"]')?.value;
+                        const cashIn = row.querySelector('input[name*="[cash_in]"]')?.value;
+                        const cashOut = row.querySelector('input[name*="[cash_out]"]')?.value;
+                        const cashflowId = row.querySelector('select[name*="[cashflow_id]"]')?.value;
+
+                        const hasCashValue = (cashIn && parseFloat(cashIn) > 0) || (cashOut && parseFloat(cashOut) > 0);
+                        
+                        if (hasCashValue) {
+                            hasValidEntry = true;
+                            
+                            if (!date) {
+                                errors.push(`Baris ${index + 1}: Tanggal wajib diisi`);
+                            }
+                            if (!description || description.trim() === '') {
+                                errors.push(`Baris ${index + 1}: Keterangan wajib diisi`);
+                            }
+                            if (!pic || pic.trim() === '') {
+                                errors.push(`Baris ${index + 1}: PIC wajib diisi`);
+                            }
+                            if (!cashflowId) {
+                                errors.push(`Baris ${index + 1}: Kode Cashflow wajib dipilih`);
+                            }
+                        }
+                    });
+
+                    if (!hasValidEntry) {
+                        showErrorModal('Validasi Error', 'Minimal satu baris harus diisi dengan nilai kas masuk atau keluar.');
+                        return false;
+                    }
+
+                    if (errors.length > 0) {
+                        showErrorModal('Validasi Error', errors.join('<br>'));
+                        return false;
+                    }
+
+                    return true;
                 }
             </script>
         @endpush
