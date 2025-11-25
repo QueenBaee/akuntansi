@@ -18,9 +18,10 @@ class TrialBalance extends Model
         'is_kas_bank'
     ];
 
+    /** RELASI PARENT - CHILD */
     public function parent()
     {
-        return $this->belongsTo (TrialBalance::class, 'parent_id');
+        return $this->belongsTo(TrialBalance::class, 'parent_id');
     }
 
     public function children()
@@ -28,8 +29,15 @@ class TrialBalance extends Model
         return $this->hasMany(TrialBalance::class, 'parent_id');
     }
 
+    /** RELASI KE CASHFLOW */
     public function cashflows()
     {
         return $this->hasMany(Cashflow::class);
+    }
+
+    /** RELASI YANG BENAR KE JOURNAL DETAILS */
+    public function journalDetails()
+    {
+        return $this->hasMany(JournalDetail::class, 'trial_balance_id');
     }
 }
