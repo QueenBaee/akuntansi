@@ -111,16 +111,4 @@ class User extends Authenticatable
         
         return $query->get();
     }
-
-    public function userLedgers()
-    {
-        return $this->hasMany(UserLedger::class);
-    }
-
-    public function ledgers()
-    {
-        return $this->belongsToMany(Ledger::class, 'user_ledgers')
-                    ->withPivot('role', 'is_active')
-                    ->withTimestamps();
-    }
 }
