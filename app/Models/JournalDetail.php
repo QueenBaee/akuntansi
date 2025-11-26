@@ -11,8 +11,7 @@ class JournalDetail extends Model
 
     protected $fillable = [
         'journal_id',
-        'account_id',
-        'description',
+        'trial_balance_id',
         'debit',
         'credit',
     ];
@@ -27,28 +26,13 @@ class JournalDetail extends Model
         return $this->belongsTo(Journal::class);
     }
 
-    public function account()
+    public function trialBalance()
     {
-        return $this->belongsTo(Account::class);
+        return $this->belongsTo(TrialBalance::class, 'trial_balance_id');
     }
 
-    public function scopeDebit($query)
+    public function details()
     {
-        return $query->where('debit', '>', 0);
-    }
-
-    public function scopeCredit($query)
-    {
-        return $query->where('credit', '>', 0);
-    }
-
-    public function getAmount()
-    {
-        return $this->debit > 0 ? $this->debit : $this->credit;
-    }
-
-    public function getType()
-    {
-        return $this->debit > 0 ? 'debit' : 'credit';
+        return $this->hasMany(JournalDetail::class);
     }
 }
