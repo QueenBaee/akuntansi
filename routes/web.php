@@ -73,7 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('bank-accounts', BankAccountController::class);
         
         // Ledgers
-        Route::resource('ledgers', LedgerController::class);
+        Route::resource('ledgers', LedgerController::class)->middleware('ledger.access');
         
         // Ledgers with type filter
         Route::get('ledgers-cash', [LedgerController::class, 'index'])->name('ledgers.cash');

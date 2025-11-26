@@ -59,14 +59,38 @@ class UserLedgerController extends Controller
 
     public function store(UserLedgerRequest $request)
     {
-        $userLedger = UserLedger::create($request->validated());
-        $userLedger->load(['user', 'ledger']);
+        try {
+            $validated = $request->validated();
+            
+            // Double check for existing combination
+            $exists = UserLedger::where('user_id', $validated['user_id'])
+                ->where('ledger_id', $validated['ledger_id'])
+                ->exists();
+                
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This user is already assigned to this ledger.',
+                    'errors' => [
+                        'user_id' => ['This user is already assigned to this ledger.']
+                    ]
+                ], 422);
+            }
+            
+            $userLedger = UserLedger::create($validated);
+            $userLedger->load(['user', 'ledger']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User ledger created successfully',
-            'data' => $userLedger
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'User ledger created successfully',
+                'data' => $userLedger
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create user ledger: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(UserLedger $userLedger)
@@ -97,14 +121,39 @@ class UserLedgerController extends Controller
 
     public function update(UserLedgerRequest $request, UserLedger $userLedger)
     {
-        $userLedger->update($request->validated());
-        $userLedger->load(['user', 'ledger']);
+        try {
+            $validated = $request->validated();
+            
+            // Check if combination already exists (excluding current record)
+            $exists = UserLedger::where('user_id', $validated['user_id'])
+                ->where('ledger_id', $validated['ledger_id'])
+                ->where('id', '!=', $userLedger->id)
+                ->exists();
+                
+            if ($exists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This user is already assigned to this ledger.',
+                    'errors' => [
+                        'user_id' => ['This user is already assigned to this ledger.']
+                    ]
+                ], 422);
+            }
+            
+            $userLedger->update($validated);
+            $userLedger->load(['user', 'ledger']);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'User ledger updated successfully',
-            'data' => $userLedger
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'User ledger updated successfully',
+                'data' => $userLedger
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user ledger: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(UserLedger $userLedger)

@@ -83,6 +83,7 @@
                                     <span class="nav-link-title">Ledger</span>
                                 </a>
                             </li> --}}
+                            @if(isset($cashLedgers) && $cashLedgers->count() > 0)
                             <li class="nav-item dropdown {{ $activeContext['active_section'] === 'cash-account' ? 'active' : '' }}" id="cash-account-nav">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -97,18 +98,18 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     <h6 class="dropdown-header">List</h6>
-                                    @forelse($cashAccounts as $ledger)
-                                        <a class="dropdown-item cash-account-item" href="#" data-account-id="{{ $ledger->id }}" data-account-type="kas" onclick="selectCashAccount({{ $ledger->id }}, '{{ $ledger->nama_ledger }}', {{ $ledger->getCurrentBalance() }})">{{ $ledger->nama_ledger }}</a>
-                                    @empty
-                                        <span class="dropdown-item text-muted">No cash ledger available</span>
-                                    @endforelse
+                                    @foreach($cashLedgers as $ledger)
+                                        <a class="dropdown-item cash-account-item" href="{{ route('ledgers.show', $ledger->id) }}" data-account-id="{{ $ledger->id }}" data-account-type="kas">{{ $ledger->nama_ledger }}</a>
+                                    @endforeach
                                     @role('admin')
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('ledgers.cash') ? 'active' : '' }}" href="{{ route('ledgers.cash') }}">Add / Edit / Delete</a>
                                     @endrole
                                 </div>
                             </li>
+                            @endif
 
+                            @if(isset($bankLedgers) && $bankLedgers->count() > 0)
                             <li class="nav-item dropdown {{ $activeContext['active_section'] === 'bank-account' ? 'active' : '' }}" id="bank-account-nav">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -128,17 +129,16 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     <h6 class="dropdown-header">List</h6>
-                                    @forelse($bankAccounts as $ledger)
-                                        <a class="dropdown-item bank-account-item" href="#" data-account-id="{{ $ledger->id }}" data-account-type="bank" onclick="selectCashAccount({{ $ledger->id }}, '{{ $ledger->nama_ledger }}', {{ $ledger->getCurrentBalance() }})">{{ $ledger->nama_ledger }}</a>
-                                    @empty
-                                        <span class="dropdown-item text-muted">No bank ledger available</span>
-                                    @endforelse
+                                    @foreach($bankLedgers as $ledger)
+                                        <a class="dropdown-item bank-account-item" href="{{ route('ledgers.show', $ledger->id) }}" data-account-id="{{ $ledger->id }}" data-account-type="bank">{{ $ledger->nama_ledger }}</a>
+                                    @endforeach
                                     @role('admin')
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('ledgers.bank') ? 'active' : '' }}" href="{{ route('ledgers.bank') }}">Add / Edit / Delete</a>
                                     @endrole
                                 </div>
                             </li>
+                            @endif
 
                             <!-- Memorial -->
                             <li class="nav-item {{ request()->routeIs('memorials.*') ? 'active' : '' }}">

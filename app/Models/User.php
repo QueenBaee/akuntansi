@@ -78,4 +78,49 @@ class User extends Authenticatable
                     ->withPivot('role', 'is_active')
                     ->withTimestamps();
     }
+
+    public function activeLedgers()
+    {
+        return $this->belongsToMany(Ledger::class, 'user_ledgers')
+                    ->wherePivot('is_active', true)
+                    ->where('ledgers.is_active', true)
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
+    }
+
+    public function hasLedgerAccess($ledgerId)
+    {
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+        
+        return $this->activeLedgers()->where('ledgers.id', $ledgerId)->exists();
+    }
+
+    public function getAccessibleLedgers($type = null)
+    {
+        if ($this->hasRole('admin')) {
+            $query = Ledger::where('is_active', true);
+        } else {
+            $query = $this->activeLedgers();
+        }
+        
+        if ($type) {
+            $query->where('tipe_ledger', $type);
+        }
+        
+        return $query->get();
+    }
+
+    public function userLedgers()
+    {
+        return $this->hasMany(UserLedger::class);
+    }
+
+    public function ledgers()
+    {
+        return $this->belongsToMany(Ledger::class, 'user_ledgers')
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
+    }
 }

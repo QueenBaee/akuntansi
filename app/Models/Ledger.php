@@ -39,7 +39,18 @@ class Ledger extends Model
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'user_ledgers');
+        return $this->belongsToMany(User::class, 'user_ledgers')
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
+    }
+
+    public function activeUsers()
+    {
+        return $this->belongsToMany(User::class, 'user_ledgers')
+                    ->wherePivot('is_active', true)
+                    ->where('users.is_active', true)
+                    ->withPivot('role', 'is_active')
+                    ->withTimestamps();
     }
 
     public function trialBalance()
