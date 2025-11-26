@@ -21,6 +21,13 @@ class LedgerController extends Controller
         
         $query = Ledger::with('trialBalance')->orderBy('nama_ledger');
         
+        // Apply access control based on user role
+        if (!auth()->user()->hasRole('admin')) {
+            // Non-admin users only see ledgers they have access to
+            $userLedgerIds = auth()->user()->userLedgers()->where('is_active', true)->pluck('ledger_id');
+            $query->whereIn('id', $userLedgerIds);
+        }
+        
         if ($type) {
             $query->where('tipe_ledger', $type);
         }
@@ -33,6 +40,11 @@ class LedgerController extends Controller
 
     public function create(Request $request)
     {
+        // Only admin can create ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to create ledgers.');
+        }
+        
         $type = $request->get('type');
         $trialBalances = TrialBalance::orderBy('kode')->get();
         return view('ledgers.create', compact('trialBalances', 'type'));
@@ -40,6 +52,11 @@ class LedgerController extends Controller
 
     public function store(Request $request)
     {
+        // Only admin can store ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to create ledgers.');
+        }
+        
         $validated = $request->validate([
             'nama_ledger' => 'required|string|max:255',
             'kode_ledger' => 'required|string|unique:ledgers',
@@ -70,6 +87,18 @@ class LedgerController extends Controller
 
     public function show(Ledger $ledger)
     {
+        // Check access for non-admin users
+        if (!auth()->user()->hasRole('admin')) {
+            $hasAccess = auth()->user()->userLedgers()
+                ->where('ledger_id', $ledger->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$hasAccess) {
+                abort(403, 'You do not have access to this ledger.');
+            }
+        }
+        
         return request()->expectsJson()
             ? response()->json([
                 'success' => true,
@@ -80,6 +109,11 @@ class LedgerController extends Controller
 
     public function edit(Ledger $ledger, Request $request)
     {
+        // Only admin can edit ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to edit ledgers.');
+        }
+        
         $type = $request->get('type');
         $trialBalances = TrialBalance::orderBy('kode')->get();
         return view('ledgers.edit', compact('ledger', 'trialBalances', 'type'));
@@ -87,6 +121,11 @@ class LedgerController extends Controller
 
     public function update(Request $request, Ledger $ledger)
     {
+        // Only admin can update ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to update ledgers.');
+        }
+        
         $validated = $request->validate([
             'nama_ledger' => 'required|string|max:255',
             'kode_ledger' => 'required|string|unique:ledgers,kode_ledger,' . $ledger->id,
@@ -121,6 +160,11 @@ class LedgerController extends Controller
 
     public function destroy(Ledger $ledger)
     {
+        // Only admin can delete ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to delete ledgers.');
+        }
+        
         // optional safety: cegah delete ledger yg terhubung jurnal
         if ($ledger->journals()->exists()) {
             return request()->expectsJson()

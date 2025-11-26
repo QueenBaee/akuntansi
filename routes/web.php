@@ -53,9 +53,24 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', \App\Http\Controllers\Web\UserController::class);
         Route::resource('accounts', \App\Http\Controllers\Web\AccountController::class);
         Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
+        
+        // User Ledgers (master data) - SPA routes
+        Route::get('user-ledgers', [\App\Http\Controllers\Web\UserLedgerController::class, 'index'])->name('user-ledgers.index');
+        Route::get('user-ledgers/create', [\App\Http\Controllers\UserLedgerController::class, 'create']);
+        Route::post('user-ledgers', [\App\Http\Controllers\UserLedgerController::class, 'store']);
+        Route::get('user-ledgers/data', [\App\Http\Controllers\UserLedgerController::class, 'index']);
+        Route::get('user-ledgers/{userLedger}/edit', [\App\Http\Controllers\UserLedgerController::class, 'edit']);
+        Route::put('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'update']);
+        Route::delete('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'destroy']);
+        
+        // Cash Accounts
         Route::resource('cash-accounts', CashAccountController::class);
         Route::resource('bank-accounts', BankAccountController::class);
-        Route::resource('ledgers', LedgerController::class);
+        
+        // Ledgers
+        Route::resource('ledgers', LedgerController::class)->middleware('ledger.access');
+        
+        // Ledgers with type filter
         Route::get('ledgers-cash', [LedgerController::class, 'index'])->name('ledgers.cash');
         Route::get('ledgers-bank', [LedgerController::class, 'index'])->name('ledgers.bank');
     });

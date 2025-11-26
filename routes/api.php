@@ -20,6 +20,8 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+
+
 // Utility routes
 Route::prefix('utils')->group(function () {
     Route::get('cashflow-categories', function () {
