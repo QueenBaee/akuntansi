@@ -63,6 +63,18 @@ Route::middleware('auth')->group(function () {
         Route::put('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'update']);
         Route::delete('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'destroy']);
         
+        // Fixed Assets
+        Route::resource('fixed-assets', \App\Http\Controllers\FixedAssetController::class);
+        Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
+            ->name('fixed-assets.mutations.store');
+        
+        // Asset Depreciation
+        Route::post('fixed-assets/{id}/depreciation/{period}/post', 
+            [\App\Http\Controllers\AssetDepreciationController::class, 'postMemorial'])
+            ->name('fixed-assets.depreciation.post');
+        Route::get('asset-depreciations', [\App\Http\Controllers\AssetDepreciationController::class, 'index'])
+            ->name('asset-depreciations.index');
+        
         // Cash Accounts
         Route::resource('cash-accounts', CashAccountController::class);
         Route::resource('bank-accounts', BankAccountController::class);
