@@ -201,8 +201,6 @@
                                     </a>
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">User Management</a>
-                                        {{-- <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a> --}}
-                                        <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}" href="{{ route('user-accounts.index') }}">User Accounts</a>
                                         <a class="dropdown-item {{ request()->routeIs('user-ledgers.*') ? 'active' : '' }}" href="{{ route('user-ledgers.index') }}">User Ledgers</a>
                                         <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}" href="{{ route('fixed-assets.index') }}">Fixed Assets</a>
                                         <div class="dropdown-divider"></div>
