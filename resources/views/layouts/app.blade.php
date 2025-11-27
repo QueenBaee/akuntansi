@@ -180,7 +180,7 @@
                                     <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
-                                    <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}" href="{{ route('trial-balance.index') }}">Trial Balance</a>
+                                    <a class="dropdown-item {{ request()->routeIs('trial-balance-report.*') ? 'active' : '' }}" href="{{ route('trial_balance_report.index') }}">Trial Balance</a>
                                     <a class="dropdown-item" href="#">Asset</a>
                                     <a class="dropdown-item" href="#">Buku Besar</a>
                                 </div>

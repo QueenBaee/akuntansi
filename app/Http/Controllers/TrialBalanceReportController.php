@@ -11,50 +11,74 @@ class TrialBalanceReportController extends Controller
     public function index(Request $request)
     {
         $year = $request->year ?? date('Y');
-        $prevYear = 2024; // kolom TB sebelumnya tetap 2024
+        $prevYear = 2024;
 
-        // Ambil semua akun trial balance
+        // Ambil akun TB
         $items = TrialBalance::orderBy('kode')->get();
 
-        // Ambil saldo dari journal_details untuk tahun berjalan
-        $balances = DB::table('journal_details')
-            ->join('journals', 'journals.id', '=', 'journal_details.journal_id')
+        // Hitung transaksi jurnal per bulan (debit - credit)
+        $balances = DB::table('journals')
             ->select(
-                'trial_balance_id',
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 1 THEN debit - credit ELSE 0 END) AS month_1'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 2 THEN debit - credit ELSE 0 END) AS month_2'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 3 THEN debit - credit ELSE 0 END) AS month_3'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 4 THEN debit - credit ELSE 0 END) AS month_4'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 5 THEN debit - credit ELSE 0 END) AS month_5'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 6 THEN debit - credit ELSE 0 END) AS month_6'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 7 THEN debit - credit ELSE 0 END) AS month_7'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 8 THEN debit - credit ELSE 0 END) AS month_8'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 9 THEN debit - credit ELSE 0 END) AS month_9'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 10 THEN debit - credit ELSE 0 END) AS month_10'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 11 THEN debit - credit ELSE 0 END) AS month_11'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' AND MONTH(journals.date) = 12 THEN debit - credit ELSE 0 END) AS month_12'),
-                DB::raw('SUM(CASE WHEN YEAR(journals.date) = '.$year.' THEN debit - credit ELSE 0 END) AS total_this_year')
-            )
-            ->groupBy('trial_balance_id')
-            ->get()
-            ->keyBy('trial_balance_id');
+                DB::raw("debit_account_id AS account_id"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=1 THEN total_debit ELSE 0 END) AS debit_1"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=1 THEN total_credit ELSE 0 END) AS credit_1"),
 
-        // Siapkan data untuk view
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=2 THEN total_debit ELSE 0 END) AS debit_2"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=2 THEN total_credit ELSE 0 END) AS credit_2"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=3 THEN total_debit ELSE 0 END) AS debit_3"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=3 THEN total_credit ELSE 0 END) AS credit_3"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=4 THEN total_debit ELSE 0 END) AS debit_4"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=4 THEN total_credit ELSE 0 END) AS credit_4"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=5 THEN total_debit ELSE 0 END) AS debit_5"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=5 THEN total_credit ELSE 0 END) AS credit_5"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=6 THEN total_debit ELSE 0 END) AS debit_6"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=6 THEN total_credit ELSE 0 END) AS credit_6"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=7 THEN total_debit ELSE 0 END) AS debit_7"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=7 THEN total_credit ELSE 0 END) AS credit_7"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=8 THEN total_debit ELSE 0 END) AS debit_8"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=8 THEN total_credit ELSE 0 END) AS credit_8"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=9 THEN total_debit ELSE 0 END) AS debit_9"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=9 THEN total_credit ELSE 0 END) AS credit_9"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=10 THEN total_debit ELSE 0 END) AS debit_10"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=10 THEN total_credit ELSE 0 END) AS credit_10"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=11 THEN total_debit ELSE 0 END) AS debit_11"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=11 THEN total_credit ELSE 0 END) AS credit_11"),
+
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=12 THEN total_debit ELSE 0 END) AS debit_12"),
+                DB::raw("SUM(CASE WHEN YEAR(date) = $year AND MONTH(date)=12 THEN total_credit ELSE 0 END) AS credit_12")
+            )
+            ->groupBy('debit_account_id')
+            ->get()
+            ->keyBy('account_id');
+
+        // Susun hasil
         $data = [];
-        foreach ($items as $tb) {
+        foreach ($items as $item) {
             $row = [];
-            if (isset($balances[$tb->id])) {
-                for ($m = 1; $m <= 12; $m++) {
-                    $row['month_'.$m] = $balances[$tb->id]->{'month_'.$m} ?? 0;
-                }
-                $row['total_this_year'] = $balances[$tb->id]->total_this_year ?? 0;
-            } else {
-                for ($m = 1; $m <= 12; $m++) {
-                    $row['month_'.$m] = 0;
-                }
-                $row['total_this_year'] = 0;
+
+            $saldo = $item->tahun_2024; // saldo awal
+
+            for ($m = 1; $m <= 12; $m++) {
+                $debit = $balances[$item->id]->{"debit_$m"} ?? 0;
+                $credit = $balances[$item->id]->{"credit_$m"} ?? 0;
+
+                $saldo += ($debit - $credit);
+
+                $row["month_$m"] = $saldo;
             }
-            $data[$tb->id] = $row;
+
+            $row['total'] = $saldo;
+
+            $data[$item->id] = $row;
         }
 
         return view('trial_balance_report.index', compact('items', 'data', 'year', 'prevYear'));
