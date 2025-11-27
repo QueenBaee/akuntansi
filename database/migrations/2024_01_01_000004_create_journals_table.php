@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('number', 50)->unique();
             $table->string('reference')->nullable();
             $table->string('description');
-            $table->enum('source_module', ['manual', 'cash', 'bank', 'asset', 'depreciation', 'maklon', 'rent_income', 'rent_expense']);
+            $table->enum('source_module', ['manual', 'cash', 'bank', 'asset', 'depreciation', 'asset_depreciation', 'maklon', 'rent_income', 'rent_expense']);
             $table->unsignedBigInteger('source_id')->nullable();
             $table->decimal('total_debit', 15, 2);
             $table->decimal('total_credit', 15, 2);

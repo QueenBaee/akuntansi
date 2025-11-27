@@ -201,8 +201,8 @@ class MemorialController extends Controller
 
     private function getMemorialsHistory()
     {
-        $journals = Journal::with(['debitAccount', 'creditAccount', 'attachments'])
-            ->where('source_module', 'memorial')
+        $journals = Journal::with(['debitAccount', 'creditAccount', 'attachments', 'details.trialBalance'])
+            ->whereIn('source_module', ['memorial', 'asset_depreciation'])
             ->orderBy('date')
             ->orderBy('created_at')
             ->get();
@@ -210,18 +210,38 @@ class MemorialController extends Controller
         $history = [];
 
         foreach ($journals as $journal) {
-            $history[] = [
-                'journal_id' => $journal->id,
-                'date' => $journal->date->format('d/m/Y'),
-                'description' => $journal->description,
-                'pic' => $journal->pic,
-                'proof_number' => $journal->proof_number,
-                'debit_amount' => $journal->cash_in,
-                'credit_amount' => $journal->cash_out,
-                'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
-                'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
-                'attachments' => $journal->attachments,
-            ];
+            if ($journal->source_module === 'asset_depreciation') {
+                // For asset depreciation, get details from journal_details
+                $debitDetail = $journal->details->where('debit', '>', 0)->first();
+                $creditDetail = $journal->details->where('credit', '>', 0)->first();
+                
+                $history[] = [
+                    'journal_id' => $journal->id,
+                    'date' => $journal->date->format('d/m/Y'),
+                    'description' => $journal->description,
+                    'pic' => $journal->pic,
+                    'proof_number' => $journal->proof_number,
+                    'debit_amount' => $debitDetail ? $debitDetail->debit : 0,
+                    'credit_amount' => $creditDetail ? $creditDetail->credit : 0,
+                    'debit_account' => $debitDetail && $debitDetail->trialBalance ? $debitDetail->trialBalance->kode . ' - ' . $debitDetail->trialBalance->keterangan : '-',
+                    'credit_account' => $creditDetail && $creditDetail->trialBalance ? $creditDetail->trialBalance->kode . ' - ' . $creditDetail->trialBalance->keterangan : '-',
+                    'attachments' => $journal->attachments,
+                ];
+            } else {
+                // For manual memorial entries
+                $history[] = [
+                    'journal_id' => $journal->id,
+                    'date' => $journal->date->format('d/m/Y'),
+                    'description' => $journal->description,
+                    'pic' => $journal->pic,
+                    'proof_number' => $journal->proof_number,
+                    'debit_amount' => $journal->cash_in,
+                    'credit_amount' => $journal->cash_out,
+                    'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
+                    'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
+                    'attachments' => $journal->attachments,
+                ];
+            }
         }
 
         return $history;
