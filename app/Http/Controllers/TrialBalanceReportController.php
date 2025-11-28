@@ -18,7 +18,7 @@ class TrialBalanceReportController extends Controller
 
         /**
          * =======================================================
-         * 1. Saldo Dasar (tahun_2024)
+         * 1. Saldo dasar dari tahun_2024
          * =======================================================
          */
         $baseSaldo = [];
@@ -28,58 +28,54 @@ class TrialBalanceReportController extends Controller
 
         /**
          * =======================================================
-         * 2. Saldo Awal (Opening Balance) — akumulatif mulai 2025
+         * 2. Hitung SALDO AWAL untuk tahun berjalan
+         *    opening = tahun_2024 + mutasi(2025..previousYear)
          * =======================================================
-         * Rumus:
-         *   opening = tahun_2024 + mutasi(2025..previousYear)
          */
         $startBaseYear = 2025;
         $openingBalance = [];
 
         if ($previousYear >= $startBaseYear) {
 
-            // Mutasi DEBIT rentang tahun
-            $debitsRange = DB::table('journals')
+            // Mutasi debit
+            $debitPrev = DB::table('journals')
                 ->select(
                     DB::raw("debit_account_id AS account_id"),
-                    DB::raw("SUM(cash_in) AS total_in"),
-                    DB::raw("0 AS total_out")
+                    DB::raw("SUM(total_debit) AS debit_amount"),
+                    DB::raw("0 AS credit_amount")
                 )
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
-                ->whereNotNull('debit_account_id')
                 ->groupBy('account_id');
 
-            // Mutasi KREDIT rentang tahun
-            $creditsRange = DB::table('journals')
+            // Mutasi kredit
+            $creditPrev = DB::table('journals')
                 ->select(
                     DB::raw("credit_account_id AS account_id"),
-                    DB::raw("0 AS total_in"),
-                    DB::raw("SUM(cash_out) AS total_out")
+                    DB::raw("0 AS debit_amount"),
+                    DB::raw("SUM(total_credit) AS credit_amount")
                 )
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
-                ->whereNotNull('credit_account_id')
                 ->groupBy('account_id');
 
-            // Gabung mutasi
-            $rangeQuery = $debitsRange
-                ->unionAll($creditsRange)
+            $prevQuery = $debitPrev
+                ->unionAll($creditPrev)
                 ->get()
                 ->groupBy('account_id');
 
-            // Hitung saldo awal final
             foreach ($items as $it) {
-                $rows = $rangeQuery[$it->id] ?? collect();
 
-                $totalIn = $rows->sum('total_in');
-                $totalOut = $rows->sum('total_out');
+                $rows = $prevQuery[$it->id] ?? collect();
 
-                $openingBalance[$it->id] = ($baseSaldo[$it->id] ?? 0) + ($totalIn - $totalOut);
+                $debit  = $rows->sum('debit_amount');
+                $credit = $rows->sum('credit_amount');
+
+                $openingBalance[$it->id] = ($baseSaldo[$it->id] ?? 0) + ($debit - $credit);
             }
 
         } else {
-            // Jika previousYear = 2024 → gunakan tahun_2024
+            // Tahun 2025 → saldo awal = master TB
             foreach ($items as $it) {
                 $openingBalance[$it->id] = $baseSaldo[$it->id] ?? 0;
             }
@@ -87,35 +83,34 @@ class TrialBalanceReportController extends Controller
 
         /**
          * =======================================================
-         * 3. Mutasi Tahun Berjalan (per bulan)
+         * 3. Mutasi tahun berjalan (per bulan)
+         *    debit(+) kredit(-)
          * =======================================================
          */
 
-        // debit ke akun (cash_in)
+        // Mutasi DEBIT per bulan
         $debits = DB::table('journals')
             ->select(
                 DB::raw("debit_account_id AS account_id"),
                 DB::raw("MONTH(date) AS month"),
-                DB::raw("SUM(cash_in) AS total_in"),
-                DB::raw("0 AS total_out")
+                DB::raw("SUM(total_debit) AS debit_amount"),
+                DB::raw("0 AS credit_amount")
             )
             ->whereYear('date', $year)
-            ->whereNotNull('debit_account_id')
             ->groupBy('account_id', 'month');
 
-        // kredit dari akun (cash_out)
+        // Mutasi KREDIT per bulan
         $credits = DB::table('journals')
             ->select(
                 DB::raw("credit_account_id AS account_id"),
                 DB::raw("MONTH(date) AS month"),
-                DB::raw("0 AS total_in"),
-                DB::raw("SUM(cash_out) AS total_out")
+                DB::raw("0 AS debit_amount"),
+                DB::raw("SUM(total_credit) AS credit_amount")
             )
             ->whereYear('date', $year)
-            ->whereNotNull('credit_account_id')
             ->groupBy('account_id', 'month');
 
-        // gabung debit + kredit
+        // Gabungkan debit + kredit
         $journalMonthly = $debits
             ->unionAll($credits)
             ->get()
@@ -123,34 +118,31 @@ class TrialBalanceReportController extends Controller
 
         /**
          * =======================================================
-         * 4. Saldo Per Bulan
+         * 4. Hitung saldo per bulan
          * =======================================================
          */
-
         $data = [];
 
         foreach ($items as $item) {
 
-            // saldo awal
             $saldo = $openingBalance[$item->id] ?? 0;
-
             $row = [];
 
             for ($m = 1; $m <= 12; $m++) {
 
                 $trx = $journalMonthly[$item->id] ?? collect();
 
-                $cashIn = $trx->where('month', $m)->sum('total_in');
-                $cashOut = $trx->where('month', $m)->sum('total_out');
+                $debit  = $trx->where('month', $m)->sum('debit_amount');
+                $credit = $trx->where('month', $m)->sum('credit_amount');
 
-                // saldo berjalan = saldo + debit - kredit
-                $saldo = $saldo + $cashIn - $cashOut;
+                $saldo = $saldo + $debit - $credit;
 
                 $row["month_$m"] = $saldo;
             }
 
-            $row['total'] = $saldo;
+            $row['total']   = $saldo;
             $row['opening'] = $openingBalance[$item->id] ?? 0;
+
             $data[$item->id] = $row;
         }
 
