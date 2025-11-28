@@ -116,6 +116,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/trial-balance-report', [TrialBalanceReportController::class, 'index'])
         ->name('trial_balance_report.index');
 
+    // Cashflow Report
+    Route::get('/reports/cashflow', [\App\Http\Controllers\CashflowReportController::class, 'index'])
+        ->name('reports.cashflow');
+
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
     // ->name('trial.balance.report');
 

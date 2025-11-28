@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Trial Balance Report')
+@section('title', 'Cashflow Report')
 
 @section('page-header')
     <div class="page-pretitle">Laporan</div>
-    <h2 class="page-title">Trial Balance Report Tahun {{ $year }}</h2>
+    <h2 class="page-title">Arus Kas Tahun {{ $year }}</h2>
 @endsection
 
 @section('page-actions')
@@ -20,12 +20,12 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Daftar Trial Balance</h3>
+                    <h3 class="card-title">Daftar Cashflow Report</h3>
                 </div>
 
                 <div class="table-responsive">
                     <style>
-                        .tb-text {
+                        .cf-text {
                             display: flex;
                             align-items: center;
                             font-size: 14px;
@@ -76,8 +76,6 @@
                         }
                     </style>
 
-
-
                     <table class="table table-bordered table-striped">
                         <thead>
                             <tr>
@@ -87,7 +85,7 @@
                                     <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }}</th>
                                 @endfor
                                 <th>Total {{ $year }}</th>
-                                <th>Total {{ $year - 1 }}</th>
+                                <th>Opening Balance</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -97,12 +95,12 @@
                                     <td>{{ $item->kode }}</td>
 
                                     <td>
-                                        <div class="tb-text level-{{ $item->level }}">
+                                        <div class="cf-text level-{{ $item->level }}">
                                             {{ $item->keterangan }}
                                         </div>
                                     </td>
 
-                                    {{-- Nilai bulan --}}
+                                    {{-- Monthly values --}}
                                     @for ($m = 1; $m <= 12; $m++)
                                         @php
                                             $val = $data[$item->id]["month_$m"] ?? 0;
@@ -110,24 +108,21 @@
                                         <td>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</td>
                                     @endfor
 
-                                    {{-- Total tahun berjalan --}}
+                                    {{-- Total current year --}}
                                     @php
                                         $total = $data[$item->id]['total'] ?? 0;
                                     @endphp
                                     <td>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</td>
 
-                                    {{-- Saldo awal --}}
+                                    {{-- Opening balance --}}
                                     @php
-                                        $start =  $data[$item->id]['opening'] ?? 0;
+                                        $opening = $data[$item->id]['opening'] ?? 0;
                                     @endphp
-                                    <td>{{ $start == 0 ? '' : number_format($start, 0, ',', '.') }}</td>
+                                    <td>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</td>
 
                                 </tr>
                             @endforeach
                         </tbody>
-
-
-
                     </table>
                 </div>
             </div>
