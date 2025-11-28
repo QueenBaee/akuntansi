@@ -201,8 +201,8 @@
                                     <span class="nav-link-title">Laporan</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}"
-                                        href="{{ route('cashflow.index') }}">Laporan Arus Kas</a>
+                                    <a class="dropdown-item {{ request()->routeIs('reports.cashflow') ? 'active' : '' }}"
+                                        href="{{ route('reports.cashflow') }}">Laporan Arus Kas</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
                                     <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
