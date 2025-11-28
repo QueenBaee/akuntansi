@@ -18,7 +18,7 @@ class MemorialController extends Controller
 
     public function index(Request $request)
     {
-        $query = Journal::with(['details.account', 'createdBy'])
+        $query = Journal::with(['details.account', 'creator'])
             ->where('source_module', 'memorial');
 
         if ($request->has('search')) {

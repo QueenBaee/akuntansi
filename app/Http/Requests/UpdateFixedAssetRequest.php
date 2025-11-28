@@ -14,7 +14,7 @@ class UpdateFixedAssetRequest extends FormRequest
 
     public function rules(): array
     {
-        $assetId = $this->route('fixed_asset') ? $this->route('fixed_asset')->id : null;
+        $assetId = $this->route('fixedAsset') ? $this->route('fixedAsset')->id : $this->route('fixed_asset');
 
         return [
             'code' => [
