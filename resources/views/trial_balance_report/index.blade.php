@@ -148,7 +148,6 @@
                                     <td>{{ $start == 0 ? '' : number_format($start, 0, ',', '.') }}</td>
                                 </tr>
                             @endif
-                            @endforeach
 
                             {{-- TOTAL ASSETS --}}
                             @php
