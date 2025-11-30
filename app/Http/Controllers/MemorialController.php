@@ -13,7 +13,7 @@ class MemorialController extends Controller
     public function create()
     {
         $accounts = TrialBalance::orderBy('kode')->where('level', 4)->get();
-        $memorialsHistory = [];
+        $memorialsHistory = $this->getMemorialsHistory();
 
         return view('memorials.create', compact('accounts', 'memorialsHistory'));
     }
@@ -23,9 +23,9 @@ class MemorialController extends Controller
         $rules = [
             'entries' => 'required|array|min:1',
             'entries.*.date' => 'nullable|date',
-            'entries.*.description' => 'nullable|string|max:255',
-            'entries.*.pic' => 'nullable|string|max:255',
-            'entries.*.proof_number' => 'nullable|string|max:255',
+            'entries.*.description' => 'nullable|string|max:70',
+            'entries.*.pic' => 'nullable|string|max:15',
+            'entries.*.proof_number' => 'nullable|string|max:10',
             'entries.*.debit_amount' => 'nullable|numeric|min:0',
             'entries.*.credit_amount' => 'nullable|numeric|min:0',
             'entries.*.debit_account_id' => 'nullable|exists:trial_balances,id',
@@ -119,9 +119,9 @@ class MemorialController extends Controller
     {
         $rules = [
             'date' => 'required|date',
-            'description' => 'required|string|max:255',
-            'pic' => 'nullable|string|max:255',
-            'proof_number' => 'nullable|string|max:255',
+            'description' => 'required|string|max:70',
+            'pic' => 'nullable|string|max:15',
+            'proof_number' => 'nullable|string|max:10',
             'debit_amount' => 'nullable|numeric|min:0',
             'credit_amount' => 'nullable|numeric|min:0',
             'debit_account_id' => 'nullable|exists:trial_balances,id',
@@ -197,6 +197,72 @@ class MemorialController extends Controller
     {
         $journal = Journal::where('source_module', 'memorial')->with('attachments')->findOrFail($id);
         return response()->json(['attachments' => $journal->attachments]);
+    }
+    
+    public function viewAttachment($id, $attachmentId)
+    {
+        try {
+            $journal = Journal::where('source_module', 'memorial')->findOrFail($id);
+            $attachment = $journal->attachments()->findOrFail($attachmentId);
+            
+            $filePath = storage_path('app/public/' . $attachment->file_path);
+            
+            if (!file_exists($filePath)) {
+                abort(404, 'File not found: ' . $filePath);
+            }
+            
+            return response()->file($filePath);
+        } catch (\Exception $e) {
+            abort(500, 'Error: ' . $e->getMessage());
+        }
+    }
+
+    private function getMemorialsHistory()
+    {
+        $journals = Journal::with(['debitAccount', 'creditAccount', 'attachments', 'details.trialBalance'])
+            ->whereIn('source_module', ['memorial', 'asset_depreciation'])
+            ->orderBy('date')
+            ->orderBy('created_at')
+            ->get();
+
+        $history = [];
+
+        foreach ($journals as $journal) {
+            if ($journal->source_module === 'asset_depreciation') {
+                // For asset depreciation, get details from journal_details
+                $debitDetail = $journal->details->where('debit', '>', 0)->first();
+                $creditDetail = $journal->details->where('credit', '>', 0)->first();
+                
+                $history[] = [
+                    'journal_id' => $journal->id,
+                    'date' => $journal->date->format('d/m/Y'),
+                    'description' => $journal->description,
+                    'pic' => $journal->pic,
+                    'proof_number' => $journal->proof_number,
+                    'debit_amount' => $debitDetail ? $debitDetail->debit : 0,
+                    'credit_amount' => $creditDetail ? $creditDetail->credit : 0,
+                    'debit_account' => $debitDetail && $debitDetail->trialBalance ? $debitDetail->trialBalance->kode . ' - ' . $debitDetail->trialBalance->keterangan : '-',
+                    'credit_account' => $creditDetail && $creditDetail->trialBalance ? $creditDetail->trialBalance->kode . ' - ' . $creditDetail->trialBalance->keterangan : '-',
+                    'attachments' => $journal->attachments,
+                ];
+            } else {
+                // For manual memorial entries
+                $history[] = [
+                    'journal_id' => $journal->id,
+                    'date' => $journal->date->format('d/m/Y'),
+                    'description' => $journal->description,
+                    'pic' => $journal->pic,
+                    'proof_number' => $journal->proof_number,
+                    'debit_amount' => $journal->cash_in,
+                    'credit_amount' => $journal->cash_out,
+                    'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
+                    'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
+                    'attachments' => $journal->attachments,
+                ];
+            }
+        }
+
+        return $history;
     }
 
     private function generateMemorialNumber()

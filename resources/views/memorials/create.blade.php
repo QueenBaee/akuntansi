@@ -43,16 +43,16 @@
                             <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
                                 <thead class="table-light">
                                     <tr style="border: 1px solid #dee2e6;">
-                                        <th style="border: 1px solid #dee2e6; width: 80px;">Tanggal</th>
-                                        <th style="border: 1px solid #dee2e6; width: 200px;">Keterangan</th>
-                                        <th style="border: 1px solid #dee2e6; width: 100px;">PIC</th>
-                                        <th style="border: 1px solid #dee2e6; width: 100px;">Bukti</th>
-                                        <th style="border: 1px solid #dee2e6; width: 100px;">No. Bukti</th>
-                                        <th style="border: 1px solid #dee2e6; width: 150px;">Akun Debit</th>
-                                        <th style="border: 1px solid #dee2e6; width: 120px;">Debit</th>
-                                        <th style="border: 1px solid #dee2e6; width: 150px;">Akun Kredit</th>
-                                        <th style="border: 1px solid #dee2e6; width: 120px;">Kredit</th>
-                                        <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
+                                        <th style="border: 1px solid #dee2e6;">Tanggal</th>
+                                        <th style="border: 1px solid #dee2e6;">Keterangan</th>
+                                        <th style="border: 1px solid #dee2e6;">PIC</th>
+                                        <th style="border: 1px solid #dee2e6;">Dokumen</th>
+                                        <th style="border: 1px solid #dee2e6;">No. Dokumen</th>
+                                        <th style="border: 1px solid #dee2e6;">Akun Debit</th>
+                                        <th style="border: 1px solid #dee2e6;">Debit</th>
+                                        <th style="border: 1px solid #dee2e6;">Akun Kredit</th>
+                                        <th style="border: 1px solid #dee2e6;">Kredit</th>
+                                        <th style="border: 1px solid #dee2e6;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="memorialLines">
@@ -173,11 +173,11 @@
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
-                    '][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi">' +
+                    '][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi" maxlength="70">' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
-                    '][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC">' +
+                    '][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC" maxlength="15">' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="file" name="entries[' + currentIndex +
@@ -185,11 +185,11 @@
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
-                    '][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="Auto" readonly>' +
+                    '][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="No. Dokumen" maxlength="10">' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<select name="entries[' + currentIndex +
-                    '][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">' +
+                    '][debit_account_id]" class="form-control form-control-sm debit-account searchable-select" style="border: none; font-size: 12px;">' +
                     accountOptions +
                     '</select>' +
                     '</td>' +
@@ -199,7 +199,7 @@
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<select name="entries[' + currentIndex +
-                    '][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">' +
+                    '][credit_account_id]" class="form-control form-control-sm credit-account searchable-select" style="border: none; font-size: 12px;">' +
                     accountOptions +
                     '</select>' +
                     '</td>' +
@@ -214,6 +214,36 @@
 
                 tbody.appendChild(row);
                 lineIndex++;
+                
+                // Initialize Select2 for new row with AJAX
+                setTimeout(() => {
+                    $(row).find('.searchable-select').select2({
+                        theme: 'default',
+                        width: '100%',
+                        placeholder: 'Ketik untuk mencari akun...',
+                        allowClear: true,
+                        ajax: {
+                            url: '/api/accounts/search',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return {
+                                    q: params.term
+                                };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: data.results
+                                };
+                            },
+                            cache: true
+                        },
+                        minimumInputLength: 1
+                    });
+                    
+                    // Refresh table widths after adding new row
+                    refreshTableWidths();
+                }, 100);
             }
 
             function handleAmountInput(input, type) {
@@ -251,34 +281,7 @@
             }
 
             function updateProofNumber(input) {
-                const row = input.closest('tr');
-                const debitAmount = parseFloat(row.querySelector('.debit-amount').value) || 0;
-                const creditAmount = parseFloat(row.querySelector('.credit-amount').value) || 0;
-                const proofInput = row.querySelector('.proof-number');
-
-                if (debitAmount > 0 || creditAmount > 0) {
-                    // Count existing memorial entries to get next number
-                    let memorialCount = 1;
-                    const historyRows = document.querySelectorAll('tr[data-existing="1"]');
-                    historyRows.forEach(historyRow => {
-                        const historyProofCell = historyRow.children[4];
-                        if (historyProofCell && historyProofCell.textContent.includes('MEM-')) {
-                            memorialCount++;
-                        }
-                    });
-
-                    const currentRows = document.querySelectorAll('input[name*="[proof_number]"]');
-                    currentRows.forEach(inp => {
-                        if (inp !== proofInput && inp.value && inp.value.includes('MEM-')) {
-                            memorialCount++;
-                        }
-                    });
-
-                    const proofNumber = `MEM-${memorialCount.toString().padStart(3, '0')}`;
-                    proofInput.value = proofNumber;
-                } else {
-                    proofInput.value = '';
-                }
+                // No auto-generation, user inputs manually
             }
 
             function viewAttachments(journalId) {
@@ -377,34 +380,59 @@
                 cells[4].innerHTML =
                     `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
                 cells[5].innerHTML =
-                    `<select class="form-control form-control-sm edit-debit-account debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    `<select class="form-control form-control-sm edit-debit-account debit-account searchable-select" style="font-size: 12px; border: none;">${accountOptions}</select>`;
                 cells[6].innerHTML =
                     `<input type="number" class="form-control form-control-sm edit-debit debit-amount" value="${debitAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'debit')">`;
                 cells[7].innerHTML =
-                    `<select class="form-control form-control-sm edit-credit-account credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    `<select class="form-control form-control-sm edit-credit-account credit-account searchable-select" style="font-size: 12px; border: none;">${accountOptions}</select>`;
                 cells[8].innerHTML =
                     `<input type="number" class="form-control form-control-sm edit-credit credit-amount" value="${creditAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'credit')">`;
 
                 // Set current selections
                 setTimeout(() => {
+                    // Initialize Select2 for edit mode with AJAX
+                    $(row).find('.searchable-select').select2({
+                        theme: 'default',
+                        width: '100%',
+                        placeholder: 'Ketik untuk mencari akun...',
+                        allowClear: true,
+                        ajax: {
+                            url: '/api/accounts/search',
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return {
+                                    q: params.term
+                                };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: data.results
+                                };
+                            },
+                            cache: true
+                        },
+                        minimumInputLength: 1
+                    });
+                    
                     // Set account selections by text
                     const debitSelect = row.querySelector('.edit-debit-account');
                     const creditSelect = row.querySelector('.edit-credit-account');
 
                     for (let option of debitSelect.options) {
                         if (option.text === debitAccount) {
-                            debitSelect.value = option.value;
+                            $(debitSelect).val(option.value).trigger('change');
                             break;
                         }
                     }
 
                     for (let option of creditSelect.options) {
                         if (option.text === creditAccount) {
-                            creditSelect.value = option.value;
+                            $(creditSelect).val(option.value).trigger('change');
                             break;
                         }
                     }
-                }, 10);
+                }, 100);
 
                 // Change button to save
                 editButton.innerHTML = '✓';

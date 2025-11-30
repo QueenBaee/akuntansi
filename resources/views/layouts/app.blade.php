@@ -8,7 +8,37 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
+        .select2-container--default .select2-selection--single {
+            height: 38px;
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+            padding-left: 12px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+        .select2-dropdown {
+            border: 1px solid #ced4da;
+            border-radius: 0.375rem;
+        }
+        
+        /* Equal-width tables - no text cutting */
+        .table-equal-width {
+            table-layout: auto !important;
+            width: auto !important;
+        }
+        
+        .table-equal-width th,
+        .table-equal-width td {
+            white-space: nowrap !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+        }
         .dropdown-item.active {
             background-color: #206bc4;
             color: white;
@@ -336,7 +366,144 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Initialize Select2 for all select elements
+        function initSelect2() {
+            // Regular selects (non-AJAX)
+            $('select:not(.no-select2):not(.ajax-select)').select2({
+                theme: 'default',
+                width: '100%',
+                placeholder: 'Pilih...',
+                allowClear: true
+            });
+            
+            // AJAX selects for accounts
+            $('select.ajax-select').select2({
+                theme: 'default',
+                width: '100%',
+                placeholder: 'Ketik untuk mencari...',
+                allowClear: true,
+                ajax: {
+                    url: '/api/accounts/search',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1
+            });
+        }
+        
+        // Initialize on document ready
+        $(document).ready(function() {
+            initSelect2();
+            initEqualWidth();
+            applyInputLimits();
+        });
+        
+        // Re-initialize after dynamic content is added
+        function reinitSelect2() {
+            $('select:not(.no-select2)').select2('destroy');
+            initSelect2();
+        }
+        
+        function equalizeTableColumns() {
+            document.querySelectorAll('table').forEach(table => {
+                if (table.classList.contains('no-equal-width')) return;
+                
+                const headers = table.querySelectorAll('thead th');
+                const skipIndexes = [];
+                
+                // Find Kode and Keterangan column indexes
+                headers.forEach((th, index) => {
+                    const text = th.textContent.toLowerCase().trim();
+                    if (text === 'kode' || text === 'keterangan') {
+                        skipIndexes.push(index);
+                    }
+                });
+                
+                // Reset table
+                table.style.tableLayout = 'auto';
+                table.querySelectorAll('th, td').forEach(cell => {
+                    cell.style.width = 'auto';
+                    cell.style.whiteSpace = 'nowrap';
+                });
+                
+                table.offsetHeight;
+                
+                // Find max width excluding skip columns
+                let maxWidth = 0;
+                table.querySelectorAll('tr').forEach(row => {
+                    Array.from(row.children).forEach((cell, index) => {
+                        if (!skipIndexes.includes(index)) {
+                            const width = cell.scrollWidth;
+                            if (width > maxWidth) maxWidth = width;
+                        }
+                    });
+                });
+                
+                // Apply max width to non-skip columns
+                if (maxWidth > 0) {
+                    table.querySelectorAll('tr').forEach(row => {
+                        Array.from(row.children).forEach((cell, index) => {
+                            if (!skipIndexes.includes(index)) {
+                                cell.style.width = maxWidth + 'px';
+                                cell.style.minWidth = maxWidth + 'px';
+                            }
+                        });
+                    });
+                }
+                
+                table.classList.add('table-equal-width');
+            });
+        }
+        
+        // Initialize equal-width on load and after dynamic content
+        function initEqualWidth() {
+            equalizeTableColumns();
+            setTimeout(equalizeTableColumns, 100);
+        }
+        
+        // Global function to call after adding dynamic content
+        window.refreshTableWidths = function() {
+            setTimeout(equalizeTableColumns, 50);
+        };
+        
+        // Auto-apply maxlength to inputs
+        function applyInputLimits() {
+            const limits = {
+                'date': 10, 'tanggal': 10, 'description': 70, 'keterangan': 70,
+                'pic': 15, 'reference': 10, 'no_bukti': 10, 'proof_number': 10,
+                'masuk': 15, 'keluar': 15, 'saldo': 15, 'balance': 15,
+                'akun_cf': 50, 'debit': 50, 'kredit': 50, 'credit': 50,
+                'debit_amount': 15, 'credit_amount': 15, 'cash_in': 15, 'cash_out': 15
+            };
+            
+            document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
+                const name = input.name || input.id || input.placeholder?.toLowerCase() || '';
+                const className = input.className.toLowerCase();
+                
+                for (const [field, limit] of Object.entries(limits)) {
+                    if (name.includes(field) || className.includes(field)) {
+                        input.maxLength = limit;
+                        break;
+                    }
+                }
+            });
+        }
+    </script>
     <script>
         function selectCashAccount(ledgerId, accountName, currentBalance) {
             // Get account type from the clicked element
