@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
     Route::post('memorials', [\App\Http\Controllers\MemorialController::class, 'store'])->name('memorials.store');
     Route::put('memorials/{id}', [\App\Http\Controllers\MemorialController::class, 'update'])->name('memorials.update');
     Route::get('memorials/{id}/attachments', [\App\Http\Controllers\MemorialController::class, 'getAttachments'])->name('memorials.attachments');
+    Route::get('memorials/{id}/attachments/{attachmentId}', [\App\Http\Controllers\MemorialController::class, 'viewAttachment'])->name('memorials.view-attachment');
     Route::delete('memorials/{id}', [\App\Http\Controllers\MemorialController::class, 'destroy'])->name('memorials.destroy');
     Route::resource('memorials', \App\Http\Controllers\Web\MemorialController::class)->except(['create','store','destroy']);
 
@@ -132,7 +133,12 @@ Route::middleware('auth')->group(function () {
     // ->name('trial.balance.report.show');
 });
 
+// API Routes
+Route::prefix('api')->group(function () {
+    Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
+});
+
 // *** Catch-all route HARUS PALING BAWAH ***
 Route::get('/{any}', function () {
     return view('dashboard.index');
-})->where('any', '.*');
+})->where('any', '^(?!storage|css|js|images|assets|api).*');

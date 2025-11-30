@@ -2,6 +2,10 @@
 
 @section('title', 'Memorial Entry')
 
+@php
+    $cacheBuster = time();
+@endphp
+
 @section('page-header')
     <div class="page-pretitle">Memorial</div>
     <h2 class="page-title">Memorial Entry</h2>
@@ -13,6 +17,12 @@
         Tambah Memorial
     </a>
 @endsection
+
+@push('head')
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+@endpush
 
 @section('content')
 <div class="row">
@@ -26,25 +36,35 @@
                     <thead>
                         <tr>
                             <th>Tanggal</th>
-                            <th>Referensi</th>
-                            <th>Deskripsi</th>
-                            <th>Total</th>
-                            <th>Status</th>
+                            <th>Keterangan</th>
+                            <th>PIC</th>
+                            <th>No Dokumen <!-- UPDATED --></th>
+                            <th>Dokumen</th>
+                            <th class="text-end">Debit (Rp)</th>
+                            <th class="text-end">Kredit (Rp)</th>
                             <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($memorials ?? [] as $memorial)
                         <tr>
-                            <td>{{ $memorial->date }}</td>
-                            <td>{{ $memorial->reference ?? '-' }}</td>
+                            <td>{{ $memorial->date->format('d/m/Y') }}</td>
                             <td>{{ $memorial->description }}</td>
-                            <td>{{ number_format($memorial->details->sum('debit'), 0, ',', '.') }}</td>
+                            <td>{{ $memorial->pic ?? '-' }}</td>
+                            <td>{{ $memorial->proof_number ?? '-' }}</td>
                             <td>
-                                <span class="badge bg-{{ $memorial->is_posted ? 'success' : 'warning' }}">
-                                    {{ $memorial->is_posted ? 'Posted' : 'Draft' }}
-                                </span>
+                                @if($memorial->attachments && $memorial->attachments->count() > 0)
+                                    @foreach($memorial->attachments as $attachment)
+                                        <a href="{{ route('memorials.view-attachment', [$memorial->id, $attachment->id]) }}?v={{ $cacheBuster }}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
+                                            {{ $attachment->original_name }}
+                                        </a>
+                                    @endforeach
+                                @else
+                                    -
+                                @endif
                             </td>
+                            <td class="text-end">{{ number_format($memorial->cash_in ?? 0, 0, ',', '.') }}</td>
+                            <td class="text-end">{{ number_format($memorial->cash_out ?? 0, 0, ',', '.') }}</td>
                             <td>
                                 <div class="btn-list flex-nowrap">
                                     <button class="btn btn-sm btn-outline-primary" onclick="viewMemorial({{ $memorial->id }})">
@@ -60,7 +80,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 Belum ada memorial
                             </td>
                         </tr>
@@ -158,5 +178,7 @@ function viewMemorial(id) {
     // Implement view memorial details
     alert('View memorial ' + id);
 }
+
+
 </script>
 @endpush
