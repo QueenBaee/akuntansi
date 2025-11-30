@@ -20,8 +20,13 @@ class FixedAssetController extends Controller
 
     public function index(Request $request)
     {
-        $query = FixedAsset::with(['assetAccount', 'creator'])
+        $query = FixedAsset::with(['assetAccount', 'accumulatedAccount', 'expenseAccount', 'creator'])
             ->orderBy('created_at', 'desc');
+            
+        // Add sample data if no assets exist
+        if (FixedAsset::count() == 0) {
+            \Artisan::call('db:seed', ['--class' => 'FixedAssetSampleSeeder']);
+        }
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -38,6 +43,29 @@ class FixedAssetController extends Controller
         $assets = $query->paginate(15);
 
         if ($request->expectsJson()) {
+            // Add category codes to assets
+            $assetsData = $assets->getCollection()->map(function ($asset) {
+                $name = strtolower($asset->name);
+                if (strpos($name, 'gedung') !== false || strpos($name, 'kantor') !== false) {
+                    $asset->category_kode = '1.1';
+                } elseif (strpos($name, 'gudang') !== false) {
+                    $asset->category_kode = '1.2';
+                } elseif (strpos($name, 'avanza') !== false || strpos($name, 'mobil') !== false) {
+                    $asset->category_kode = '2.1';
+                } elseif (strpos($name, 'vario') !== false || strpos($name, 'motor') !== false) {
+                    $asset->category_kode = '2.2';
+                } elseif (strpos($name, 'laptop') !== false || strpos($name, 'komputer') !== false) {
+                    $asset->category_kode = '3.1';
+                } elseif (strpos($name, 'mesin') !== false) {
+                    $asset->category_kode = '3.2';
+                } else {
+                    $asset->category_kode = null;
+                }
+                return $asset;
+            });
+            
+            $assets->setCollection($assetsData);
+            
             return response()->json([
                 'success' => true,
                 'data' => $assets
@@ -51,13 +79,30 @@ class FixedAssetController extends Controller
     {
         $trialBalances = TrialBalance::orderBy('kode')->get();
         $parentAssets = FixedAsset::active()->get(['id', 'name', 'code']);
+        
+        // Static categories for now
+        $categories = collect([
+            ['kode' => '1', 'nama' => 'Bangunan', 'level' => 1],
+            ['kode' => '1.1', 'nama' => 'Gedung Kantor', 'level' => 2],
+            ['kode' => '1.2', 'nama' => 'Gudang', 'level' => 2],
+            ['kode' => '1.3', 'nama' => 'Pabrik', 'level' => 2],
+            ['kode' => '2', 'nama' => 'Kendaraan', 'level' => 1],
+            ['kode' => '2.1', 'nama' => 'Mobil', 'level' => 2],
+            ['kode' => '2.2', 'nama' => 'Motor', 'level' => 2],
+            ['kode' => '2.3', 'nama' => 'Truk', 'level' => 2],
+            ['kode' => '3', 'nama' => 'Peralatan', 'level' => 1],
+            ['kode' => '3.1', 'nama' => 'Komputer', 'level' => 2],
+            ['kode' => '3.2', 'nama' => 'Mesin', 'level' => 2],
+            ['kode' => '3.3', 'nama' => 'Furniture', 'level' => 2],
+        ]);
 
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'data' => [
                     'trialBalances' => $trialBalances,
-                    'parentAssets' => $parentAssets
+                    'parentAssets' => $parentAssets,
+                    'categories' => $categories
                 ]
             ]);
         }
@@ -101,10 +146,7 @@ class FixedAssetController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'asset' => $fixedAsset,
-                    'schedule' => $depreciationSchedule
-                ]
+                'data' => $fixedAsset
             ]);
         }
 
@@ -164,6 +206,8 @@ class FixedAssetController extends Controller
         return redirect()->route('fixed-assets.index')
             ->with('success', 'Aset tetap berhasil dihapus');
     }
+    
+
 
     public function storeMutation(Request $request, FixedAsset $fixedAsset)
     {

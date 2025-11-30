@@ -37,6 +37,14 @@
                     </div>
                     <div class="col-md-2">
                         <div class="mb-3">
+                            <label class="form-label">Kategori</label>
+                            <select class="form-select" id="categoryKode">
+                                <option value="">Pilih Kategori</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
                             <label class="form-label">Tanggal Perolehan</label>
                             <input type="date" class="form-control" id="acquisitionDate" required>
                         </div>
@@ -81,9 +89,9 @@
                     </div>
                     <div class="col-md-3">
                         <div class="mb-3">
-                            <label class="form-label">Nilai Residual</label>
-                            <input type="text" class="form-control" id="residualValue" placeholder="0 atau 0.1 (10%)" value="0">
-                            <small class="form-hint">Masukkan dalam rupiah (1000000) atau desimal (0.1 = 10%)</small>
+                            <label class="form-label">Nilai Residual (%)</label>
+                            <input type="number" class="form-control" id="residualValue" placeholder="10" value="0" min="0" max="100" step="0.01">
+                            <small class="form-hint">Masukkan dalam persen (contoh: 10 untuk 10%)</small>
                         </div>
                     </div>
                 </div>
@@ -109,6 +117,11 @@
                         <th>Nama Aset</th>
                         <th>Tanggal Perolehan</th>
                         <th>Harga Perolehan</th>
+                        <th>Umur Manfaat</th>
+                        <th>Nilai Residual</th>
+                        <th>Asset Account</th>
+                        <th>Accumulated Account</th>
+                        <th>Expense Account</th>
                         <th>Nilai Buku</th>
                         <th>Status</th>
                         <th class="w-1">Aksi</th>
@@ -116,7 +129,7 @@
                 </thead>
                 <tbody id="assetTableBody">
                     <tr>
-                        <td colspan="7" class="text-center">Loading...</td>
+                        <td colspan="12" class="text-center">Loading...</td>
                     </tr>
                 </tbody>
             </table>
@@ -194,6 +207,15 @@ async function loadFormData() {
         accumulatedSelect.innerHTML = options;
         expenseSelect.innerHTML = options;
         
+        const categorySelect = document.getElementById('categoryKode');
+        const categoryOptions = '<option value="">Pilih Kategori</option>' + 
+            result.data.categories.map(cat => {
+                const indent = cat.level === 2 ? '&nbsp;&nbsp;' : '';
+                const style = cat.level === 1 ? 'font-weight: bold;' : '';
+                return `<option value="${cat.kode}" style="${style}">${indent}${cat.nama}</option>`;
+            }).join('');
+        categorySelect.innerHTML = categoryOptions;
+        
     } catch (error) {
         showAlert('error', 'Gagal memuat data form: ' + error.message);
     }
@@ -226,33 +248,75 @@ function renderAssets(assets) {
     const tbody = document.getElementById('assetTableBody');
     
     if (assets.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tidak ada data aset tetap</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Tidak ada data aset tetap</td></tr>';
         return;
     }
     
-    tbody.innerHTML = assets.map(asset => `
-        <tr id="row-${asset.id}" data-id="${asset.id}">
-            <td class="editable" data-field="code">${asset.code}</td>
-            <td class="editable" data-field="name">${asset.name}</td>
-            <td class="editable" data-field="acquisition_date">${new Date(asset.acquisition_date).toLocaleDateString('id-ID')}</td>
-            <td class="editable" data-field="acquisition_price">${new Intl.NumberFormat('id-ID').format(asset.acquisition_price)}</td>
-            <td class="text-success">${new Intl.NumberFormat('id-ID').format(asset.current_book_value)}</td>
-            <td class="editable" data-field="is_active">
-                <span class="badge bg-${asset.is_active ? 'success' : 'danger'}">
-                    ${asset.is_active ? 'Aktif' : 'Tidak Aktif'}
-                </span>
-            </td>
-            <td>
-                <div class="btn-list flex-nowrap">
-                    <a href="/fixed-assets/${asset.id}" class="btn btn-sm btn-white">Detail</a>
-                    <button class="btn btn-sm edit-btn" onclick="editRow(${asset.id})">Edit</button>
-                    <button class="btn btn-sm btn-success save-btn" onclick="saveRow(${asset.id})" style="display: none;">Simpan</button>
-                    <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit(${asset.id})" style="display: none;">Batal</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteAsset(${asset.id})">Hapus</button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
+    // Group assets by category
+    const categories = {
+        '1': { name: 'Bangunan', assets: [] },
+        '2': { name: 'Kendaraan', assets: [] },
+        '3': { name: 'Peralatan', assets: [] },
+        '4': { name: 'Tanah', assets: [] },
+        'uncategorized': { name: 'Tidak Berkategori', assets: [] }
+    };
+    
+    assets.forEach(asset => {
+        const categoryCode = asset.category_kode ? asset.category_kode.split('.')[0] : 'uncategorized';
+        if (categories[categoryCode]) {
+            categories[categoryCode].assets.push(asset);
+        } else {
+            categories['uncategorized'].assets.push(asset);
+        }
+    });
+    
+    let html = '';
+    
+    Object.keys(categories).forEach(categoryCode => {
+        const category = categories[categoryCode];
+        if (category.assets.length > 0) {
+            // Category header
+            html += `
+                <tr class="table-active">
+                    <td colspan="12" class="fw-bold text-primary">${category.name}</td>
+                </tr>
+            `;
+            
+            // Assets in category
+            category.assets.forEach(asset => {
+                html += `
+                    <tr id="row-${asset.id}" data-id="${asset.id}">
+                        <td class="editable ps-4" data-field="code">${asset.code}</td>
+                        <td class="editable" data-field="name">${asset.name}</td>
+                        <td class="editable" data-field="acquisition_date">${new Date(asset.acquisition_date).toLocaleDateString('id-ID')}</td>
+                        <td class="editable" data-field="acquisition_price">${new Intl.NumberFormat('id-ID').format(asset.acquisition_price)}</td>
+                        <td class="editable" data-field="useful_life_months">${asset.useful_life_months} bulan</td>
+                        <td class="editable" data-field="residual_value">${(asset.residual_value * 100).toFixed(2)}%</td>
+                        <td class="editable text-muted small" data-field="asset_account_id">${asset.asset_account ? asset.asset_account.kode + ' - ' + asset.asset_account.keterangan : '-'}</td>
+                        <td class="editable text-muted small" data-field="accumulated_account_id">${asset.accumulated_account ? asset.accumulated_account.kode + ' - ' + asset.accumulated_account.keterangan : '-'}</td>
+                        <td class="editable text-muted small" data-field="expense_account_id">${asset.expense_account ? asset.expense_account.kode + ' - ' + asset.expense_account.keterangan : '-'}</td>
+                        <td class="text-success">${new Intl.NumberFormat('id-ID').format(asset.current_book_value)}</td>
+                        <td class="editable" data-field="is_active">
+                            <span class="badge bg-${asset.is_active ? 'success' : 'danger'}">
+                                ${asset.is_active ? 'Aktif' : 'Tidak Aktif'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a href="/fixed-assets/${asset.id}" class="btn btn-sm btn-white">Detail</a>
+                                <button class="btn btn-sm btn-primary edit-btn" onclick="editRow(${asset.id})">Edit</button>
+                                <button class="btn btn-sm btn-success save-btn" onclick="saveRow(${asset.id})" style="display: none;">Simpan</button>
+                                <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit(${asset.id})" style="display: none;">Batal</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAsset(${asset.id})">Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    });
+    
+    tbody.innerHTML = html;
 }
 
 function editRow(id) {
@@ -280,6 +344,24 @@ function editRow(id) {
         } else if (field === 'acquisition_price') {
             const numericValue = currentValue.replace(/\./g, '');
             cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${numericValue}" step="0.01">`;
+        } else if (field === 'useful_life_months') {
+            const numericValue = currentValue.replace(' bulan', '');
+            cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${numericValue}" min="1">`;
+        } else if (field === 'residual_value') {
+            const percentValue = parseFloat(currentValue.replace('%', ''));
+            cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${percentValue}" min="0" max="100" step="0.01">`;
+        } else if (field === 'asset_account_id' || field === 'accumulated_account_id' || field === 'expense_account_id') {
+            const options = '<option value="">Pilih Account</option>' + 
+                trialBalances.map(account => `<option value="${account.id}">${account.kode} - ${account.keterangan}</option>`).join('');
+            cell.innerHTML = `<select class="form-select form-select-sm">${options}</select>`;
+            
+            // Set selected value
+            const select = cell.querySelector('select');
+            if (currentValue !== '-') {
+                const accountCode = currentValue.split(' - ')[0];
+                const account = trialBalances.find(acc => acc.kode === accountCode);
+                if (account) select.value = account.id;
+            }
         } else {
             cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${currentValue}">`;
         }
@@ -299,7 +381,11 @@ function saveRow(id) {
         const field = cell.dataset.field;
         const input = cell.querySelector('input, select');
         if (input) {
-            formData[field] = input.value;
+            if (field === 'residual_value') {
+                formData[field] = parseFloat(input.value) / 100 || 0;
+            } else {
+                formData[field] = input.value;
+            }
         }
     });
     
@@ -339,6 +425,8 @@ function saveRow(id) {
 function cancelEdit(id) {
     refreshTableData();
 }
+
+
 
 function deleteAsset(id) {
     showAlert('warning', 'Apakah Anda yakin ingin menghapus aset tetap ini?');
@@ -385,9 +473,10 @@ document.getElementById('assetForm').addEventListener('submit', function(e) {
     const formData = {
         code: document.getElementById('code').value,
         name: document.getElementById('name').value,
+        category_kode: document.getElementById('categoryKode').value,
         acquisition_date: document.getElementById('acquisitionDate').value,
         acquisition_price: parseCurrency(document.getElementById('acquisitionPrice').value),
-        residual_value: document.getElementById('residualValue').value || 0,
+        residual_value: parseFloat(document.getElementById('residualValue').value) / 100 || 0,
         useful_life_months: document.getElementById('usefulLifeMonths').value,
         asset_account_id: document.getElementById('assetAccountId').value,
         accumulated_account_id: document.getElementById('accumulatedAccountId').value,
@@ -485,6 +574,55 @@ function formatCurrency(input) {
 // Parse currency to number
 function parseCurrency(value) {
     return parseInt(value.replace(/[^\d]/g, '')) || 0;
+}
+
+function createSampleData() {
+    const sampleAssets = [
+        {code: 'BNG-001', name: 'Gedung Kantor Pusat', category_kode: '1.1', price: 2500000000},
+        {code: 'BNG-002', name: 'Gudang Penyimpanan', category_kode: '1.2', price: 800000000},
+        {code: 'KND-001', name: 'Mobil Toyota Avanza', category_kode: '2.1', price: 250000000},
+        {code: 'KND-002', name: 'Motor Honda Vario', category_kode: '2.2', price: 25000000},
+        {code: 'PRL-001', name: 'Laptop Dell Latitude', category_kode: '3.1', price: 15000000},
+        {code: 'PRL-002', name: 'Mesin Produksi A1', category_kode: '3.2', price: 500000000},
+    ];
+    
+    let created = 0;
+    
+    sampleAssets.forEach(async (asset, index) => {
+        setTimeout(async () => {
+            try {
+                const response = await fetch('/fixed-assets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        code: asset.code,
+                        name: asset.name,
+                        category_kode: asset.category_kode,
+                        acquisition_date: '2023-01-15',
+                        acquisition_price: asset.price,
+                        residual_value: 0.10,
+                        useful_life_months: 60,
+                        asset_account_id: trialBalances[0]?.id,
+                        accumulated_account_id: trialBalances[1]?.id,
+                        expense_account_id: trialBalances[2]?.id
+                    })
+                });
+                
+                created++;
+                if (created === sampleAssets.length) {
+                    showAlert('success', 'Sample data berhasil dibuat!');
+                    refreshTableData();
+                }
+            } catch (error) {
+                console.error('Error creating sample:', error);
+            }
+        }, index * 500);
+    });
 }
 
 // Initialize

@@ -13,6 +13,7 @@ class FixedAsset extends Model
     protected $fillable = [
         'code',
         'name',
+        'category_kode',
         'parent_id',
         'acquisition_date',
         'acquisition_price',
@@ -74,6 +75,11 @@ class FixedAsset extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(AssetCategory::class, 'category_kode', 'kode');
     }
 
     // Accessors & Helpers
