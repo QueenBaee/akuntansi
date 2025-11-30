@@ -82,10 +82,10 @@
                                 <th>Kode</th>
                                 <th>Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }}</th>
+                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
-                                <th>Total {{ $year }}</th>
-                                <th>Opening Balance</th>
+                                <th>{{ $year }}</th>
+                                <th>{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>

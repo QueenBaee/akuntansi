@@ -15,8 +15,8 @@ class DatabaseSeeder extends Seeder
         //     CashflowCategorySeeder::class,
         //     UserSeeder::class,
         // ]);
-        // $this->call(CashflowSeeder::class);
-        // $this->call(TrialBalanceSeeder::class);
+        $this->call(CashflowSeeder::class);
+        $this->call(TrialBalanceSeeder::class);
         $this->call(CashflowTrialBalanceSeeder::class);
     }
 }

@@ -518,12 +518,14 @@ class TrialBalanceSeeder extends Seeder
 
     private function insertRecursive($items, $parentId, $level)
     {
+        $sortOrder = 1;
         foreach ($items as $item) {
             $id = DB::table('trial_balances')->insertGetId([
                 'kode'          => $item['kode'],
                 'keterangan'    => $item['keterangan'],
                 'parent_id'     => $parentId,
                 'level'         => $level,
+                'sort_order'    => $sortOrder,
                 'tahun_2024'    => null,
                 'created_at'    => now(),
                 'updated_at'    => now(),
@@ -532,6 +534,8 @@ class TrialBalanceSeeder extends Seeder
             if (isset($item['children'])) {
                 $this->insertRecursive($item['children'], $id, $level + 1);
             }
+            
+            $sortOrder++;
         }
     }
 }
