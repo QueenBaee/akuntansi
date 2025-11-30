@@ -14,8 +14,10 @@ class TrialBalance extends Model
         'keterangan',
         'parent_id',
         'level',
+        'sort_order',
         'tahun_2024',
-        'is_kas_bank'
+        'is_kas_bank',
+        'tipe_ledger'
     ];
 
     /** RELASI PARENT - CHILD */
@@ -26,7 +28,7 @@ class TrialBalance extends Model
 
     public function children()
     {
-        return $this->hasMany(TrialBalance::class, 'parent_id');
+        return $this->hasMany(TrialBalance::class, 'parent_id')->orderBy('sort_order');
     }
 
     /** RELASI KE CASHFLOW */

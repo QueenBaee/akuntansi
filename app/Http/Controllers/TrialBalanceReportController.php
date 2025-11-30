@@ -14,7 +14,7 @@ class TrialBalanceReportController extends Controller
         $previousYear = $year - 1;
 
         // Ambil master akun TB
-        $items = TrialBalance::orderBy('kode')->get();
+        $items = TrialBalance::orderBy('sort_order')->get();
 
         /**
          * =======================================================

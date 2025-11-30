@@ -84,46 +84,70 @@
                                 <th>Kode</th>
                                 <th>Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }}</th>
+                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
-                                <th>Total {{ $year }}</th>
-                                <th>Total {{ $year - 1 }}</th>
+                                <th>{{ $year }}</th>
+                                <th>{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($items as $item)
-                                <tr class="level-{{ $item->level }}-row">
-
-                                    <td>{{ $item->kode }}</td>
-
-                                    <td>
-                                        <div class="tb-text level-{{ $item->level }}">
-                                            {{ $item->keterangan }}
-                                        </div>
-                                    </td>
-
-                                    {{-- Nilai bulan --}}
+                            @php
+                                function renderRowsReport($items, $data, $prefix = '') {
+                                    foreach ($items as $item) {
+                                        if($item->kode == 'PB') continue;
+                                        
+                                        echo '<tr class="level-' . $item->level . '-row">';
+                                        echo '<td>' . $item->kode . '</td>';
+                                        echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
+                                        
+                                        // Nilai bulan
+                                        for ($m = 1; $m <= 12; $m++) {
+                                            $val = $data[$item->id]["month_$m"] ?? 0;
+                                            echo '<td>' . ($val == 0 ? '' : number_format($val, 0, ',', '.')) . '</td>';
+                                        }
+                                        
+                                        // Total tahun berjalan
+                                        $total = $data[$item->id]['total'] ?? 0;
+                                        echo '<td>' . ($total == 0 ? '' : number_format($total, 0, ',', '.')) . '</td>';
+                                        
+                                        // Saldo awal
+                                        $start = $data[$item->id]['opening'] ?? 0;
+                                        echo '<td>' . ($start == 0 ? '' : number_format($start, 0, ',', '.')) . '</td>';
+                                        
+                                        echo '</tr>';
+                                        
+                                        if ($item->children->count() > 0) {
+                                            renderRowsReport($item->children, $data, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
+                                        }
+                                    }
+                                }
+                                
+                                $rootItems = $items->whereNull('parent_id');
+                                renderRowsReport($rootItems, $data);
+                            @endphp
+                            
+                            {{-- Bagian Pindah Buku --}}
+                            @php
+                                $pbItem = $items->where('kode', 'PB')->first();
+                            @endphp
+                            @if($pbItem)
+                                <tr class="level-{{ $pbItem->level }}-row">
+                                    <td>{{ $pbItem->kode }}</td>
+                                    <td><div class="tb-text level-{{ $pbItem->level }}">{{ $pbItem->keterangan }}</div></td>
                                     @for ($m = 1; $m <= 12; $m++)
                                         @php
-                                            $val = $data[$item->id]["month_$m"] ?? 0;
+                                            $val = $data[$pbItem->id]["month_$m"] ?? 0;
                                         @endphp
                                         <td>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</td>
                                     @endfor
-
-                                    {{-- Total tahun berjalan --}}
                                     @php
-                                        $total = $data[$item->id]['total'] ?? 0;
+                                        $total = $data[$pbItem->id]['total'] ?? 0;
+                                        $start = $data[$pbItem->id]['opening'] ?? 0;
                                     @endphp
                                     <td>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</td>
-
-                                    {{-- Saldo awal --}}
-                                    @php
-                                        $start =  $data[$item->id]['opening'] ?? 0;
-                                    @endphp
                                     <td>{{ $start == 0 ? '' : number_format($start, 0, ',', '.') }}</td>
-
                                 </tr>
-                            @endforeach
+                            @endif
                         </tbody>
 
 

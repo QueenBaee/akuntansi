@@ -19,6 +19,62 @@
 @endsection
 
 @section('content')
+<style>
+    .tb-text {
+        display: flex;
+        align-items: center;
+        font-size: 14px;
+    }
+
+    /* Kolom kode dilebarkan */
+    .table td:nth-child(1),
+    .table th:nth-child(1) {
+        min-width: 100px;
+        width: 100px;
+        white-space: nowrap;
+        font-weight: 600;
+    }
+
+    .level-0 {
+        margin-left: 0px;
+        font-weight: 800;
+    }
+
+    .level-1 {
+        margin-left: 15px;
+        font-weight: 700;
+    }
+
+    .level-2 {
+        margin-left: 30px;
+        font-weight: 600;
+    }
+
+    .level-3 {
+        margin-left: 45px;
+    }
+
+    .level-4 {
+        margin-left: 60px;
+    }
+
+    tr.level-0-row {
+        background: #eaf6ff !important;
+    }
+
+    tr.level-1-row {
+        background: #f4fbff !important;
+    }
+
+    tr.level-2-row {
+        background: #ffffff !important;
+    }
+    
+    /* Make all card titles uppercase */
+    .card-title {
+        text-transform: uppercase !important;
+    }
+</style>
 <div class="row">
     <div class="col-12">
 
@@ -27,25 +83,49 @@
                 <h3 class="card-title">Daftar Trial Balance</h3>
 
                 <div class="card-actions">
-                    <form method="GET" class="d-flex">
-                        <input type="text" name="search"
-                            value="{{ request('search') }}"
-                            class="form-control me-2"
-                            placeholder="Search Kode / Keterangan">
-                        <button class="btn btn-outline-primary">Search</button>
+                    <form method="GET" class="d-flex gap-2 align-items-center">
+                        <div class="input-group">
+                            <select name="filter_tipe_ledger" class="form-select" style="min-width: 150px;">
+                                <option value="">🔍 Semua Akun</option>
+                                <option value="kas" {{ request('filter_tipe_ledger') == 'kas' ? 'selected' : '' }}>💰 Akun Kas</option>
+                                <option value="bank" {{ request('filter_tipe_ledger') == 'bank' ? 'selected' : '' }}>🏦 Akun Bank</option>
+                            </select>
+                            <input type="text" name="search"
+                                value="{{ request('search') }}"
+                                class="form-control"
+                                placeholder="Cari kode atau keterangan...">
+                            <button class="btn btn-primary" type="submit">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <circle cx="10" cy="10" r="7"/>
+                                    <path d="m21 21l-6 -6"/>
+                                </svg>
+                                Filter
+                            </button>
+                        </div>
+                        @if(request('search') || request('filter_tipe_ledger'))
+                            <a href="{{ route('trial-balance.index') }}" class="btn btn-outline-secondary">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <line x1="18" y1="6" x2="6" y2="18"/>
+                                    <line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                                Reset
+                            </a>
+                        @endif
                     </form>
                 </div>
             </div>
 
             <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+                <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>Kode</th>
                             <th>Keterangan</th>
                             <th>Parent</th>
                             <th>Level</th>
-                            <th>Kas/Bank</th>
+                            <th class="text-center">Kas/Bank</th>
                             <th>2024 (Rp)</th>
                             <th class="w-1">Aksi</th>
                         </tr>
@@ -54,20 +134,44 @@
                         @php
                             function renderRowsTB($items, $prefix = '') {
                                 foreach ($items as $item) {
-                                    if(substr($item->kode, 0, 1) == 'E') continue;
 
-                                    echo '<tr>';
+
+
+                                    echo '<tr class="level-' . $item->level . '-row">';
                                     echo '<td>' . $item->kode . '</td>';
-                                    echo '<td>' . $prefix . $item->keterangan . '</td>';
+                                    echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
                                     echo '<td>' . ($item->parent?->kode ?? '-') . '</td>';
                                     echo '<td>' . $item->level . '</td>';
 
-                                    // Kas/Bank hanya untuk level 3
-                                    echo '<td>';
-                                    if ($item->level == 3) {
-                                        echo $item->is_kas_bank ? ucfirst($item->is_kas_bank) : '-';
+                                    // Tipe Ledger (Kas/Bank)
+                                    echo '<td class="text-center">';
+                                    if ($item->tipe_ledger) {
+                                        if ($item->tipe_ledger == 'kas') {
+                                            echo '<span class="badge bg-success-lt text-success">';
+                                            echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+                                            echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
+                                            echo '<rect x="7" y="9" width="14" height="10" rx="2"/>';
+                                            echo '<circle cx="14" cy="14" r="2"/>';
+                                            echo '<path d="m4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8"/>';
+                                            echo '</svg>';
+                                            echo 'KAS</span>';
+                                        } else {
+                                            echo '<span class="badge bg-primary-lt text-primary">';
+                                            echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+                                            echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
+                                            echo '<line x1="3" y1="21" x2="21" y2="21"/>';
+                                            echo '<line x1="3" y1="10" x2="21" y2="10"/>';
+                                            echo '<polyline points="5,6 12,3 19,6"/>';
+                                            echo '<line x1="4" y1="10" x2="4" y2="21"/>';
+                                            echo '<line x1="20" y1="10" x2="20" y2="21"/>';
+                                            echo '<line x1="8" y1="14" x2="8" y2="17"/>';
+                                            echo '<line x1="12" y1="14" x2="12" y2="17"/>';
+                                            echo '<line x1="16" y1="14" x2="16" y2="17"/>';
+                                            echo '</svg>';
+                                            echo 'BANK</span>';
+                                        }
                                     } else {
-                                        echo '-';
+                                        echo '<span class="text-muted">-</span>';
                                     }
                                     echo '</td>';
 
@@ -98,67 +202,7 @@
             </div>
         </div>
 
-        {{-- Bagian Beban --}}
-        <div class="card mt-4">
-            <div class="card-header">
-                <h3 class="card-title">Beban (E) Group</h3>
-            </div>
 
-            <div class="card-body p-0">
-                @foreach($bebanItems as $group => $groupItems)
-                    <h5 class="m-3">{{ $group }}</h5>
-
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th>Kode</th>
-                                    <th>Keterangan</th>
-                                    <th>Parent</th>
-                                    <th>Level</th>
-                                    <th>Kas/Bank</th>
-                                    <th>2024 (Rp)</th>
-                                    <th class="w-1">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($groupItems as $item)
-                                <tr>
-                                    <td>{{ $item->kode }}</td>
-                                    <td>{{ $item->keterangan }}</td>
-                                    <td>{{ $item->parent?->kode ?? '-' }}</td>
-                                    <td>{{ $item->level }}</td>
-
-                                    {{-- Kas/Bank di beban --}}
-                                    <td>
-                                        @if ($item->level == 3)
-                                            {{ $item->is_kas_bank ? ucfirst($item->is_kas_bank) : '-' }}
-                                        @else
-                                            -
-                                        @endif
-                                    </td>
-
-                                    <td>{{ number_format($item->tahun_2024 ?? 0, 0, ',', '.') }}</td>
-
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a href="{{ route('trial-balance.edit', $item->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <a href="{{ route('trial-balance.create') }}?parent_id={{ $item->id }}" class="btn btn-sm btn-outline-success">Tambah</a>
-                                            <form action="{{ route('trial-balance.destroy', $item->id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')">Hapus</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endforeach
-            </div>
-        </div>
 
     </div>
 </div>

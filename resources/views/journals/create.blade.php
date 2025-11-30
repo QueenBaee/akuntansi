@@ -21,6 +21,14 @@
 @endsection
 
 @section('content')
+    <style>
+        .card-title {
+            text-transform: uppercase !important;
+        }
+        h3.card-title {
+            text-transform: uppercase !important;
+        }
+    </style>
     <!-- Alert Messages -->
     <div id="alert-container"></div>
 
@@ -90,9 +98,9 @@
                                             <th style="border: 1px solid #dee2e6; width: 120px;">Keluar</th>
                                             <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
                                             <th style="border: 1px solid #dee2e6; width: 80px;">Kode CF</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Arus Kas</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Debit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun Kredit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun CF</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Debit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Kredit</th>
                                             <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
                                         </tr>
                                     </thead>
