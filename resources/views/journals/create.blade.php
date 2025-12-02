@@ -21,14 +21,7 @@
 @endsection
 
 @section('content')
-    <style>
-        .card-title {
-            text-transform: uppercase !important;
-        }
-        h3.card-title {
-            text-transform: uppercase !important;
-        }
-    </style>
+
     <!-- Alert Messages -->
     <div id="alert-container"></div>
 
@@ -97,8 +90,7 @@
                                             <th style="border: 1px solid #dee2e6; width: 120px;">Masuk</th>
                                             <th style="border: 1px solid #dee2e6; width: 120px;">Keluar</th>
                                             <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
-                                            <th style="border: 1px solid #dee2e6; width: 80px;">Kode CF</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Akun CF</th>
+                                            <th style="border: 1px solid #dee2e6; width: 230px;">Kode & Akun CF</th>
                                             <th style="border: 1px solid #dee2e6; width: 150px;">Debit</th>
                                             <th style="border: 1px solid #dee2e6; width: 150px;">Kredit</th>
                                             <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
@@ -140,9 +132,7 @@
                                                     style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right; background: #e3f2fd;">
                                                     {{ number_format($history['balance'], 0, ',', '.') }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
-                                                    {{ $history['cashflow_code'] ?? '-' }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
-                                                    {{ $history['cashflow_desc'] ?? '-' }}</td>
+                                                    {{ ($history['cashflow_code'] ?? '-') . ' - ' . ($history['cashflow_desc'] ?? '-') }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
                                                     {{ $history['debit_account'] }}</td>
                                                 <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">
@@ -200,9 +190,9 @@
                 @endforeach
 
                 // Build cashflow options
-                let cashflowOptions = '<option value="">Pilih Kode</option>';
+                let cashflowOptions = '<option value="">Pilih Kode & Akun CF</option>';
                 @foreach ($cashflows as $cashflow)
-                    cashflowOptions += '<option value="{{ $cashflow->id }}" data-description="{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}">{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}</option>';
+                    cashflowOptions += '<option value="{{ $cashflow->id }}" data-description="{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}">{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode . ' - ' . $cashflow->keterangan) }}</option>';
                 @endforeach
 
                 // Build cashflow data object
@@ -288,9 +278,7 @@
                             '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">' +
                                 cashflowOptions +
                             '</select>' +
-                        '</td>' +
-                        '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                            '<input type="text" class="form-control form-control-sm cashflow-desc" style="border: none; font-size: 12px; background-color: #f8f9fa;" placeholder="Keterangan otomatis" readonly>' +
+                            '<input type="hidden" class="cashflow-desc">' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                             '<select name="entries[' + currentIndex + '][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">' +
@@ -523,18 +511,13 @@
 
                 function updateCashflowDescription(selectElement) {
                     const row = selectElement.closest('tr');
-                    const descInput = row.querySelector('.cashflow-desc');
                     const selectedId = selectElement.value;
 
                     if (selectedId && cashflowData && cashflowData[selectedId]) {
-                        descInput.value = cashflowData[selectedId].description;
-                        
                         // Auto-set trial balance account if available
                         if (cashflowData[selectedId].trial_balance_id) {
                             setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
                         }
-                    } else {
-                        descInput.value = '';
                     }
                 }
 
@@ -593,8 +576,8 @@
                     const cashIn = cells[5].textContent.replace(/[^0-9]/g, '') || '0';
                     const cashOut = cells[6].textContent.replace(/[^0-9]/g, '') || '0';
                     const cashflowCode = cells[8].textContent.trim();
-                    const debitAccount = cells[10].textContent.trim();
-                    const creditAccount = cells[11].textContent.trim();
+                    const debitAccount = cells[9].textContent.trim();
+                    const creditAccount = cells[10].textContent.trim();
                     
                     // Convert date format from d/m/Y to Y-m-d
                     const dateParts = currentDate.split('/');
@@ -609,16 +592,16 @@
                     cells[5].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-in cash-in" value="${cashIn}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'in')">`;
                     cells[6].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-out cash-out" value="${cashOut}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'out')">`;
                     cells[8].innerHTML = `<select class="form-control form-control-sm edit-cashflow cashflow-select" style="font-size: 12px; border: none;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">${cashflowOptions}</select>`;
-                    cells[9].innerHTML = `<input type="text" class="form-control form-control-sm edit-cashflow-desc cashflow-desc" value="${cells[9].textContent.trim()}" style="font-size: 12px; border: none; background-color: #f8f9fa;" readonly>`;
-                    cells[10].innerHTML = `<select class="form-control form-control-sm edit-debit debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
-                    cells[11].innerHTML = `<select class="form-control form-control-sm edit-credit credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    cells[9].innerHTML = `<select class="form-control form-control-sm edit-debit debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    cells[10].innerHTML = `<select class="form-control form-control-sm edit-credit credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
                     
                     // Set current selections
                     setTimeout(() => {
-                        // Set cashflow selection by code
+                        // Set cashflow selection by code (now combined with description)
                         const cashflowSelect = row.querySelector('.edit-cashflow');
+                        const combinedCashflowText = cells[8].textContent.trim();
                         for (let option of cashflowSelect.options) {
-                            if (option.text === cashflowCode) {
+                            if (option.text === combinedCashflowText) {
                                 cashflowSelect.value = option.value;
                                 break;
                             }
