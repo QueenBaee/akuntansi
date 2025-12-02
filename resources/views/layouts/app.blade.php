@@ -218,7 +218,7 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item {{ request()->routeIs('memorials.create') ? 'active' : '' }}"
-                                        href="#" onclick="return false;">Jurnal Memorial</a>
+                                        href="{{ route('memorials.create') }}">Jurnal Memorial</a>
                                     <a class="dropdown-item {{ request()->routeIs('maklon.*') ? 'active' : '' }}"
                                         href="#" onclick="return false;">Data Maklon</a>
                                 </div>
@@ -245,12 +245,13 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item {{ request()->routeIs('reports.cashflow') ? 'active' : '' }}"
-                                        href="{{ route('reports.cashflow') }}">Laporan Arus Kas</a>
+                                        href="{{ route('reports.cashflow') }}">Cashflow Report</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
                                     <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
                                     <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan
                                         Laba Rugi</a>
+                                    <a class="dropdown-item" href="#">Laporan Arus Kas</a>
                                     <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
