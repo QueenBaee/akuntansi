@@ -63,6 +63,7 @@
 
                         tr.level-0-row {
                             background: #eaf6ff !important;
+                            font-weight: bold;
                         }
 
                         tr.level-1-row {
@@ -72,7 +73,6 @@
                         tr.level-2-row {
                             background: #ffffff !important;
                         }
-
 
                     </style>
 
@@ -90,46 +90,26 @@
                         </thead>
                         <tbody>
                             @foreach ($enhancedItems as $item)
-                                @php
-                                    $displayLevel = $item->level;
-                                    if (isset($item->is_subtotal)) {
-                                        $displayLevel = 1;
-                                    } elseif (isset($item->is_total)) {
-                                        $displayLevel = 0;
-                                    } elseif (isset($item->is_surplus)) {
-                                        $displayLevel = 0;
-                                    }
-                                @endphp
-                                <tr class="level-{{ $displayLevel }}-row">
-
-                                    <td>{{ $item->kode }}</td>
-
+                                <tr class="level-{{ min($item->level ?? 0, 4) }}-row">
+                                    <td>{{ $item->kode ?? '' }}</td>
                                     <td>
-                                        <div class="cf-text level-{{ $displayLevel }}">
+                                        <div class="cf-text level-{{ min($item->level ?? 0, 4) }}">
                                             {{ $item->keterangan }}
                                         </div>
                                     </td>
-
-                                    {{-- Monthly values --}}
                                     @for ($m = 1; $m <= 12; $m++)
                                         @php
                                             $val = $data[$item->id]["month_$m"] ?? 0;
+                                            $display = $val == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($val);
                                         @endphp
-                                        <td>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</td>
+                                        <td>{{ $display }}</td>
                                     @endfor
-
-                                    {{-- Total current year --}}
                                     @php
-                                        $total = $data[$item->id]['total'] ?? 0;
+                                        $t = $data[$item->id]['total'] ?? 0;
+                                        $o = $data[$item->id]['opening'] ?? 0;
                                     @endphp
-                                    <td>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</td>
-
-                                    {{-- Opening balance --}}
-                                    @php
-                                        $opening = $data[$item->id]['opening'] ?? 0;
-                                    @endphp
-                                    <td>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</td>
-
+                                    <td>{{ $t == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($t) }}</td>
+                                    <td>{{ $o == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($o) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

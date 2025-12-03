@@ -10,11 +10,68 @@ class CashflowReportController extends Controller
 {
     public function index(Request $request)
     {
-        $year = $request->year ?? date('Y');
+        $request->validate([
+            'year' => 'nullable|integer|min:2000|max:' . (date('Y') + 10)
+        ]);
+
+        $year = (int) ($request->year ?? date('Y'));
+
+        // Load all cashflow items in stable order by kode so grouping follows kode order
         $items = Cashflow::orderBy('id')->get();
 
-        // Calculate opening balance from all journal entries before selected year
-        $openingBalance = [];
+        // Build maps for quick access
+        $itemsByKode = [];
+        foreach ($items as $it) {
+            $itemsByKode[$it->kode] = $it;
+        }
+
+        // Determine parent kode for each item:
+        // - If kode contains '-', parent is everything before last '-'
+        // - Else if kode length > 1 and starts with letter+digit (e.g., R1), parent is first letter (R)
+        // - Else no parent (root)
+        $parentOf = [];
+        foreach ($items as $it) {
+            $kode = $it->kode;
+            $parent = null;
+            if (strpos($kode, '-') !== false) {
+                $parent = substr($kode, 0, strrpos($kode, '-'));
+            } else {
+                // Handle codes like R1 -> parent R
+                if (preg_match('/^[A-Z]\d+$/i', $kode)) {
+                    $parent = substr($kode, 0, 1);
+                } else {
+                    // single letter like R has no parent
+                    $parent = null;
+                }
+            }
+            if ($parent && isset($itemsByKode[$parent])) {
+                $parentOf[$kode] = $parent;
+            } else {
+                $parentOf[$kode] = null;
+            }
+        }
+
+        // Build children lists preserving original kode order
+        $children = [];
+        foreach ($items as $it) {
+            $children[$it->kode] = [];
+        }
+        foreach ($items as $it) {
+            $p = $parentOf[$it->kode];
+            if ($p !== null) {
+                $children[$p][] = $it->kode;
+            }
+        }
+
+        // Find roots (items that have no parent)
+        $roots = [];
+        foreach ($items as $it) {
+            if ($parentOf[$it->kode] === null) {
+                $roots[] = $it->kode;
+            }
+        }
+
+        // Load opening balances: sum(debit) - sum(credit) for journals before $year
         $openingQuery = DB::table('journals as j')
             ->join('cashflows as c', 'j.cashflow_id', '=', 'c.id')
             ->select(
@@ -22,17 +79,18 @@ class CashflowReportController extends Controller
                 DB::raw('SUM(CASE WHEN j.debit_account_id = c.trial_balance_id THEN j.total_debit ELSE 0 END) as total_debit'),
                 DB::raw('SUM(CASE WHEN j.credit_account_id = c.trial_balance_id THEN j.total_credit ELSE 0 END) as total_credit')
             )
-            ->where(DB::raw('YEAR(j.date)'), '<', $year)
+            ->whereYear('j.date', '<', $year)
             ->groupBy('j.cashflow_id')
             ->get()
             ->keyBy('cashflow_id');
 
-        foreach ($items as $item) {
-            $opening = $openingQuery[$item->id] ?? null;
-            $openingBalance[$item->id] = $opening ? ($opening->total_debit - $opening->total_credit) : 0;
+        $openingBalance = [];
+        foreach ($items as $it) {
+            $row = $openingQuery[$it->id] ?? null;
+            $openingBalance[$it->id] = $row ? ($row->total_debit - $row->total_credit) : 0;
         }
 
-        // Calculate monthly movements for selected year
+        // Load monthly journal movements for year
         $journalMonthly = DB::table('journals as j')
             ->join('cashflows as c', 'j.cashflow_id', '=', 'c.id')
             ->select(
@@ -46,12 +104,12 @@ class CashflowReportController extends Controller
             ->get()
             ->groupBy('cashflow_id');
 
-        // Calculate running balances
+        // Compute running balances per item (opening + month deltas)
         $data = [];
-        foreach ($items as $item) {
-            $saldo = $openingBalance[$item->id];
+        foreach ($items as $it) {
+            $saldo = $openingBalance[$it->id] ?? 0;
             $row = [];
-            $trx = $journalMonthly[$item->id] ?? collect();
+            $trx = $journalMonthly[$it->id] ?? collect();
 
             for ($m = 1; $m <= 12; $m++) {
                 $monthData = $trx->where('month', $m)->first();
@@ -62,146 +120,151 @@ class CashflowReportController extends Controller
             }
 
             $row['total'] = $saldo;
-            $row['opening'] = $openingBalance[$item->id];
-            $data[$item->id] = $row;
+            $row['opening'] = $openingBalance[$it->id] ?? 0;
+            $data[$it->kode] = $row; // key by kode for easier aggregation
+            $data[$it->id] = $row;   // also keep id key for existing view access
         }
 
-        // Build enhanced structure with subtotals
-        $enhancedItems = [];
-        $subtotals = [];
-        
-        // Group items by main code (R, E, F)
-        $grouped = $items->groupBy(function($item) {
-            return substr($item->kode, 0, 1);
-        });
-        
-        foreach ($grouped as $mainCode => $mainItems) {
-            // Group by level 1 (R1, E1, etc.)
-            $level1Groups = $mainItems->groupBy(function($item) {
-                if ($item->level <= 1) return $item->kode;
-                $parts = explode('-', $item->kode);
-                return $parts[0];
-            });
-            
-            $mainTotals = array_fill(1, 12, 0);
-            $mainTotalYear = 0;
-            $mainTotalOpening = 0;
-            
-            foreach ($level1Groups as $level1Code => $level1Items) {
-                // Add individual items
-                foreach ($level1Items as $item) {
-                    $enhancedItems[] = $item;
-                }
-                
-                // Calculate level 1 subtotal
-                $level1Totals = array_fill(1, 12, 0);
-                $level1TotalYear = 0;
-                $level1TotalOpening = 0;
-                
-                foreach ($level1Items as $item) {
-                    $itemData = $data[$item->id] ?? [];
-                    for ($m = 1; $m <= 12; $m++) {
-                        $level1Totals[$m] += $itemData["month_$m"] ?? 0;
-                    }
-                    $level1TotalYear += $itemData['total'] ?? 0;
-                    $level1TotalOpening += $itemData['opening'] ?? 0;
-                }
-                
-                // Add subtotal row if needed
-                if (count($level1Items) > 1 || $level1Items->first()->level > 1) {
-                    $subtotalItem = (object)[
-                        'id' => 'subtotal_' . $level1Code,
-                        'kode' => '',
-                        'keterangan' => 'Subtotal ' . $level1Code,
-                        'level' => 'subtotal_1',
-                        'is_subtotal' => true
-                    ];
-                    $enhancedItems[] = $subtotalItem;
-                    
-                    $subtotalData = [];
-                    for ($m = 1; $m <= 12; $m++) {
-                        $subtotalData["month_$m"] = $level1Totals[$m];
-                    }
-                    $subtotalData['total'] = $level1TotalYear;
-                    $subtotalData['opening'] = $level1TotalOpening;
-                    $data[$subtotalItem->id] = $subtotalData;
-                }
-                
-                // Add to main totals
-                for ($m = 1; $m <= 12; $m++) {
-                    $mainTotals[$m] += $level1Totals[$m];
-                }
-                $mainTotalYear += $level1TotalYear;
-                $mainTotalOpening += $level1TotalOpening;
-            }
-            
-            // Add main category total
-            $mainCategoryName = [
-                'R' => 'TOTAL PEMASUKAN',
-                'E' => 'TOTAL PENGELUARAN', 
-                'F' => 'TOTAL INVESTASI & PENDANAAN'
-            ][$mainCode] ?? 'TOTAL ' . $mainCode;
-            
-            $totalItem = (object)[
-                'id' => 'total_' . $mainCode,
-                'kode' => '',
-                'keterangan' => $mainCategoryName,
-                'level' => 'total_main',
-                'is_total' => true
-            ];
-            $enhancedItems[] = $totalItem;
-            
-            $totalData = [];
+        // Helper to sum two aggregate rows
+        $sumRows = function ($a, $b) {
+            $res = [];
             for ($m = 1; $m <= 12; $m++) {
-                $totalData["month_$m"] = $mainTotals[$m];
+                $res["month_$m"] = ($a["month_$m"] ?? 0) + ($b["month_$m"] ?? 0);
             }
-            $totalData['total'] = $mainTotalYear;
-            $totalData['opening'] = $mainTotalOpening;
-            $data[$totalItem->id] = $totalData;
-            
-            $subtotals[$mainCode] = $totalData;
+            $res['total'] = ($a['total'] ?? 0) + ($b['total'] ?? 0);
+            $res['opening'] = ($a['opening'] ?? 0) + ($b['opening'] ?? 0);
+            return $res;
+        };
+
+        // Recursive traversal that builds enhancedItems and returns aggregated sums for parent
+        $enhancedItems = [];
+        $visited = [];
+
+        $buildRec = function ($kode) use (&$buildRec, &$enhancedItems, &$children, $itemsByKode, $data, $sumRows, &$visited) {
+            // Prevent infinite loop
+            if (isset($visited[$kode])) {
+                return ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
+            }
+            $visited[$kode] = true;
+
+            // push current node (if exists in itemsByKode)
+            if (isset($itemsByKode[$kode])) {
+                $enhancedItems[] = $itemsByKode[$kode];
+            }
+
+            // aggregate starts with current node's own row (so parent totals include its own value)
+            $agg = $data[$kode] ?? ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
+
+            // process children in original children order
+            if (!empty($children[$kode])) {
+                foreach ($children[$kode] as $childKode) {
+                    $childAgg = $buildRec($childKode);
+                    // accumulate into parent's agg
+                    $agg = $sumRows($agg, $childAgg);
+                }
+
+                // After processing children, insert a subtotal row for this group that sums children + self.
+                // Make sure subtotal id unique and not colliding with real kode
+                $subtotalId = 'subtotal_' . $kode;
+                $subtotalItem = (object)[
+                    'id' => $subtotalId,
+                    'kode' => '',
+                    'keterangan' => 'Subtotal ' . $kode,
+                    // level: if parent exists and has level, use parent level; else fallback to 0
+                    'level' => (isset($itemsByKode[$kode]) ? ($itemsByKode[$kode]->level ?? 0) : 0),
+                    'is_subtotal' => true
+                ];
+                $enhancedItems[] = $subtotalItem;
+                // store aggregated data under that id so view can read it
+                $data[$subtotalId] = $agg;
+                // return agg to upper caller
+                return $agg;
+            }
+
+            // no children: return own agg
+            return $agg;
+        };
+
+        // Loop through roots in items order
+        foreach ($roots as $rootKode) {
+            $buildRec($rootKode);
         }
-        
-        // Add SURPLUS/DEFICIT calculations
-        if (isset($subtotals['R']) && isset($subtotals['E'])) {
+
+        // After building enhancedItems we might want top-level totals per main code (R, E, F)
+        // Compute totals by scanning enhancedItems aggregations for root groups starting with letter R/E/F
+        $mainTotals = [];
+        foreach ($enhancedItems as $ei) {
+            $key = $ei->kode ?? $ei->id;
+            // only consider root real items (exist in itemsByKode and single-letter kode)
+            if (isset($itemsByKode[$key]) && strlen($key) === 1) {
+                // find aggregated row stored at subtotal key (subtotal_rootKode) if exists; else use data[$key]
+                $agg = $data['subtotal_' . $key] ?? ($data[$key] ?? null);
+                if ($agg) {
+                    $mainTotals[$key] = $agg;
+                } else {
+                    // fallback zero
+                    $mainTotals[$key] = ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
+                }
+            }
+        }
+
+        // Append grand total rows for R, E, F in the order they appear among roots (if present)
+        foreach ($roots as $rKode) {
+            if (in_array($rKode, ['R','E','F']) && isset($mainTotals[$rKode])) {
+                $totalItem = (object)[
+                    'id' => 'total_' . $rKode,
+                    'kode' => '',
+                    'keterangan' => ($rKode === 'R' ? 'TOTAL PEMASUKAN' : ($rKode === 'E' ? 'TOTAL PENGELUARAN' : ($rKode === 'F' ? 'TOTAL INVESTASI & PENDANAAN' : 'TOTAL ' . $rKode))),
+                    'level' => 0,
+                    'is_total' => true
+                ];
+                $enhancedItems[] = $totalItem;
+                $data[$totalItem->id] = $mainTotals[$rKode];
+            }
+        }
+
+        // SURPLUS/DEFICIT operational (R - E)
+        if (isset($mainTotals['R']) && isset($mainTotals['E'])) {
+            $surplusData = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $surplusData["month_$m"] = ($mainTotals['R']["month_$m"] ?? 0) - ($mainTotals['E']["month_$m"] ?? 0);
+            }
+            $surplusData['total'] = ($mainTotals['R']['total'] ?? 0) - ($mainTotals['E']['total'] ?? 0);
+            $surplusData['opening'] = ($mainTotals['R']['opening'] ?? 0) - ($mainTotals['E']['opening'] ?? 0);
+
             $surplusItem = (object)[
                 'id' => 'surplus_operational',
                 'kode' => '',
                 'keterangan' => 'SURPLUS / DEFISIT USAHA',
-                'level' => 'surplus',
+                'level' => 0,
                 'is_surplus' => true
             ];
             $enhancedItems[] = $surplusItem;
-            
-            $surplusData = [];
-            for ($m = 1; $m <= 12; $m++) {
-                $surplusData["month_$m"] = ($subtotals['R']["month_$m"] ?? 0) - ($subtotals['E']["month_$m"] ?? 0);
-            }
-            $surplusData['total'] = ($subtotals['R']['total'] ?? 0) - ($subtotals['E']['total'] ?? 0);
-            $surplusData['opening'] = ($subtotals['R']['opening'] ?? 0) - ($subtotals['E']['opening'] ?? 0);
             $data[$surplusItem->id] = $surplusData;
-        }
-        
-        if (isset($subtotals['F'])) {
-            $finalSurplusItem = (object)[
-                'id' => 'surplus_final',
-                'kode' => '',
-                'keterangan' => 'SURPLUS / DEFISIT BERSIH',
-                'level' => 'surplus_final',
-                'is_surplus' => true
-            ];
-            $enhancedItems[] = $finalSurplusItem;
-            
-            $finalSurplusData = [];
-            $operationalSurplus = $data['surplus_operational'] ?? [];
-            for ($m = 1; $m <= 12; $m++) {
-                $finalSurplusData["month_$m"] = ($operationalSurplus["month_$m"] ?? 0) + ($subtotals['F']["month_$m"] ?? 0);
+
+            // If F exists, final surplus = operational + F
+            if (isset($mainTotals['F'])) {
+                $finalSurplus = [];
+                for ($m = 1; $m <= 12; $m++) {
+                    $finalSurplus["month_$m"] = $surplusData["month_$m"] + ($mainTotals['F']["month_$m"] ?? 0);
+                }
+                $finalSurplus['total'] = $surplusData['total'] + ($mainTotals['F']['total'] ?? 0);
+                $finalSurplus['opening'] = $surplusData['opening'] + ($mainTotals['F']['opening'] ?? 0);
+
+                $finalItem = (object)[
+                    'id' => 'surplus_final',
+                    'kode' => '',
+                    'keterangan' => 'SURPLUS / DEFISIT BERSIH',
+                    'level' => 0,
+                    'is_surplus' => true
+                ];
+                $enhancedItems[] = $finalItem;
+                $data[$finalItem->id] = $finalSurplus;
             }
-            $finalSurplusData['total'] = ($operationalSurplus['total'] ?? 0) + ($subtotals['F']['total'] ?? 0);
-            $finalSurplusData['opening'] = ($operationalSurplus['opening'] ?? 0) + ($subtotals['F']['opening'] ?? 0);
-            $data[$finalSurplusItem->id] = $finalSurplusData;
         }
 
+        // Note: $enhancedItems elements may be Eloquent models (original rows) or stdClass objects for subtotal/total.
+        // The Blade expects $data indexed by item->id or custom id strings; we filled both forms.
         return view('cashflow_report.index', compact('enhancedItems', 'data', 'year'));
     }
 }
