@@ -9,10 +9,10 @@
 
 @section('page-actions')
     <form method="GET" class="d-flex gap-2 align-items-center me-2">
-        <select name="filter_tipe_ledger" class="form-select" style="min-width: 200px;">
+        <select name="filter_kas_bank" class="form-select" style="min-width: 200px;">
             <option value="">🔍 Semua Akun</option>
-            <option value="kas" {{ request('filter_tipe_ledger') == 'kas' ? 'selected' : '' }}>💰 Akun Kas</option>
-            <option value="bank" {{ request('filter_tipe_ledger') == 'bank' ? 'selected' : '' }}>🏦 Akun Bank</option>
+            <option value="1" {{ request('filter_kas_bank') == '1' ? 'selected' : '' }}>💰 Akun Kas/Bank</option>
+            <option value="0" {{ request('filter_kas_bank') == '0' ? 'selected' : '' }}>📄 Akun Lainnya</option>
         </select>
         <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari kode atau keterangan..." style="min-width: 200px;">
         <button class="btn btn-outline-primary" type="submit">
@@ -23,7 +23,7 @@
             </svg>
             Filter
         </button>
-        @if(request('search') || request('filter_tipe_ledger'))
+        @if(request('search') || request('filter_kas_bank'))
             <a href="{{ route('trial-balance.index') }}" class="btn btn-outline-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -142,35 +142,19 @@
                                     echo '<td>' . ($item->parent?->kode ?? '-') . '</td>';
                                     echo '<td>' . $item->level . '</td>';
 
-                                    // Tipe Ledger (Kas/Bank)
+                                    // Kas/Bank Status
                                     echo '<td class="text-center">';
-                                    if ($item->tipe_ledger) {
-                                        if ($item->tipe_ledger == 'kas') {
-                                            echo '<span class="badge bg-success-lt text-success">';
-                                            echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
-                                            echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
-                                            echo '<rect x="7" y="9" width="14" height="10" rx="2"/>';
-                                            echo '<circle cx="14" cy="14" r="2"/>';
-                                            echo '<path d="m4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8"/>';
-                                            echo '</svg>';
-                                            echo 'KAS</span>';
-                                        } else {
-                                            echo '<span class="badge bg-primary-lt text-primary">';
-                                            echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
-                                            echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
-                                            echo '<line x1="3" y1="21" x2="21" y2="21"/>';
-                                            echo '<line x1="3" y1="10" x2="21" y2="10"/>';
-                                            echo '<polyline points="5,6 12,3 19,6"/>';
-                                            echo '<line x1="4" y1="10" x2="4" y2="21"/>';
-                                            echo '<line x1="20" y1="10" x2="20" y2="21"/>';
-                                            echo '<line x1="8" y1="14" x2="8" y2="17"/>';
-                                            echo '<line x1="12" y1="14" x2="12" y2="17"/>';
-                                            echo '<line x1="16" y1="14" x2="16" y2="17"/>';
-                                            echo '</svg>';
-                                            echo 'BANK</span>';
-                                        }
+                                    if ($item->is_kas_bank) {
+                                        echo '<span class="badge bg-success-lt text-success">';
+                                        echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+                                        echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
+                                        echo '<rect x="7" y="9" width="14" height="10" rx="2"/>';
+                                        echo '<circle cx="14" cy="14" r="2"/>';
+                                        echo '<path d="m4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8"/>';
+                                        echo '</svg>';
+                                        echo 'Yes</span>';
                                     } else {
-                                        echo '<span class="text-muted">-</span>';
+                                        echo '<span class="text-muted">No</span>';
                                     }
                                     echo '</td>';
 
