@@ -4,17 +4,43 @@
 
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
-    <h2 class="page-title">Trial Balance</h2>
+    <h2 class="page-title">Daftar Trial Balance</h2>
 @endsection
 
 @section('page-actions')
+    <form method="GET" class="d-flex gap-2 align-items-center me-2">
+        <select name="filter_tipe_ledger" class="form-select" style="min-width: 200px;">
+            <option value="">🔍 Semua Akun</option>
+            <option value="kas" {{ request('filter_tipe_ledger') == 'kas' ? 'selected' : '' }}>💰 Akun Kas</option>
+            <option value="bank" {{ request('filter_tipe_ledger') == 'bank' ? 'selected' : '' }}>🏦 Akun Bank</option>
+        </select>
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari kode atau keterangan..." style="min-width: 200px;">
+        <button class="btn btn-outline-primary" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <circle cx="10" cy="10" r="7"/>
+                <path d="m21 21l-6 -6"/>
+            </svg>
+            Filter
+        </button>
+        @if(request('search') || request('filter_tipe_ledger'))
+            <a href="{{ route('trial-balance.index') }}" class="btn btn-outline-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Reset
+            </a>
+        @endif
+    </form>
     <a href="{{ route('trial-balance.create') }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Tambah Root
+        Tambah Akun Trial Balance
     </a>
 @endsection
 
@@ -74,48 +100,21 @@
     .card-title {
         text-transform: uppercase !important;
     }
+    
+    /* Make table fill full width */
+    .table {
+        width: 100% !important;
+        table-layout: auto !important;
+    }
+    
+    .table-responsive {
+        width: 100% !important;
+    }
 </style>
 <div class="row">
     <div class="col-12">
 
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Trial Balance</h3>
-
-                <div class="card-actions">
-                    <form method="GET" class="d-flex gap-2 align-items-center">
-                        <div class="input-group">
-                            <select name="filter_tipe_ledger" class="form-select" style="min-width: 150px;">
-                                <option value="">🔍 Semua Akun</option>
-                                <option value="kas" {{ request('filter_tipe_ledger') == 'kas' ? 'selected' : '' }}>💰 Akun Kas</option>
-                                <option value="bank" {{ request('filter_tipe_ledger') == 'bank' ? 'selected' : '' }}>🏦 Akun Bank</option>
-                            </select>
-                            <input type="text" name="search"
-                                value="{{ request('search') }}"
-                                class="form-control"
-                                placeholder="Cari kode atau keterangan...">
-                            <button class="btn btn-primary" type="submit">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <circle cx="10" cy="10" r="7"/>
-                                    <path d="m21 21l-6 -6"/>
-                                </svg>
-                                Filter
-                            </button>
-                        </div>
-                        @if(request('search') || request('filter_tipe_ledger'))
-                            <a href="{{ route('trial-balance.index') }}" class="btn btn-outline-secondary">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <line x1="18" y1="6" x2="6" y2="18"/>
-                                    <line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                                Reset
-                            </a>
-                        @endif
-                    </form>
-                </div>
-            </div>
 
             <div class="table-responsive">
                 <table class="table table-bordered table-striped">
@@ -180,7 +179,7 @@
                                     echo '<td>
                                             <div class="btn-list flex-nowrap">
                                                 <a href="' . route('trial-balance.edit', $item->id) . '" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <a href="' . route('trial-balance.create') . '?parent_id=' . $item->id . '" class="btn btn-sm btn-outline-success">Tambah</a>
+                                                <!-- <a href="' . route('trial-balance.create') . '?parent_id=' . $item->id . '" class="btn btn-sm btn-outline-success">Tambah</a> -->
                                                 <form action="' . route('trial-balance.destroy', $item->id) . '" method="POST" class="d-inline">
                                                     ' . csrf_field() . '
                                                     ' . method_field('DELETE') . '

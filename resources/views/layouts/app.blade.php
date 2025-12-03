@@ -55,6 +55,17 @@
         .card-header .card-title {
             text-transform: uppercase !important;
         }
+        
+        /* Make all page titles and subtitles uppercase */
+        .page-title,
+        .page-subtitle {
+            text-transform: uppercase !important;
+        }
+        
+        /* Keep table headers normal case */
+        table th {
+            text-transform: none !important;
+        }
     </style>
 </head>
 
@@ -217,8 +228,8 @@
                                     <span class="nav-link-title">Memorial</span>
                                 </a>
                                 <div class="dropdown-menu">
-                                    <a class="dropdown-item {{ request()->routeIs('memorials.create') ? 'active' : '' }}"
-                                        href="{{ route('memorials.create') }}">Jurnal Memorial</a>
+                                    <a class="dropdown-item {{ request()->routeIs('memorials.*') ? 'active' : '' }}"
+                                        href="{{ route('memorials.index') }}">Jurnal Memorial</a>
                                     <a class="dropdown-item {{ request()->routeIs('maklon.*') ? 'active' : '' }}"
                                         href="#" onclick="return false;">Data Maklon</a>
                                 </div>
@@ -249,8 +260,7 @@
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
                                     <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
-                                    <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan
-                                        Laba Rugi</a>
+                                    <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan Laba Rugi</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
                                     <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
@@ -288,9 +298,9 @@
                                             href="{{ route('user-accounts.index') }}">User Accounts</a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}"
-                                            href="{{ route('trial-balance.index') }}">Trial Balances</a>
+                                            href="{{ route('trial-balance.index') }}">Akun Trial Balances</a>
                                         <a class="dropdown-item {{ request()->routeIs('cashflow.*') ? 'active' : '' }}"
-                                            href="{{ route('cashflow.index') }}">Cash Flow</a>
+                                            href="{{ route('cashflow.index') }}">Akun Cash Flow</a>
                                     </div>
                                 </li>
                             @endrole
