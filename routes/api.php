@@ -22,6 +22,9 @@ Route::prefix('auth')->group(function () {
 
 
 
+Route::get('trial-balance/get-data', [App\Http\Controllers\TrialBalanceController::class, 'getData']);
+Route::get('cashflow/get-data', [App\Http\Controllers\CashflowController::class, 'getData']);
+
 // Utility routes
 Route::prefix('utils')->group(function () {
     Route::get('cashflow-categories', function () {

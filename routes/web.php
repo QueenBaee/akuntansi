@@ -7,7 +7,6 @@ use App\Http\Controllers\CashBankJournalController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
-use App\Http\Controllers\TrialBalanceReportController;
 
 // Guest routes (login)
 Route::middleware('guest')->group(function () {
@@ -118,13 +117,15 @@ Route::middleware('auth')->group(function () {
     // Cashflow
     Route::resource('cashflow', CashflowController::class);
 
-    // Trial Balance Report (pastikan sebelum catch-all)
-    Route::get('/trial-balance-report', [TrialBalanceReportController::class, 'index'])
-        ->name('trial_balance_report.index');
+    // Trial Balance Report
+    Route::get('/trial-balance-report', function() {
+        return view('trial_balance.report');
+    })->name('trial_balance_report.index');
 
     // Cashflow Report
-    Route::get('/reports/cashflow', [\App\Http\Controllers\CashflowReportController::class, 'index'])
-        ->name('reports.cashflow');
+    Route::get('/reports/cashflow', function() {
+        return view('cashflow.report');
+    })->name('reports.cashflow');
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
     // ->name('trial.balance.report');

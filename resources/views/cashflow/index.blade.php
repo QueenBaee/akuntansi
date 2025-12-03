@@ -49,37 +49,15 @@
                             <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach($cashflows as $cashflow)
-                            <tr>
-                                <td>{{ $cashflow->kode }}</td>
-                                <td>
-                                    @for($i = 1; $i < $cashflow->level; $i++)
-                                        &nbsp;&nbsp;&nbsp;&nbsp;
-                                    @endfor
-                                    {{ $cashflow->keterangan }}
-                                </td>
-                                <td>{{ $cashflow->parent->keterangan ?? '-' }}</td>
-                                <td>
-                                    @if($cashflow->level == 3 && $cashflow->trialBalance)
-                                        {{ $cashflow->trialBalance->kode }} - {{ $cashflow->trialBalance->keterangan }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>{{ $cashflow->level }}</td>
-                                <td>
-                                    <div class="btn-list flex-nowrap">
-                                        <a href="{{ route('cashflow.edit', $cashflow->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                        <form action="{{ route('cashflow.destroy', $cashflow->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')">Hapus</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                    <tbody id="cashflow-tbody">
+                        <tr id="loading-row">
+                            <td colspan="6" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-2">Loading...</div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -89,4 +67,82 @@
 
     </div>
 </div>
+
+<script>
+console.log('SCRIPT LOADED');
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadCashflowData();
+});
+
+function loadCashflowData() {
+    console.log('FETCH CALLED');
+    
+    fetch('/api/cashflow/get-data')
+        .then(response => {
+            console.log('RESPONSE RECEIVED', response);
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                renderCashflowTable(data.data.items);
+            } else {
+                throw new Error(data.message || 'Failed to load data');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading cashflow data:', error);
+            alert('Error loading data: ' + error.message);
+            document.getElementById('cashflow-tbody').innerHTML = 
+                '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+        });
+}
+
+function renderCashflowTable(items) {
+    const tbody = document.getElementById('cashflow-tbody');
+    let html = '';
+    
+    items.forEach(item => {
+        html += renderCashflowRow(item);
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function renderCashflowRow(item) {
+    let html = '<tr>';
+    html += `<td>${item.kode}</td>`;
+    
+    // Indentation based on level
+    let indentation = '';
+    for(let i = 1; i < item.level; i++) {
+        indentation += '&nbsp;&nbsp;&nbsp;&nbsp;';
+    }
+    html += `<td>${indentation}${item.keterangan}</td>`;
+    
+    html += `<td>${item.parent?.keterangan || '-'}</td>`;
+    
+    // Trial Balance info for level 3
+    if (item.level == 3 && item.trial_balance) {
+        html += `<td>${item.trial_balance.kode} - ${item.trial_balance.keterangan}</td>`;
+    } else {
+        html += '<td>-</td>';
+    }
+    
+    html += `<td>${item.level}</td>`;
+    html += `<td>
+        <div class="btn-list flex-nowrap">
+            <a href="/cashflow/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+            <form action="/cashflow/${item.id}" method="POST" class="d-inline">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="_method" value="DELETE">
+                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')">Hapus</button>
+            </form>
+        </div>
+    </td>`;
+    html += '</tr>';
+    
+    return html;
+}
+</script>
 @endsection

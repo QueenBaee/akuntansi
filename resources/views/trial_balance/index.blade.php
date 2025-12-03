@@ -129,57 +129,15 @@
                             <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @php
-                            function renderRowsTB($items, $prefix = '') {
-                                foreach ($items as $item) {
-
-
-
-                                    echo '<tr class="level-' . $item->level . '-row">';
-                                    echo '<td>' . $item->kode . '</td>';
-                                    echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
-                                    echo '<td>' . ($item->parent?->kode ?? '-') . '</td>';
-                                    echo '<td>' . $item->level . '</td>';
-
-                                    // Kas/Bank Status
-                                    echo '<td class="text-center">';
-                                    if ($item->is_kas_bank) {
-                                        echo '<span class="badge bg-success-lt text-success">';
-                                        echo '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
-                                        echo '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
-                                        echo '<rect x="7" y="9" width="14" height="10" rx="2"/>';
-                                        echo '<circle cx="14" cy="14" r="2"/>';
-                                        echo '<path d="m4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8"/>';
-                                        echo '</svg>';
-                                        echo 'Yes</span>';
-                                    } else {
-                                        echo '<span class="text-muted">No</span>';
-                                    }
-                                    echo '</td>';
-
-                                    echo '<td>' . number_format($item->tahun_2024 ?? 0, 0, ',', '.') . '</td>';
-
-                                    echo '<td>
-                                            <div class="btn-list flex-nowrap">
-                                                <a href="' . route('trial-balance.edit', $item->id) . '" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <!-- <a href="' . route('trial-balance.create') . '?parent_id=' . $item->id . '" class="btn btn-sm btn-outline-success">Tambah</a> -->
-                                                <form action="' . route('trial-balance.destroy', $item->id) . '" method="POST" class="d-inline">
-                                                    ' . csrf_field() . '
-                                                    ' . method_field('DELETE') . '
-                                                    <button class="btn btn-sm btn-outline-danger" onclick="return confirm(\'Hapus?\')">Hapus</button>
-                                                </form>
-                                            </div>
-                                          </td>';
-                                    echo '</tr>';
-
-                                    if ($item->children->count() > 0) {
-                                        renderRowsTB($item->children, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
-                                    }
-                                }
-                            }
-                            renderRowsTB($items);
-                        @endphp
+                    <tbody id="trial-balance-tbody">
+                        <tr id="loading-row">
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-2">Loading...</div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -189,4 +147,84 @@
 
     </div>
 </div>
+
+<script>
+console.log('SCRIPT LOADED');
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTrialBalanceData();
+});
+
+function loadTrialBalanceData() {
+    console.log('FETCH CALLED');
+    
+    fetch('/api/trial-balance/get-data')
+        .then(response => {
+            console.log('RESPONSE RECEIVED', response);
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                renderTrialBalanceTable(data.data.items);
+            } else {
+                throw new Error(data.message || 'Failed to load data');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading trial balance data:', error);
+            alert('Error loading data: ' + error.message);
+            document.getElementById('trial-balance-tbody').innerHTML = 
+                '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
+        });
+}
+
+function renderTrialBalanceTable(items) {
+    const tbody = document.getElementById('trial-balance-tbody');
+    let html = '';
+    
+    items.forEach(item => {
+        html += renderTrialBalanceRow(item, '');
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function renderTrialBalanceRow(item, prefix) {
+    let html = `<tr class="level-${item.level}-row">`;
+    html += `<td>${item.kode}</td>`;
+    html += `<td><div class="tb-text level-${item.level}">${prefix}${item.keterangan}</div></td>`;
+    html += `<td>${item.parent?.kode || '-'}</td>`;
+    html += `<td>${item.level}</td>`;
+    
+    // Kas/Bank Status
+    html += '<td class="text-center">';
+    if (item.is_kas_bank) {
+        html += '<span class="badge bg-success-lt text-success">';
+        html += '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+        html += '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
+        html += '<rect x="7" y="9" width="14" height="10" rx="2"/>';
+        html += '<circle cx="14" cy="14" r="2"/>';
+        html += '<path d="m4.5 12.5l8 -8a4.94 4.94 0 0 1 7 7l-8 8"/>';
+        html += '</svg>Yes</span>';
+    } else {
+        html += '<span class="text-muted">No</span>';
+    }
+    html += '</td>';
+    
+    html += `<td>${new Intl.NumberFormat('id-ID').format(item.tahun_2024 || 0)}</td>`;
+    html += `<td>
+        <div class="btn-list flex-nowrap">
+            <a href="/trial-balance/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
+            <form action="/trial-balance/${item.id}" method="POST" class="d-inline">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="_method" value="DELETE">
+                <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')">Hapus</button>
+            </form>
+        </div>
+    </td>`;
+    html += '</tr>';
+    
+    return html;
+}
+</script>
 @endsection
