@@ -20,15 +20,15 @@ class TrialBalanceController extends Controller
             });
         }
 
-        // Filter tipe ledger (kas/bank)
-        if ($request->filled('filter_tipe_ledger')) {
-            $tipeLedger = $request->filter_tipe_ledger;
+        // Filter kas/bank accounts
+        if ($request->filled('filter_kas_bank')) {
+            $isKasBank = $request->filter_kas_bank === '1';
             
             // Ambil semua ID yang cocok dengan filter (termasuk parent dari yang cocok)
             $matchingIds = collect();
             
             // Cari semua akun yang langsung cocok
-            $directMatches = TrialBalance::where('tipe_ledger', $tipeLedger)->pluck('id');
+            $directMatches = TrialBalance::where('is_kas_bank', $isKasBank)->pluck('id');
             $matchingIds = $matchingIds->merge($directMatches);
             
             // Cari parent dari akun yang cocok
@@ -51,9 +51,10 @@ class TrialBalanceController extends Controller
             }]);
         }])->get();
 
-        // Filter items berdasarkan tipe ledger jika ada filter
-        if ($request->filled('filter_tipe_ledger')) {
-            $items = $this->filterItemsByTipeLedger($items, $request->filter_tipe_ledger);
+        // Filter items berdasarkan kas/bank jika ada filter
+        if ($request->filled('filter_kas_bank')) {
+            $isKasBank = $request->filter_kas_bank === '1';
+            $items = $this->filterItemsByKasBank($items, $isKasBank);
         }
 
         // Ambil Beban (E) untuk group
@@ -96,7 +97,7 @@ class TrialBalanceController extends Controller
             'keterangan' => 'required',
             'parent_id' => 'nullable|exists:trial_balances,id',
             'tahun_2024' => 'nullable|numeric',
-            'tipe_ledger' => 'nullable|in:kas,bank'
+            'is_kas_bank' => 'nullable|boolean'
         ]);
 
         $level = $request->parent_id ? TrialBalance::find($request->parent_id)->level + 1 : 1;
@@ -122,7 +123,7 @@ class TrialBalanceController extends Controller
             'level' => $level,
             'sort_order' => $sortOrder,
             'tahun_2024' => $request->tahun_2024,
-            'tipe_ledger' => $request->tipe_ledger,
+            'is_kas_bank' => $request->boolean('is_kas_bank'),
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Trial Balance berhasil ditambahkan.');
@@ -139,14 +140,14 @@ class TrialBalanceController extends Controller
             'kode' => 'required|unique:trial_balances,kode,' . $trial_balance->id,
             'keterangan' => 'required',
             'tahun_2024' => 'nullable|numeric',
-            'tipe_ledger' => 'nullable|in:kas,bank'
+            'is_kas_bank' => 'nullable|boolean'
         ]);
 
         $trial_balance->update([
             'kode' => $request->kode,
             'keterangan' => $request->keterangan,
             'tahun_2024' => $request->tahun_2024,
-            'tipe_ledger' => $request->tipe_ledger,
+            'is_kas_bank' => $request->boolean('is_kas_bank'),
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Trial Balance berhasil diupdate.');
@@ -165,32 +166,32 @@ class TrialBalanceController extends Controller
     }
     
     /**
-     * Filter items berdasarkan tipe ledger
+     * Filter items berdasarkan kas/bank
      */
-    private function filterItemsByTipeLedger($items, $tipeLedger)
+    private function filterItemsByKasBank($items, $isKasBank)
     {
-        return $items->filter(function($item) use ($tipeLedger) {
+        return $items->filter(function($item) use ($isKasBank) {
             // Jika item ini cocok
-            if ($item->tipe_ledger == $tipeLedger) {
+            if ($item->is_kas_bank == $isKasBank) {
                 return true;
             }
             
             // Jika ada anak yang cocok
-            return $this->hasMatchingChildren($item, $tipeLedger);
-        })->map(function($item) use ($tipeLedger) {
+            return $this->hasMatchingKasBankChildren($item, $isKasBank);
+        })->map(function($item) use ($isKasBank) {
             // Filter children juga
-            $item->children = $this->filterItemsByTipeLedger($item->children, $tipeLedger);
+            $item->children = $this->filterItemsByKasBank($item->children, $isKasBank);
             return $item;
         });
     }
     
     /**
-     * Cek apakah ada anak yang cocok dengan filter
+     * Cek apakah ada anak yang cocok dengan filter kas/bank
      */
-    private function hasMatchingChildren($item, $tipeLedger)
+    private function hasMatchingKasBankChildren($item, $isKasBank)
     {
         foreach ($item->children as $child) {
-            if ($child->tipe_ledger == $tipeLedger || $this->hasMatchingChildren($child, $tipeLedger)) {
+            if ($child->is_kas_bank == $isKasBank || $this->hasMatchingKasBankChildren($child, $isKasBank)) {
                 return true;
             }
         }
