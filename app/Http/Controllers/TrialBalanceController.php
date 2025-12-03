@@ -197,4 +197,39 @@ class TrialBalanceController extends Controller
         }
         return false;
     }
+
+    /**
+     * AJAX endpoint for trial balance data
+     */
+    public function getData(Request $request)
+    {
+        try {
+            $year = $request->year ?? date('Y');
+            $items = TrialBalance::orderBy('sort_order')->get();
+
+            $data = [];
+            foreach ($items as $item) {
+                $data[$item->id] = [
+                    'month_1' => 0, 'month_2' => 0, 'month_3' => 0, 'month_4' => 0,
+                    'month_5' => 0, 'month_6' => 0, 'month_7' => 0, 'month_8' => 0,
+                    'month_9' => 0, 'month_10' => 0, 'month_11' => 0, 'month_12' => 0,
+                    'total' => 0, 'opening' => 0
+                ];
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'items' => $items,
+                    'data' => $data,
+                    'year' => $year
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to load trial balance data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
