@@ -9,533 +9,292 @@ class TrialBalanceSeeder extends Seeder
 {
     public function run()
     {
-        $data = [
+        $rows = [
 
-            // ================================
+            // =============================
             // ASET
-            // ================================
-            [
-                'kode' => 'A',
-                'keterangan' => 'ASET',
-                'children' => [
-                    [
-                        'kode' => 'A1',
-                        'keterangan' => 'ASET LANCAR',
-                        'children' => [
-                            [
-                                'kode' => 'A11',
-                                'keterangan' => 'Kas & Setara Kas',
-                                'children' => [
-                                    ['kode' => 'A11-01', 'keterangan' => 'Kas Pabrik'],
-                                    ['kode' => 'A11-02', 'keterangan' => 'Kas Tunai 2'],
-                                    ['kode' => 'A11-21', 'keterangan' => 'BNI - Giro - 0053984843'],
-                                    ['kode' => 'A11-22', 'keterangan' => 'BCA - Giro - 1993234234'],
-                                    ['kode' => 'A11-23', 'keterangan' => 'BNI - Tab - 0354707039'],
-                                    ['kode' => 'A11-24', 'keterangan' => 'BNI - Tab - 0533170487'],
-                                    ['kode' => 'A11-25', 'keterangan' => 'Bank 5'],
-                                    ['kode' => 'A11-51', 'keterangan' => 'Deposito (<3 Bln)'],
-                                ],
-                            ],
+            // =============================
+            ['A', 'ASET', '-'],
+            ['A1', 'ASET LANCAR', '-'],
+            ['A11', 'Kas & Setara Kas', '-'],
+            ['A11-01', 'Kas Pabrik', '2,747,632,592'],
+            ['A11-02', 'Kas Tunai 2', '-'],
+            ['A11-21', 'BNI - Giro - 0053984843', '20,632,776,125'],
+            ['A11-22', 'BCA - Giro - 1993234234', '50,671,422'],
+            ['A11-23', 'BNI - Tab - 0354707039', '2,548,000,615'],
+            ['A11-24', 'BNI - Tab - 0533170487', '-'],
+            ['A11-25', 'Bank 5', '-'],
+            ['A11-51', 'Deposito (<3 Bln)', '-'],
 
-                            [
-                                'kode' => 'A12',
-                                'keterangan' => 'Piutang Usaha',
-                                'children' => [
-                                    ['kode' => 'A12-01', 'keterangan' => 'PU - HM Sampoerna Tbk'],
-                                    ['kode' => 'A12-02', 'keterangan' => 'PU - Si B'],
-                                    ['kode' => 'A12-03', 'keterangan' => 'PU - Si C'],
-                                ],
-                            ],
+            ['A12', 'Piutang Usaha', '-'],
+            ['A12-01', 'PU - HM Sampoerna Tbk', '1,052,472,867'],
+            ['A12-02', 'PU - Si B', '-'],
+            ['A12-03', 'PU - Si C', '-'],
 
-                            [
-                                'kode' => 'A13',
-                                'keterangan' => 'Piutang Lain-lain',
-                                'children' => [
-                                    ['kode' => 'A13-01', 'keterangan' => 'PL - Pemegang Saham'],
-                                    ['kode' => 'A13-02', 'keterangan' => 'PL - Pungutan BPJS'],
-                                    ['kode' => 'A13-03', 'keterangan' => 'PL - PPh Pasal 21'],
-                                    ['kode' => 'A13-98', 'keterangan' => 'PL - Lainnya'],
-                                    ['kode' => 'A13-99', 'keterangan' => 'Piutang/(Hutang) - Harus Nol'],
-                                ],
-                            ],
+            ['A13', 'Piutang Lain-lain', '-'],
+            ['A13-01', 'PL - Pemegang Saham', '-'],
+            ['A13-02', 'PL - Pungutan BPJS', '-'],
+            ['A13-03', 'PL - PPh Pasal 21', '155,195,306'],
+            ['A13-98', 'PL - Lainnya', '-'],
+            ['A13-99', 'Piutang/(Hutang) - Harus Nol', '-'],
 
-                            [
-                                'kode' => 'A14',
-                                'keterangan' => 'Investasi Jangka Pendek',
-                                'children' => [
-                                    ['kode' => 'A14-01', 'keterangan' => 'Deposito A (3 s.d 12 bln)'],
-                                    ['kode' => 'A14-02', 'keterangan' => 'Deposito B (3 s.d 12 bln)'],
-                                    ['kode' => 'A14-99', 'keterangan' => 'Investasi Semua (Saldo Harus Nol)'],
-                                ],
-                            ],
+            ['A14', 'Investasi Jangka Pendek', '-'],
+            ['A14-01', 'Deposito A (3 s.d 12 bln)', '-'],
+            ['A14-02', 'Deposito B (3 s.d 12 bln)', '-'],
+            ['A14-99', 'Investasi Semua (Saldo Harus Nol)', '-'],
 
-                            [
-                                'kode' => 'A15',
-                                'keterangan' => 'Persediaan',
-                                'children' => [
-                                    ['kode' => 'A15-01', 'keterangan' => 'Barang Perlengkapan'],
-                                    ['kode' => 'A15-02', 'keterangan' => 'Stock B'],
-                                    ['kode' => 'A15-99', 'keterangan' => '……………'],
-                                ],
-                            ],
+            ['A15', 'Persediaan', '-'],
+            ['A15-01', 'Barang Perlengkapan', '-'],
+            ['A15-02', 'Stock B', '-'],
+            ['A15-99', '……………', '-'],
 
-                            [
-                                'kode' => 'A16',
-                                'keterangan' => 'Biaya Dibayar Di muka',
-                                'children' => [
-                                    ['kode' => 'A16-01', 'keterangan' => 'BDM - Sewa'],
-                                    ['kode' => 'A16-02', 'keterangan' => 'BDM - Rupa-rupa Biaya'],
-                                ],
-                            ],
+            ['A16', 'Biaya Dibayar Di muka', '-'],
+            ['A16-01', 'BDM - Sewa', '-'],
+            ['A16-02', 'BDM - Rupa-rupa Biaya', '198,750,001'],
 
-                            [
-                                'kode' => 'A17',
-                                'keterangan' => 'Uang Muka Pajak',
-                                'children' => [
-                                    ['kode' => 'A17-01', 'keterangan' => 'UMP - PPh Pasal 21'],
-                                    ['kode' => 'A17-02', 'keterangan' => 'UMP - PPh Pasal 23'],
-                                    ['kode' => 'A17-03', 'keterangan' => 'UMP - PPh Pasal 25'],
-                                    ['kode' => 'A17-04', 'keterangan' => 'UMP - PPh Pasal 4(2)'],
-                                    ['kode' => 'A17-11', 'keterangan' => 'UMP - PPN Masukan'],
-                                ],
-                            ],
+            ['A17', 'Uang Muka Pajak', '-'],
+            ['A17-01', 'UMP - PPh Pasal 21', '22,083,332'],
+            ['A17-02', 'UMP - PPh Pasal 23', '231,128'],
+            ['A17-03', 'UMP - PPh Pasal 25', '-'],
+            ['A17-04', 'UMP - PPh Pasal 4(2)', '-'],
+            ['A17-11', 'UMP - PPN Masukan', '-'],
 
-                            [
-                                'kode' => 'A18',
-                                'keterangan' => 'Aset Lancar Lainnya',
-                                'children' => [
-                                    ['kode' => 'A18-01', 'keterangan' => 'Aset Lancar A'],
-                                    ['kode' => 'A18-02', 'keterangan' => 'Aset Lancar B'],
-                                ],
-                            ],
-                        ],
-                    ],
+            ['A18', 'Aset Lancar Lainnya', '-'],
+            ['A18-01', 'Aset Lancar A', '-'],
+            ['A18-02', 'Aset Lancar B', '-'],
 
-                    // ASET TIDAK LANCAR
-                    [
-                        'kode' => 'A2',
-                        'keterangan' => 'ASET TIDAK LANCAR',
-                        'children' => [
-                            [
-                                'kode' => 'A21',
-                                'keterangan' => 'Piutang Lain-lain - Jangka Panjang',
-                                'children' => [
-                                    ['kode' => 'A21-01', 'keterangan' => 'Debitor A'],
-                                    ['kode' => 'A21-02', 'keterangan' => 'Debitor B'],
-                                ],
-                            ],
+            ['A2', 'ASET TIDAK LANCAR', '-'],
 
-                            [
-                                'kode' => 'A22',
-                                'keterangan' => 'Investasi Jangka Panjang',
-                                'children' => [
-                                    ['kode' => 'A22-01', 'keterangan' => 'Deposito A (> 12 bln)'],
-                                    ['kode' => 'A22-02', 'keterangan' => 'Deposito B (> 12 bln)'],
-                                ],
-                            ],
+            ['A21', 'Piutang Lain-lain - Jangka Panjang', '-'],
+            ['A21-01', 'Debitor A', '-'],
+            ['A21-02', 'Debitor B', '-'],
 
-                            [
-                                'kode' => 'A23',
-                                'keterangan' => 'Harga Perolehan Aset Tetap',
-                                'children' => [
-                                    ['kode' => 'A23-01', 'keterangan' => 'HP - Tanah'],
-                                    ['kode' => 'A23-02', 'keterangan' => 'HP - Bangunan'],
-                                    ['kode' => 'A23-03', 'keterangan' => 'HP - Kendaraaan'],
-                                    ['kode' => 'A23-04', 'keterangan' => 'HP - Mesin & Peralatan'],
-                                    ['kode' => 'A23-05', 'keterangan' => 'HP - Inventaris'],
-                                    ['kode' => 'A23-99', 'keterangan' => 'Aset dalam Penyelesaian'],
-                                ],
-                            ],
+            ['A22', 'Investasi Jangka Panjang', '-'],
+            ['A22-01', 'Deposito A (> 12 bln)', '-'],
+            ['A22-02', 'Deposito B (> 12 bln)', '-'],
 
-                            [
-                                'kode' => 'A24',
-                                'keterangan' => 'Akumulasi Penyusutan Aset Tetap',
-                                'children' => [
-                                    ['kode' => 'A24-01', 'keterangan' => 'AP - Bangunan'],
-                                    ['kode' => 'A24-02', 'keterangan' => 'AP - Kendaraaan'],
-                                    ['kode' => 'A24-03', 'keterangan' => 'AP - Mesin & Peralatan'],
-                                    ['kode' => 'A24-04', 'keterangan' => 'AP - Inventaris'],
-                                ],
-                            ],
+            ['A23', 'Harga Perolehan Aset Tetap', '-'],
+            ['A23-01', 'HP - Tanah', '498,817,500'],
+            ['A23-02', 'HP - Bangunan', '2,780,478,238'],
+            ['A23-03', 'HP - Kendaraaan', '3,614,628,807'],
+            ['A23-04', 'HP - Mesin & Peralatan', '3,334,459,406'],
+            ['A23-05', 'HP - Inventaris', '-'],
+            ['A23-99', 'Aset dalam Penyelesaian', '-'],
 
-                            [
-                                'kode' => 'A25',
-                                'keterangan' => 'Aset Tidak Berwujud',
-                                'children' => [
-                                    ['kode' => 'A25-01', 'keterangan' => 'Merk'],
-                                    ['kode' => 'A25-02', 'keterangan' => 'Software'],
-                                ],
-                            ],
+            ['A24', 'Akumulasi Penyusutan Aset Tetap', '-'],
+            ['A24-01', 'AP - Bangunan', '(287,849,679)'],
+            ['A24-02', 'AP - Kendaraaan', '(2,261,883,440)'],
+            ['A24-03', 'AP - Mesin & Peralatan', '(2,400,329,723)'],
+            ['A24-04', 'AP - Inventaris', '-'],
 
-                            [
-                                'kode' => 'A26',
-                                'keterangan' => 'Aset Tidak Lancar Lainnya',
-                                'children' => [
-                                    ['kode' => 'A26-01', 'keterangan' => 'BNI - Tab - 1753560912'],
-                                    ['kode' => 'A26-02', 'keterangan' => '…………….'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
+            ['A25', 'Aset Tidak Berwujud', '-'],
+            ['A25-01', 'Merk', '-'],
+            ['A25-02', 'Software', '-'],
 
-            // ================================
+            ['A26', 'Aset Tidak Lancar Lainnya', '-'],
+            ['A26-01', 'BNI - Tab - 1753560912', '5,000,806,795'],
+            ['A26-02', '…………….', '-'],
+
+            // =============================
             // KEWAJIBAN
-            // ================================
-            [
-                'kode' => 'L',
-                'keterangan' => 'KEWAJIBAN',
-                'children' => [
-                    [
-                        'kode' => 'L1',
-                        'keterangan' => 'KEWAJIBAN JANGKA PENDEK',
-                        'children' => [
-                            [
-                                'kode' => 'L11',
-                                'keterangan' => 'Utang Usaha',
-                                'children' => [
-                                    ['kode' => 'L11-01', 'keterangan' => 'Kreditor1'],
-                                    ['kode' => 'L11-02', 'keterangan' => 'Kreditor2'],
-                                    ['kode' => 'L11-03', 'keterangan' => 'Kreditor3'],
-                                    ['kode' => 'L11-99', 'keterangan' => '…...............'],
-                                ],
-                            ],
+            // =============================
+            ['L', 'KEWAJIBAN', '-'],
+            ['L1', 'KEWAJIBAN JANGKA PENDEK', '-'],
 
-                            [
-                                'kode' => 'L12',
-                                'keterangan' => 'Utang Lain-lain',
-                                'children' => [
-                                    ['kode' => 'L12-01', 'keterangan' => 'Utang Deviden'],
-                                    ['kode' => 'L12-02', 'keterangan' => 'Utang ke Kreditor B'],
-                                ],
-                            ],
+            ['L11', 'Utang Usaha', '-'],
+            ['L11-01', 'Kreditor1', '-'],
+            ['L11-02', 'Kreditor2', '-'],
+            ['L11-03', 'Kreditor3', '-'],
+            ['L11-99', '…...............', '-'],
 
-                            [
-                                'kode' => 'L13',
-                                'keterangan' => 'Biaya yang Harus Dibayar',
-                                'children' => [
-                                    ['kode' => 'L13-01', 'keterangan' => 'BHD - Gaji & Upah'],
-                                    ['kode' => 'L13-02', 'keterangan' => 'BHD - Listrik & Air'],
-                                    ['kode' => 'L13-03', 'keterangan' => 'BHD - Telpon & Internet'],
-                                    ['kode' => 'L13-04', 'keterangan' => 'BHD - Klaim BPJS'],
-                                    ['kode' => 'L13-05', 'keterangan' => 'BHD - BPJS TK'],
-                                    ['kode' => 'L13-06', 'keterangan' => 'BHD - Sewa'],
-                                    ['kode' => 'L13-99', 'keterangan' => 'BHD - Beban Lainnya'],
-                                ],
-                            ],
+            ['L12', 'Utang Lain-lain', '-'],
+            ['L12-01', 'Utang Deviden', '-'],
+            ['L12-02', 'Utang ke Kreditor B', '-'],
 
-                            [
-                                'kode' => 'L14',
-                                'keterangan' => 'Utang Pajak',
-                                'children' => [
-                                    ['kode' => 'L14-01', 'keterangan' => 'Utang Pajak PPh Pasal 21'],
-                                    ['kode' => 'L14-02', 'keterangan' => 'Utang Pajak PPh Pasal 22'],
-                                    ['kode' => 'L14-03', 'keterangan' => 'Utang Pajak PPh Pasal 23'],
-                                    ['kode' => 'L14-04', 'keterangan' => 'Utang Pajak PPh Pasal 25'],
-                                    ['kode' => 'L14-05', 'keterangan' => 'Utang Pajak PPh Pasal 29'],
-                                    ['kode' => 'L14-11', 'keterangan' => 'Utang Pajak PPh Pasal 4(2)'],
-                                    ['kode' => 'L14-12', 'keterangan' => 'Utang Pajak PPN - Keluaran'],
-                                ],
-                            ],
+            ['L13', 'Biaya yang Harus Dibayar', '-'],
+            ['L13-01', 'BHD - Gaji & Upah', '-'],
+            ['L13-02', 'BHD - Listrik & Air', '-'],
+            ['L13-03', 'BHD - Telpon & Internet', '-'],
+            ['L13-04', 'BHD - Klaim BPJS', '-'],
+            ['L13-05', 'BHD - BPJS TK', '-'],
+            ['L13-06', 'BHD - Sewa', '(1,800,000,000)'],
+            ['L13-99', 'BHD - Beban Lainnya', '-'],
 
-                            [
-                                'kode' => 'L15',
-                                'keterangan' => 'Uang Muka Pendapatan',
-                                'children' => [
-                                    ['kode' => 'L15-01', 'keterangan' => 'UMP - Dana Pendidikan'],
-                                    ['kode' => 'L15-02', 'keterangan' => 'UMP - Dana Manasik'],
-                                    ['kode' => 'L15-99', 'keterangan' => 'UMP - Lainnya'],
-                                ],
-                            ],
+            ['L14', 'Utang Pajak', '-'],
+            ['L14-01', 'Utang Pajak PPh Pasal 21', '(1,901,155,330)'],
+            ['L14-02', 'Utang Pajak PPh Pasal 22', '-'],
+            ['L14-03', 'Utang Pajak PPh Pasal 23', '(2,743,832)'],
+            ['L14-04', 'Utang Pajak PPh Pasal 25', '(259,905,444)'],
+            ['L14-05', 'Utang Pajak PPh Pasal 29', '(218,247,682)'],
+            ['L14-11', 'Utang Pajak PPh Pasal 4(2)', '(204,999,999)'],
+            ['L14-12', 'Utang Pajak PPN - Keluaran', '(1,577,332,916)'],
 
-                            [
-                                'kode' => 'L16',
-                                'keterangan' => 'Pinjaman Jangka Pendek',
-                                'children' => [
-                                    ['kode' => 'L16-01', 'keterangan' => 'PJ Pendek - Bank'],
-                                    ['kode' => 'L16-02', 'keterangan' => 'PJ Pendek - Sewa Guna Usaha'],
-                                ],
-                            ],
+            ['L15', 'Uang Muka Pendapatan', '-'],
+            ['L15-01', 'UMP - Dana Pendidikan', '-'],
+            ['L15-02', 'UMP - Dana Manasik', '-'],
+            ['L15-99', 'UMP - Lainnya', '-'],
 
-                            [
-                                'kode' => 'L17',
-                                'keterangan' => 'Kewajiban Imbalan Pasca Kerja',
-                                'children' => [
-                                    ['kode' => 'L17-01', 'keterangan' => 'Kewajiban Imbalan Pasca Kerja'],
-                                    ['kode' => 'L17-02', 'keterangan' => '……………………..'],
-                                ],
-                            ],
-                        ],
-                    ],
+            ['L16', 'Pinjaman Jangka Pendek', '-'],
+            ['L16-01', 'PJ Pendek - Bank', '-'],
+            ['L16-02', 'PJ Pendek - Sewa Guna Usaha', '-'],
 
-                    // KEWAJIBAN JANGKA PANJANG
-                    [
-                        'kode' => 'L2',
-                        'keterangan' => 'KEWAJIBAN JANGKA PANJANG',
-                        'children' => [
-                            [
-                                'kode' => 'L21',
-                                'keterangan' => 'Utang Usaha - Jk. Panjang',
-                                'children' => [
-                                    ['kode' => 'L21-01', 'keterangan' => 'Kreditor A'],
-                                    ['kode' => 'L21-02', 'keterangan' => '……………………………..'],
-                                ],
-                            ],
+            ['L17', 'Kewajiban Imbalan Pasca Kerja', '-'],
+            ['L17-01', 'Kewajiban Imbalan Pasca Kerja', '(4,937,083,600)'],
+            ['L17-02', '……………………..', '-'],
 
-                            [
-                                'kode' => 'L22',
-                                'keterangan' => 'Utang Lain-lain - Jk. Panjang',
-                                'children' => [
-                                    ['kode' => 'L22-01', 'keterangan' => 'Kreditor A'],
-                                    ['kode' => 'L22-02', 'keterangan' => 'Kreditor B'],
-                                ],
-                            ],
-
-                            [
-                                'kode' => 'L23',
-                                'keterangan' => 'Pinjaman Jangka Panjang',
-                                'children' => [
-                                    ['kode' => 'L23-01', 'keterangan' => 'Bank - Jk. Panjang'],
-                                    ['kode' => 'L23-02', 'keterangan' => 'Sewa Guna Usaha - Jk. Panjang'],
-                                ],
-                            ],
-
-                            [
-                                'kode' => 'L24',
-                                'keterangan' => 'Kewajiban Imbalan Pasca Kerja',
-                                'children' => [
-                                    ['kode' => 'L24-01', 'keterangan' => 'Kewajiban Imbalan Pasca Kerja - Jk. Panjang'],
-                                    ['kode' => 'L24-02', 'keterangan' => '……………………………..'],
-                                ],
-                            ],
-
-                            [
-                                'kode' => 'L25',
-                                'keterangan' => 'Kewajiban Jangka Panjang Lainnya',
-                                'children' => [
-                                    ['kode' => 'L25-01', 'keterangan' => 'Kewajiban Jangka Panjang Lainnya'],
-                                    ['kode' => 'L25-02', 'keterangan' => '……………………………..'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
-
-            // ================================
+            // =============================
             // EKUITAS
-            // ================================
-            [
-                'kode' => 'C',
-                'keterangan' => 'EKUITAS',
-                'children' => [
-                    [
-                        'kode' => 'C1',
-                        'keterangan' => 'MODAL',
-                        'children' => [
-                            [
-                                'kode' => 'C11',
-                                'keterangan' => 'Modal Disetor',
-                                'children' => [
-                                    ['kode' => 'C11-01', 'keterangan' => 'Modal Disetor - Hj. Rosita Aniati, S.H.'],
-                                    ['kode' => 'C11-02', 'keterangan' => 'Modal Disetor - Hj. Rusti Widayati, S.E.'],
-                                    ['kode' => 'C11-03', 'keterangan' => 'Modal Disetor - Siti Zahroh'],
-                                ],
-                            ],
-                        ],
-                    ],
+            // =============================
+            ['C', 'EKUITAS', '-'],
+            ['C1', 'MODAL', '-'],
+            ['C11', 'Modal Disetor', '-'],
+            ['C11-01', 'Modal Disetor - Hj. Rosita Aniati, S.H.', '(750,000,000)'],
+            ['C11-02', 'Modal Disetor - Hj. Rusti Widayati, S.E.', '(750,000,000)'],
+            ['C11-03', 'Modal Disetor - Siti Zahroh', '(1,000,000,000)'],
 
-                    [
-                        'kode' => 'C2',
-                        'keterangan' => 'SALDO (LABA)/RUGI',
-                        'children' => [
-                            [
-                                'kode' => 'C21',
-                                'keterangan' => 'Saldo (Laba)/Rugi',
-                                'children' => [
-                                    ['kode' => 'C21-01', 'keterangan' => '(Laba)/Rugi Ditahan'],
-                                    ['kode' => 'C21-02', 'keterangan' => 'Deviden'],
-                                    ['kode' => 'C21-99', 'keterangan' => '(Laba)/Rugi Berjalan'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
+            ['C2', 'SALDO (LABA)/RUGI', '-'],
+            ['C21', 'Saldo (Laba)/Rugi', '-'],
+            ['C21-01', '(Laba)/Rugi Ditahan', '(13,260,910,873)'],
+            ['C21-02', 'Deviden', '-'],
+            ['C21-99', '(Laba)/Rugi Berjalan', '(11,024,561,618)'],
 
-            // ================================
+            // =============================
             // PENDAPATAN
-            // ================================
-            [
-                'kode' => 'R',
-                'keterangan' => 'PENDAPATAN',
-                'children' => [
-                    [
-                        'kode' => 'R1',
-                        'keterangan' => 'PENDAPATAN',
-                        'children' => [
-                            [
-                                'kode' => 'R11',
-                                'keterangan' => 'Pendapatan',
-                                'children' => [
-                                    ['kode' => 'R11-01', 'keterangan' => 'Jasa Maklon'],
-                                    ['kode' => 'R11-02', 'keterangan' => 'Jasa Sewa'],
-                                    ['kode' => 'R11-03', 'keterangan' => 'Jasa Manajemen Fee'],
-                                ],
-                            ],
-                        ],
-                    ],
+            // =============================
+            ['R', 'PENDAPATAN', '-'],
+            ['R1', 'PENDAPATAN', '-'],
+            ['R11', 'Pendapatan', '-'],
+            ['R11-01', 'Jasa Maklon', '(144,414,014,072)'],
+            ['R11-02', 'Jasa Sewa', '-'],
+            ['R11-03', 'Jasa Manajemen Fee', '(1,999,388,181)'],
 
-                    [
-                        'kode' => 'R2',
-                        'keterangan' => 'PENDAPATAN LAIN-LAIN',
-                        'children' => [
-                            [
-                                'kode' => 'R21',
-                                'keterangan' => 'Pendapatan Lain-Lain',
-                                'children' => [
-                                    ['kode' => 'R21-01', 'keterangan' => 'Jasa Giro & Bank'],
-                                    ['kode' => 'R21-02', 'keterangan' => '…................'],
-                                    ['kode' => 'R21-98', 'keterangan' => 'Laba Investasi'],
-                                    ['kode' => 'R21-99', 'keterangan' => 'Laba Penjualan Aset Tetap'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
+            ['R2', 'PENDAPATAN LAIN-LAIN', '-'],
+            ['R21', 'Pendapatan Lain-Lain', '-'],
+            ['R21-01', 'Jasa Giro & Bank', '(468,685,044)'],
+            ['R21-02', '…................', '-'],
+            ['R21-98', 'Laba Investasi', '-'],
+            ['R21-99', 'Laba Penjualan Aset Tetap', '-'],
 
-            // ================================
+            // =============================
             // BEBAN
-            // ================================
-            [
-                'kode' => 'E',
-                'keterangan' => 'BEBAN',
-                'children' => [
-                    [
-                        'kode' => 'E1',
-                        'keterangan' => 'BEBAN PRODUKSI',
-                        'children' => [
-                            [
-                                'kode' => 'E11',
-                                'keterangan' => 'Beban Produksi',
-                                'children' => [
-                                    ['kode' => 'E11-01', 'keterangan' => 'Gaji, Upah & Tunjangan'],
-                                    ['kode' => 'E11-02', 'keterangan' => 'Kesejahteraan & BPJS'],
-                                    ['kode' => 'E11-03', 'keterangan' => 'Natura & Fasilitas Pabrik'],
-                                    ['kode' => 'E11-04', 'keterangan' => 'Bahan & Perlengkapan'],
-                                    ['kode' => 'E11-05', 'keterangan' => 'Energi & Utilitas'],
-                                    ['kode' => 'E11-06', 'keterangan' => 'Riset & Pengembangan'],
-                                    ['kode' => 'E11-07', 'keterangan' => '…................'],
-                                    ['kode' => 'E11-99', 'keterangan' => 'Beban Produksi Lainnya'],
-                                ],
-                            ],
-                        ],
-                    ],
+            // =============================
+            ['E', 'BEBAN', '-'],
+            ['E1', 'BEBAN PRODUKSI', '-'],
+            ['E11', 'Beban Produksi', '-'],
 
-                    [
-                        'kode' => 'E2',
-                        'keterangan' => 'BEBAN USAHA',
-                        'children' => [
-                            [
-                                'kode' => 'E21',
-                                'keterangan' => 'Pemasaran',
-                                'children' => [
-                                    ['kode' => 'E21-01', 'keterangan' => 'Gaji, Upah & Tunjangan'],
-                                    ['kode' => 'E21-02', 'keterangan' => '…............'],
-                                ],
-                            ],
+            ['E11-01', 'Gaji, Upah & Tunjangan', '104,342,443,900'],
+            ['E11-02', 'Kesejahteraan & BPJS', '7,015,138,963'],
+            ['E11-03', 'Natura & Fasilitas Pabrik', '2,536,284,952'],
+            ['E11-04', 'Bahan & Perlengkapan', '380,495,235'],
+            ['E11-05', 'Energi & Utilitas', '-'],
+            ['E11-06', 'Riset & Pengembangan', '67,030,942'],
+            ['E11-07', '…................', '-'],
+            ['E11-99', 'Beban Produksi Lainnya', '-'],
 
-                            [
-                                'kode' => 'E22',
-                                'keterangan' => 'Administrasi & Umum',
-                                'children' => [
-                                    ['kode' => 'E22-01', 'keterangan' => 'Gaji, Upah & Tunjangan'],
-                                    ['kode' => 'E22-02', 'keterangan' => 'Kesejahteraan & BPJS'],
-                                    ['kode' => 'E22-03', 'keterangan' => 'Pelatihan & Pengembangan'],
-                                    ['kode' => 'E22-04', 'keterangan' => 'SMK3'],
-                                    ['kode' => 'E22-05', 'keterangan' => 'Operasional Kantor'],
-                                    ['kode' => 'E22-06', 'keterangan' => 'Sewa'],
-                                    ['kode' => 'E22-07', 'keterangan' => 'Pemeliharaan'],
-                                    ['kode' => 'E22-08', 'keterangan' => 'Asuransi, Pajak & Perijinan'],
-                                    ['kode' => 'E22-09', 'keterangan' => 'Konsultan & Jasa Pihak Ketiga'],
-                                    ['kode' => 'E22-10', 'keterangan' => 'Sosial & CSR'],
-                                    ['kode' => 'E22-11', 'keterangan' => '…....................'],
-                                    ['kode' => 'E22-89', 'keterangan' => 'Beban Usaha Lainnya'],
-                                    ['kode' => 'E22-96', 'keterangan' => 'Penyusutan Bangunan'],
-                                    ['kode' => 'E22-97', 'keterangan' => 'Penyusutan Kendaraan'],
-                                    ['kode' => 'E22-98', 'keterangan' => 'Penyusutan Mesin & Peralatan'],
-                                    ['kode' => 'E22-99', 'keterangan' => 'Penyusutan Inventaris'],
-                                ],
-                            ],
-                        ],
-                    ],
+            ['E2', 'BEBAN USAHA', '-'],
+            ['E21', 'Pemasaran', '-'],
+            ['E21-01', 'Gaji, Upah & Tunjangan', '-'],
+            ['E21-02', '…............', '-'],
 
-                    [
-                        'kode' => 'E3',
-                        'keterangan' => 'BEBAN LAIN-LAIN',
-                        'children' => [
-                            [
-                                'kode' => 'E31',
-                                'keterangan' => 'Beban Lain-lain',
-                                'children' => [
-                                    ['kode' => 'E31-01', 'keterangan' => 'Pajak Bunga & Jasa Giro'],
-                                    ['kode' => 'E31-02', 'keterangan' => 'Bunga Pinjaman'],
-                                    ['kode' => 'E31-03', 'keterangan' => 'Rugi Penjualan Aset Tetap'],
-                                ],
-                            ],
-                        ],
-                    ],
+            ['E22', 'Administrasi & Umum', '-'],
+            ['E22-01', 'Gaji, Upah & Tunjangan', '10,549,707,284'],
+            ['E22-02', 'Kesejahteraan & BPJS', '290,286,139'],
+            ['E22-03', 'Pelatihan & Pengembangan', '181,240,704'],
+            ['E22-04', 'SMK3', '37,524,849'],
+            ['E22-05', 'Operasional Kantor', '1,824,975,124'],
+            ['E22-06', 'Sewa', '2,399,000,000'],
+            ['E22-07', 'Pemeliharaan', '257,882,000'],
+            ['E22-08', 'Asuransi, Pajak & Perijinan', '257,559,713'],
+            ['E22-09', 'Konsultan & Jasa Pihak Ketiga', '46,875,564'],
+            ['E22-10', 'Sosial & CSR', '923,961,752'],
+            ['E22-11', '…....................', '-'],
+            ['E22-89', 'Beban Usaha Lainnya', '579,079,346'],
+            ['E22-96', 'Penyusutan Bangunan', '867,612,564'],
+            ['E22-97', 'Penyusutan Kendaraan', '-'],
+            ['E22-98', 'Penyusutan Mesin & Peralatan', '-'],
+            ['E22-99', 'Penyusutan Inventaris', '-'],
 
-                    [
-                        'kode' => 'E9',
-                        'keterangan' => 'BEBAN PAJAK PENGHASILAN',
-                        'children' => [
-                            [
-                                'kode' => 'E91',
-                                'keterangan' => 'Beban Pajak Penghasilan',
-                                'children' => [
-                                    ['kode' => 'E91-01', 'keterangan' => 'Beban Pajak Penghasilan'],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ],
+            ['E3', 'BEBAN LAIN-LAIN', '-'],
+            ['E31', 'Beban Lain-lain', '-'],
+            ['E31-01', 'Pajak Bunga & Jasa Giro', '93,737,009'],
+            ['E31-02', 'Bunga Pinjaman', '-'],
+            ['E31-03', 'Rugi Penjualan Aset Tetap', '-'],
 
-            // ================================
-            // PINDAH BUKU
-            // ================================
-            [
-                'kode' => 'PB',
-                'keterangan' => 'Pindah Buku',
-            ],
+            ['E9', 'BEBAN PAJAK PENGHASILAN', '-'],
+            ['E91', 'Beban Pajak Penghasilan', '-'],
+            ['E91-01', 'Beban Pajak Penghasilan', '3,206,689,640'],
+
+            ['AM', 'Akun Memorial', '-'],
+            ['PB', 'Pindah Buku', '-'],
         ];
 
-        $this->insertRecursive($data, null, 1);
-    }
+        // Build parent relationships
+        $idMap = [];
 
-    private function insertRecursive($items, $parentId, $level)
-    {
-        $sortOrder = 1;
-        foreach ($items as $item) {
+        foreach ($rows as $row) {
+
+            [$kode, $keterangan, $val] = $row;
+
+            // Determine parent
+            $parentKode = $this->getParentCode($kode);
+            $parentId = $parentKode && isset($idMap[$parentKode]) ? $idMap[$parentKode] : null;
+
+            // Determine level
+            $level = $this->getLevel($kode);
+
             $id = DB::table('trial_balances')->insertGetId([
-                'kode'          => $item['kode'],
-                'keterangan'    => $item['keterangan'],
+                'kode'          => $kode,
+                'keterangan'    => $keterangan,
                 'parent_id'     => $parentId,
                 'level'         => $level,
-                'sort_order'    => $sortOrder,
-                'tahun_2024'    => null,
+                'tahun_2024'    => $this->parseNumber($val),
                 'created_at'    => now(),
                 'updated_at'    => now(),
             ]);
 
-            if (isset($item['children'])) {
-                $this->insertRecursive($item['children'], $id, $level + 1);
-            }
-            
-            $sortOrder++;
+            $idMap[$kode] = $id;
         }
+    }
+
+    private function parseNumber($value)
+    {
+        if ($value === '-' || $value === null) return 0;
+
+        // If in parentheses → negative
+        if (preg_match('/^\((.*)\)$/', $value, $m)) {
+            return -1 * intval(str_replace(',', '', $m[1]));
+        }
+
+        return intval(str_replace(',', '', $value));
+    }
+
+    private function getParentCode($kode)
+    {
+        // Examples:
+        // A11-01 -> parent A11
+        // A12 -> parent A1
+        // A11 -> parent A1
+
+        if (str_contains($kode, '-')) {
+            return explode('-', $kode)[0];
+        }
+
+        if (strlen($kode) === 3) { // A11, L21, E22
+            return substr($kode, 0, 2);
+        }
+
+        if (strlen($kode) === 2) { // A1, L2, R1
+            return substr($kode, 0, 1);
+        }
+
+        return null; // level 1 (A, L, E, R, C)
+    }
+
+    private function getLevel($kode)
+    {
+        if (str_contains($kode, '-')) return 4;
+        if (strlen($kode) === 3) return 3;
+        if (strlen($kode) === 2) return 2;
+        return 1;
     }
 }

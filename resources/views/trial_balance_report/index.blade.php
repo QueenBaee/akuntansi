@@ -101,16 +101,16 @@
                                         // Nilai bulan
                                         for ($m = 1; $m <= 12; $m++) {
                                             $val = $data[$item->id]["month_$m"] ?? 0;
-                                            echo '<td>' . ($val == 0 ? '' : number_format($val, 0, ',', '.')) . '</td>';
+                                            echo '<td>' . formatAccounting($val) . '</td>';
                                         }
                                         
                                         // Total tahun berjalan
                                         $total = $data[$item->id]['total'] ?? 0;
-                                        echo '<td>' . ($total == 0 ? '' : number_format($total, 0, ',', '.')) . '</td>';
+                                        echo '<td>' . formatAccounting($total) . '</td>';
                                         
                                         // Saldo awal
                                         $start = $data[$item->id]['opening'] ?? 0;
-                                        echo '<td>' . ($start == 0 ? '' : number_format($start, 0, ',', '.')) . '</td>';
+                                        echo '<td>' . formatAccounting($start) . '</td>';
                                         
                                         echo '</tr>';
                                         
@@ -136,14 +136,14 @@
                                         @php
                                             $val = $data[$pbItem->id]["month_$m"] ?? 0;
                                         @endphp
-                                        <td>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</td>
+                                        <td>{{ formatAccounting($val) }}</td>
                                     @endfor
                                     @php
                                         $total = $data[$pbItem->id]['total'] ?? 0;
                                         $start = $data[$pbItem->id]['opening'] ?? 0;
                                     @endphp
-                                    <td>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</td>
-                                    <td>{{ $start == 0 ? '' : number_format($start, 0, ',', '.') }}</td>
+                                    <td>{{ formatAccounting($total) }}</td>
+                                    <td>{{ formatAccounting($start) }}</td>
                                 </tr>
                             @endif
 
@@ -165,12 +165,12 @@
                                 <td><strong>TOTAL ASSETS (Aktiva)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalAssets["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $totalAssets['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $totalAssets['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- TOTAL LIABILITIES --}}
@@ -191,12 +191,12 @@
                                 <td><strong>TOTAL LIABILITIES (Kewajiban)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalLiabilities["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $totalLiabilities['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $totalLiabilities['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- TOTAL EQUITY --}}
@@ -217,34 +217,35 @@
                                 <td><strong>TOTAL EQUITY (Ekuitas)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalEquity["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $totalEquity['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $totalEquity['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- SELISIH (A - L - C) --}}
                             @php
                                 $selisih = [];
                                 for ($m = 1; $m <= 12; $m++) {
-                                    $selisih["month_$m"] = ($totalAssets["month_$m"] ?? 0) - ($totalLiabilities["month_$m"] ?? 0) - ($totalEquity["month_$m"] ?? 0);
+                                    // Assets are positive, Liabilities & Equity are negative in accounting
+                                    $selisih["month_$m"] = ($totalAssets["month_$m"] ?? 0) - abs($totalLiabilities["month_$m"] ?? 0) - abs($totalEquity["month_$m"] ?? 0);
                                 }
-                                $selisih['total'] = ($totalAssets['total'] ?? 0) - ($totalLiabilities['total'] ?? 0) - ($totalEquity['total'] ?? 0);
-                                $selisih['opening'] = ($totalAssets['opening'] ?? 0) - ($totalLiabilities['opening'] ?? 0) - ($totalEquity['opening'] ?? 0);
+                                $selisih['total'] = ($totalAssets['total'] ?? 0) - abs($totalLiabilities['total'] ?? 0) - abs($totalEquity['total'] ?? 0);
+                                $selisih['opening'] = ($totalAssets['opening'] ?? 0) - abs($totalLiabilities['opening'] ?? 0) - abs($totalEquity['opening'] ?? 0);
                             @endphp
                             <tr class="total-row">
                                 <td><strong></strong></td>
                                 <td><strong>SELISIH</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $selisih["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $selisih['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $selisih['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- R1 GROUP --}}
@@ -265,12 +266,12 @@
                                 <td><strong>Pendapatan</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $r1Group["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $r1Group['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $r1Group['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- R2 GROUP --}}
@@ -291,12 +292,12 @@
                                 <td><strong>Pendapatan Lain-Lain</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $r2Group["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $r2Group['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $r2Group['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- TOTAL REVENUE --}}
@@ -313,12 +314,12 @@
                                 <td><strong>TOTAL REVENUE</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalRevenue["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $totalRevenue['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $totalRevenue['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- E11 GROUP --}}
@@ -339,12 +340,12 @@
                                 <td><strong>Beban Produksi</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $e11Group["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $e11Group['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $e11Group['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- E2 GROUP --}}
@@ -365,12 +366,12 @@
                                 <td><strong>Beban Usaha</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $e2Group["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $e2Group['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $e2Group['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- E3 GROUP --}}
@@ -391,15 +392,15 @@
                                 <td><strong>Beban Lain-lain</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $e3Group["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $e3Group['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $e3Group['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
-                            {{-- TOTAL EXPENSES --}}
+                            {{-- TOTAL EXPENSES (excluding E9) --}}
                             @php
                                 $totalExpenses = [];
                                 for ($m = 1; $m <= 12; $m++) {
@@ -413,89 +414,83 @@
                                 <td><strong>TOTAL EXPENSES</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalExpenses["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $totalExpenses['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $totalExpenses['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                             {{-- (SURPLUS) / DEFICIT --}}
                             @php
                                 $surplusDeficit = [];
                                 for ($m = 1; $m <= 12; $m++) {
-                                    $surplusDeficit["month_$m"] = ($totalRevenue["month_$m"] ?? 0) - ($totalExpenses["month_$m"] ?? 0);
+                                    // Revenue is credit (negative), Expenses are debit (positive)
+                                    $surplusDeficit["month_$m"] = abs($totalRevenue["month_$m"] ?? 0) - abs($totalExpenses["month_$m"] ?? 0);
                                 }
-                                $surplusDeficit['total'] = ($totalRevenue['total'] ?? 0) - ($totalExpenses['total'] ?? 0);
-                                $surplusDeficit['opening'] = ($totalRevenue['opening'] ?? 0) - ($totalExpenses['opening'] ?? 0);
+                                $surplusDeficit['total'] = abs($totalRevenue['total'] ?? 0) - abs($totalExpenses['total'] ?? 0);
+                                $surplusDeficit['opening'] = abs($totalRevenue['opening'] ?? 0) - abs($totalExpenses['opening'] ?? 0);
                             @endphp
                             <tr class="total-row">
                                 <td><strong></strong></td>
                                 <td><strong>(SURPLUS) / DEFICIT</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $surplusDeficit["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $surplusDeficit['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $surplusDeficit['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
-                            {{-- E9 - BEBAN PAJAK PENGHASILAN --}}
-                            @foreach ($items as $item)
-                                @if ($item->kode == 'E9')
-                                    <tr class="level-{{ $item->level }}-row">
-                                        <td>{{ $item->kode }}</td>
-                                        <td>
-                                            <div class="tb-text level-{{ $item->level }}">
-                                                {{ $item->keterangan }}
-                                            </div>
-                                        </td>
-                                        @for ($m = 1; $m <= 12; $m++)
-                                            @php $val = $data[$item->id]["month_$m"] ?? 0; @endphp
-                                            <td>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</td>
-                                        @endfor
-                                        @php $total = $data[$item->id]['total'] ?? 0; @endphp
-                                        <td>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</td>
-                                        @php $opening = $data[$item->id]['opening'] ?? 0; @endphp
-                                        <td>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</td>
-                                    </tr>
-                                @endif
-                            @endforeach
+                            {{-- E9 GROUP --}}
+                            @php
+                                $e9Group = [];
+                                foreach ($items as $item) {
+                                    if (str_starts_with($item->kode, 'E9')) {
+                                        for ($m = 1; $m <= 12; $m++) {
+                                            $e9Group["month_$m"] = ($e9Group["month_$m"] ?? 0) + ($data[$item->id]["month_$m"] ?? 0);
+                                        }
+                                        $e9Group['total'] = ($e9Group['total'] ?? 0) + ($data[$item->id]['total'] ?? 0);
+                                        $e9Group['opening'] = ($e9Group['opening'] ?? 0) + ($data[$item->id]['opening'] ?? 0);
+                                    }
+                                }
+                            @endphp
+                            <tr class="total-row">
+                                <td><strong>E9</strong></td>
+                                <td><strong>Beban Pajak Penghasilan</strong></td>
+                                @for ($m = 1; $m <= 12; $m++)
+                                    @php $val = $e9Group["month_$m"] ?? 0; @endphp
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
+                                @endfor
+                                @php $total = $e9Group['total'] ?? 0; @endphp
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
+                                @php $opening = $e9Group['opening'] ?? 0; @endphp
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
+                            </tr>
 
                             {{-- NET (SURPLUS) / DEFICIT --}}
                             @php
                                 $netSurplusDeficit = [];
-                                $totalE9 = [];
-                                foreach ($items as $item) {
-                                    if ($item->kode == 'E9') {
-                                        for ($m = 1; $m <= 12; $m++) {
-                                            $totalE9["month_$m"] = $data[$item->id]["month_$m"] ?? 0;
-                                        }
-                                        $totalE9['total'] = $data[$item->id]['total'] ?? 0;
-                                        $totalE9['opening'] = $data[$item->id]['opening'] ?? 0;
-                                        break;
-                                    }
-                                }
                                 for ($m = 1; $m <= 12; $m++) {
-                                    $netSurplusDeficit["month_$m"] = ($surplusDeficit["month_$m"] ?? 0) - ($totalE9["month_$m"] ?? 0);
+                                    $netSurplusDeficit["month_$m"] = ($surplusDeficit["month_$m"] ?? 0) - abs($e9Group["month_$m"] ?? 0);
                                 }
-                                $netSurplusDeficit['total'] = ($surplusDeficit['total'] ?? 0) - ($totalE9['total'] ?? 0);
-                                $netSurplusDeficit['opening'] = ($surplusDeficit['opening'] ?? 0) - ($totalE9['opening'] ?? 0);
+                                $netSurplusDeficit['total'] = ($surplusDeficit['total'] ?? 0) - abs($e9Group['total'] ?? 0);
+                                $netSurplusDeficit['opening'] = ($surplusDeficit['opening'] ?? 0) - abs($e9Group['opening'] ?? 0);
                             @endphp
                             <tr class="total-row">
                                 <td><strong></strong></td>
                                 <td><strong>NET (SURPLUS) / DEFICIT</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $netSurplusDeficit["month_$m"] ?? 0; @endphp
-                                    <td><strong>{{ $val == 0 ? '' : number_format($val, 0, ',', '.') }}</strong></td>
+                                    <td><strong>{{ formatAccounting($val) }}</strong></td>
                                 @endfor
                                 @php $total = $netSurplusDeficit['total'] ?? 0; @endphp
-                                <td><strong>{{ $total == 0 ? '' : number_format($total, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($total) }}</strong></td>
                                 @php $opening = $netSurplusDeficit['opening'] ?? 0; @endphp
-                                <td><strong>{{ $opening == 0 ? '' : number_format($opening, 0, ',', '.') }}</strong></td>
+                                <td><strong>{{ formatAccounting($opening) }}</strong></td>
                             </tr>
 
                         </tbody>

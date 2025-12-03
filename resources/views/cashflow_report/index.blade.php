@@ -72,6 +72,8 @@
                         tr.level-2-row {
                             background: #ffffff !important;
                         }
+
+
                     </style>
 
                     <table class="table table-bordered table-striped">
@@ -87,13 +89,23 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($items as $item)
-                                <tr class="level-{{ $item->level }}-row">
+                            @foreach ($enhancedItems as $item)
+                                @php
+                                    $displayLevel = $item->level;
+                                    if (isset($item->is_subtotal)) {
+                                        $displayLevel = 1;
+                                    } elseif (isset($item->is_total)) {
+                                        $displayLevel = 0;
+                                    } elseif (isset($item->is_surplus)) {
+                                        $displayLevel = 0;
+                                    }
+                                @endphp
+                                <tr class="level-{{ $displayLevel }}-row">
 
                                     <td>{{ $item->kode }}</td>
 
                                     <td>
-                                        <div class="cf-text level-{{ $item->level }}">
+                                        <div class="cf-text level-{{ $displayLevel }}">
                                             {{ $item->keterangan }}
                                         </div>
                                     </td>
