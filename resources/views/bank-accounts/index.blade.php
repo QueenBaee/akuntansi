@@ -39,6 +39,7 @@
                                         <th>Nama</th>
                                         <th>Bank</th>
                                         <th>Nomor Rekening</th>
+                                        <th>Akun CF</th>
                                         <th>Deskripsi</th>
                                         <th>Status</th>
                                         <th class="w-1">Aksi</th>
@@ -50,6 +51,14 @@
                                         <td>{{ $account->name }}</td>
                                         <td>{{ $account->bank_name }}</td>
                                         <td>{{ $account->account_number }}</td>
+                                        <td>
+                                            @if($account->cashflow)
+                                                <span class="badge bg-info">{{ $account->cashflow->kode }}</span><br>
+                                                <small class="text-muted">{{ $account->cashflow->keterangan }}</small>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $account->description }}</td>
                                         <td>
                                             <span class="badge bg-{{ $account->is_active ? 'success' : 'danger' }}">

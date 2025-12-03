@@ -4,10 +4,21 @@
 
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
-    <h2 class="page-title">Cashflow</h2>
+    <h2 class="page-title">Daftar Cashflow</h2>
 @endsection
 
 @section('page-actions')
+    <form method="GET" class="d-flex gap-2 align-items-center me-2">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Cari kode atau keterangan..." style="min-width: 200px;">
+        <button class="btn btn-outline-primary" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <circle cx="10" cy="10" r="7"/>
+                <path d="m21 21l-6 -6"/>
+            </svg>
+            Cari
+        </button>
+    </form>
     <a href="{{ route('cashflow.create') }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
             viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
@@ -25,19 +36,6 @@
     <div class="col-12">
 
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Daftar Cashflow</h3>
-
-                <div class="card-actions">
-                    <form method="GET" class="d-flex">
-                        <input type="text" name="search"
-                            value="{{ request('search') }}"
-                            class="form-control me-2"
-                            placeholder="Search Kode / Keterangan">
-                        <button class="btn btn-outline-primary">Search</button>
-                    </form>
-                </div>
-            </div>
 
             <div class="table-responsive">
                 <table class="table table-vcenter card-table">
@@ -75,8 +73,8 @@
                                                 <a href='" . route('cashflow.edit', $item->id) . "' 
                                                    class='btn btn-sm btn-outline-primary'>Edit</a>
 
-                                                <a href='" . route('cashflow.create') . "?parent_id={$item->id}' 
-                                                   class='btn btn-sm btn-outline-success'>Tambah</a>
+                                                <!-- <a href='" . route('cashflow.create') . "?parent_id={$item->id}' 
+                                                   class='btn btn-sm btn-outline-success'>Tambah</a> -->
 
                                                 <form action='" . route('cashflow.destroy', $item->id) . "' 
                                                       method='POST' class='d-inline'>

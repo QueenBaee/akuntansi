@@ -15,7 +15,8 @@ class BankAccount extends Model
         'account_number',
         'description',
         'is_active',
-        'trial_balance_id'
+        'trial_balance_id',
+        'cashflow_id'
     ];
 
     protected $casts = [
@@ -25,6 +26,11 @@ class BankAccount extends Model
     public function trialBalance()
     {
         return $this->belongsTo(TrialBalance::class);
+    }
+
+    public function cashflow()
+    {
+        return $this->belongsTo(Cashflow::class);
     }
 
     public function getCurrentBalance()
