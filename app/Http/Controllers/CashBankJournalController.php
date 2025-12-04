@@ -20,6 +20,7 @@ class CashBankJournalController extends Controller
         $selectedAccount = null;
         $openingBalance = 0;
         $journalsHistory = [];
+        $year = $request->get('year', date('Y'));
 
         if ($request->filled('ledger_id')) {
 
@@ -33,8 +34,8 @@ class CashBankJournalController extends Controller
                 // Hitung opening balance
                 $openingBalance = $this->calculateOpeningBalance($selectedAccount->id);
 
-                // Ambil history jurnal
-                $journalsHistory = $this->getJournalsHistory($selectedLedger->id);
+                // Ambil history jurnal dengan filter tahun
+                $journalsHistory = $this->getJournalsHistory($selectedLedger->id, $year);
             }
         }
 
@@ -206,11 +207,16 @@ class CashBankJournalController extends Controller
         return $balance;
     }
 
-    private function getJournalsHistory($ledgerId)
+    private function getJournalsHistory($ledgerId, $year = null)
     {
-        $journals = Journal::with(['debitAccount', 'creditAccount', 'cashflow', 'attachments'])
-            ->where('ledger_id', $ledgerId)
-            ->orderBy('date')
+        $query = Journal::with(['debitAccount', 'creditAccount', 'cashflow', 'attachments'])
+            ->where('ledger_id', $ledgerId);
+            
+        if ($year) {
+            $query->whereYear('date', $year);
+        }
+        
+        $journals = $query->orderBy('date')
             ->orderBy('created_at')
             ->get();
 

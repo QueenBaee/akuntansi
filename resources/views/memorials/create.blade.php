@@ -4,10 +4,23 @@
 
 @section('page-header')
     <div class="page-pretitle">Memorial</div>
-    <h2 class="page-title">Memorial Entry</h2>
+    <h2 class="page-title">Memorial Entry - Tahun {{ request('year', date('Y')) }}</h2>
+@endsection
+
+@section('page-actions')
+    <form method="GET" class="d-flex">
+        <input type="number" name="year" value="{{ request('year', date('Y')) }}" class="form-control me-2" placeholder="Tahun" style="width: 100px;">
+        <button class="btn btn-outline-primary">Filter</button>
+    </form>
 @endsection
 
 @section('content')
+<style>
+    body {
+        overflow-x: hidden;
+    }
+</style>
+
 <!-- Alert Messages -->
 <div id="alert-container"></div>
 
