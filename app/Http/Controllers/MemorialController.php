@@ -12,7 +12,13 @@ class MemorialController extends Controller
 {
     public function create()
     {
-        $accounts = TrialBalance::orderBy('kode')->where('level', 4)->get();
+        $accounts = TrialBalance::orderBy('kode')
+            ->where('level', 4)
+            ->where(function($query) {
+                $query->where('is_kas_bank', false)
+                      ->orWhereNull('is_kas_bank');
+            })
+            ->get();
         $memorialsHistory = $this->getMemorialsHistory();
 
         return view('memorials.create', compact('accounts', 'memorialsHistory'));

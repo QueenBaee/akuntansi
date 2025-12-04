@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\TrialBalance;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TrialBalanceController extends Controller
 {
@@ -136,18 +137,17 @@ class TrialBalanceController extends Controller
 
     public function update(Request $request, TrialBalance $trial_balance)
     {
-        $request->validate([
-            'kode' => 'required|unique:trial_balances,kode,' . $trial_balance->id,
+        $validated = $request->validate([
+            'kode' => ['required', Rule::unique('trial_balances')->ignore($trial_balance->id)],
             'keterangan' => 'required',
             'tahun_2024' => 'nullable|numeric',
-            'is_kas_bank' => 'nullable|boolean'
         ]);
 
         $trial_balance->update([
-            'kode' => $request->kode,
-            'keterangan' => $request->keterangan,
-            'tahun_2024' => $request->tahun_2024,
-            'is_kas_bank' => $request->boolean('is_kas_bank'),
+            'kode' => $validated['kode'],
+            'keterangan' => $validated['keterangan'],
+            'tahun_2024' => $validated['tahun_2024'],
+            'is_kas_bank' => $request->has('is_kas_bank'),
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Trial Balance berhasil diupdate.');

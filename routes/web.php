@@ -102,14 +102,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('journals/{id}', [CashBankJournalController::class, 'destroy'])->name('journals.destroy');
     Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create','store','destroy']);
 
-    // Memorials
+    // Memorials - redirect to create like cash/bank
+    Route::get('memorials', [\App\Http\Controllers\MemorialController::class, 'create'])->name('memorials.index');
     Route::get('memorials/create', [\App\Http\Controllers\MemorialController::class, 'create'])->name('memorials.create');
     Route::post('memorials', [\App\Http\Controllers\MemorialController::class, 'store'])->name('memorials.store');
     Route::put('memorials/{id}', [\App\Http\Controllers\MemorialController::class, 'update'])->name('memorials.update');
     Route::get('memorials/{id}/attachments', [\App\Http\Controllers\MemorialController::class, 'getAttachments'])->name('memorials.attachments');
     Route::get('memorials/{id}/attachments/{attachmentId}', [\App\Http\Controllers\MemorialController::class, 'viewAttachment'])->name('memorials.view-attachment');
     Route::delete('memorials/{id}', [\App\Http\Controllers\MemorialController::class, 'destroy'])->name('memorials.destroy');
-    Route::resource('memorials', \App\Http\Controllers\Web\MemorialController::class)->except(['create','store','destroy']);
 
     // Trial Balance
     Route::resource('trial-balance', TrialBalanceController::class);
