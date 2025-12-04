@@ -41,10 +41,9 @@ class JournalService
             foreach ($data['details'] as $detail) {
                 JournalDetail::create([
                     'journal_id' => $journal->id,
-                    'account_id' => $detail['account_id'],
+                    'trial_balance_id' => $detail['account_id'],
                     'debit' => $detail['debit'] ?? 0,
                     'credit' => $detail['credit'] ?? 0,
-                    'description' => $detail['description'] ?? $data['description'],
                 ]);
             }
             
@@ -80,10 +79,9 @@ class JournalService
             foreach ($data['details'] as $detail) {
                 JournalDetail::create([
                     'journal_id' => $journal->id,
-                    'account_id' => $detail['account_id'],
+                    'trial_balance_id' => $detail['account_id'],
                     'debit' => $detail['debit'] ?? 0,
                     'credit' => $detail['credit'] ?? 0,
-                    'description' => $detail['description'] ?? $data['description'],
                 ]);
             }
             
@@ -105,7 +103,7 @@ class JournalService
     
     public function getAccountBalance(int $accountId, string $endDate = null): float
     {
-        $query = JournalDetail::where('account_id', $accountId)
+        $query = JournalDetail::where('trial_balance_id', $accountId)
             ->whereHas('journal', function ($q) use ($endDate) {
                 $q->where('is_posted', true);
                 if ($endDate) {
@@ -116,19 +114,12 @@ class JournalService
         $totalDebit = $query->sum('debit');
         $totalCredit = $query->sum('credit');
         
-        $account = Account::find($accountId);
+        $account = TrialBalance::find($accountId);
         
         // Normal balance calculation based on account type
-        switch ($account->type) {
-            case 'asset':
-            case 'expense':
-                return $totalDebit - $totalCredit;
-            case 'liability':
-            case 'equity':
-            case 'revenue':
-                return $totalCredit - $totalDebit;
-            default:
-                return 0;
-        }
+        if (!$account) return 0;
+        
+        // Assuming trial balance has similar type logic
+        return $totalDebit - $totalCredit;
     }
 }

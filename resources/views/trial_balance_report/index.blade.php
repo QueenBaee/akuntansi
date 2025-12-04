@@ -29,13 +29,34 @@
                             font-size: 14px;
                         }
 
-                        /* Kolom kode dilebarkan */
-                        .table td:nth-child(1),
-                        .table th:nth-child(1) {
-                            min-width: 100px;
-                            width: 100px;
-                            white-space: nowrap;
-                            font-weight: 600;
+                        .no-equal-width th {
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                            font-weight: 600 !important;
+                            background-color: #f8f9fa !important;
+                            width: auto !important;
+                        }
+
+                        .no-equal-width td:nth-child(1),
+                        .no-equal-width th:nth-child(1) {
+                            min-width: 80px !important;
+                            width: 80px !important;
+                            text-align: center !important;
+                            font-weight: 600 !important;
+                        }
+
+                        .no-equal-width td:nth-child(2),
+                        .no-equal-width th:nth-child(2) {
+                            min-width: 200px !important;
+                            width: 200px !important;
+                            text-align: left !important;
+                        }
+
+                        .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
+                        .no-equal-width th:not(:nth-child(1)):not(:nth-child(2)) {
+                            text-align: right !important;
+                            min-width: 80px !important;
+                            width: 80px !important;
                         }
 
                         .level-0 {
@@ -44,29 +65,31 @@
                         }
 
                         .level-1 {
-                            margin-left: 15px;
+                            margin-left: 20px;
                             font-weight: 700;
                         }
 
                         .level-2 {
-                            margin-left: 30px;
+                            margin-left: 40px;
                             font-weight: 600;
                         }
 
                         .level-3 {
-                            margin-left: 45px;
+                            margin-left: 60px;
+                            font-weight: 500;
                         }
 
                         .level-4 {
-                            margin-left: 60px;
+                            margin-left: 80px;
+                            font-weight: 400;
                         }
 
                         tr.level-0-row {
-                            background: #eaf6ff !important;
+                            background: #e3f2fd !important;
                         }
 
                         tr.level-1-row {
-                            background: #f4fbff !important;
+                            background: #f1f8ff !important;
                         }
 
                         tr.level-2-row {
@@ -76,7 +99,7 @@
 
 
 
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
                                 <th>Kode</th>

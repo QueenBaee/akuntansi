@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Journal extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'date',
@@ -127,5 +128,28 @@ class Journal extends Model
     public function isBalanced()
     {
         return $this->total_debit == $this->total_credit;
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($journal) {
+            if ($journal->isForceDeleting()) {
+                return;
+            }
+            
+            // Soft delete related records
+            $journal->details()->delete();
+            $journal->attachments()->delete();
+        });
+    }
+
+    // Helper method to restore journal with its related records
+    public function restoreWithRelated()
+    {
+        $this->restore();
+        $this->details()->withTrashed()->restore();
+        $this->attachments()->withTrashed()->restore();
     }
 }

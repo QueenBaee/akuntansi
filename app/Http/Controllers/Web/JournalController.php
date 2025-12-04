@@ -253,13 +253,21 @@ class JournalController extends Controller
     public function destroy(Journal $journal)
     {
         try {
-            $journal->delete();
+            if ($journal->is_posted) {
+                $message = 'Cannot delete posted journal';
+                if (request()->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            $journal->delete(); // This will soft delete
             
             if (request()->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Jurnal berhasil dihapus']);
             }
             
-            return redirect()->route('journals.index')
+            return redirect()->route('journals.create', ['account_id' => session('selected_cash_account_id')])
                 ->with('success', 'Jurnal berhasil dihapus');
         } catch (\Exception $e) {
             if (request()->expectsJson()) {
