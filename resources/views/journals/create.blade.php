@@ -6,7 +6,7 @@
     <div class="page-pretitle">Transaksi</div>
     <h2 class="page-title" id="pageTitle">
         @if ($selectedAccount)
-            Jurnal {{ $selectedAccount->keterangan }}
+            Jurnal {{ $selectedAccount->keterangan }} - Tahun {{ request('year', date('Y')) }}
         @else
             Jurnal Kas/Bank
         @endif
@@ -20,7 +20,22 @@
     </div>
 @endsection
 
+@section('page-actions')
+    @if ($selectedAccount)
+        <form method="GET" class="d-flex">
+            <input type="hidden" name="ledger_id" value="{{ request('ledger_id') }}">
+            <input type="number" name="year" value="{{ request('year', date('Y')) }}" class="form-control me-2" placeholder="Tahun" style="width: 100px;">
+            <button class="btn btn-outline-primary">Filter</button>
+        </form>
+    @endif
+@endsection
+
 @section('content')
+<style>
+    body {
+        overflow-x: hidden;
+    }
+</style>
 
     <!-- Alert Messages -->
     <div id="alert-container"></div>

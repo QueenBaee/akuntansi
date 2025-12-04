@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class MemorialController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
         $accounts = TrialBalance::orderBy('kode')
             ->where('level', 4)
@@ -19,7 +19,8 @@ class MemorialController extends Controller
                       ->orWhereNull('is_kas_bank');
             })
             ->get();
-        $memorialsHistory = $this->getMemorialsHistory();
+        $year = $request->get('year', date('Y'));
+        $memorialsHistory = $this->getMemorialsHistory($year);
 
         return view('memorials.create', compact('accounts', 'memorialsHistory'));
     }
@@ -223,11 +224,16 @@ class MemorialController extends Controller
         }
     }
 
-    private function getMemorialsHistory()
+    private function getMemorialsHistory($year = null)
     {
-        $journals = Journal::with(['debitAccount', 'creditAccount', 'attachments', 'details.trialBalance'])
-            ->whereIn('source_module', ['memorial', 'asset_depreciation'])
-            ->orderBy('date')
+        $query = Journal::with(['debitAccount', 'creditAccount', 'attachments', 'details.trialBalance'])
+            ->whereIn('source_module', ['memorial', 'asset_depreciation']);
+            
+        if ($year) {
+            $query->whereYear('date', $year);
+        }
+        
+        $journals = $query->orderBy('date')
             ->orderBy('created_at')
             ->get();
 
