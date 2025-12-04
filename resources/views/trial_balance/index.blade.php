@@ -190,6 +190,8 @@ function renderTrialBalanceTable(items) {
 }
 
 function renderTrialBalanceRow(item, prefix) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
     let html = `<tr class="level-${item.level}-row">`;
     html += `<td>${item.kode}</td>`;
     html += `<td><div class="tb-text level-${item.level}">${prefix}${item.keterangan}</div></td>`;
@@ -216,7 +218,7 @@ function renderTrialBalanceRow(item, prefix) {
         <div class="btn-list flex-nowrap">
             <a href="/trial-balance/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
             <form action="/trial-balance/${item.id}" method="POST" class="d-inline">
-                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="_token" value="${csrfToken}">
                 <input type="hidden" name="_method" value="DELETE">
                 <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus?')">Hapus</button>
             </form>

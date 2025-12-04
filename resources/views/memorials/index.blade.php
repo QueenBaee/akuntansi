@@ -31,62 +31,64 @@
             <div class="card-header">
                 <h3 class="card-title">Daftar Memorial</h3>
             </div>
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Keterangan</th>
-                            <th>PIC</th>
-                            <th>No Dokumen <!-- UPDATED --></th>
-                            <th>Dokumen</th>
-                            <th class="text-end">Debit (Rp)</th>
-                            <th class="text-end">Kredit (Rp)</th>
-                            <th class="w-1">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($memorials ?? [] as $memorial)
-                        <tr>
-                            <td>{{ $memorial->date->format('d/m/Y') }}</td>
-                            <td>{{ $memorial->description }}</td>
-                            <td>{{ $memorial->pic ?? '-' }}</td>
-                            <td>{{ $memorial->proof_number ?? '-' }}</td>
-                            <td>
-                                @if($memorial->attachments && $memorial->attachments->count() > 0)
-                                    @foreach($memorial->attachments as $attachment)
-                                        <a href="{{ route('memorials.view-attachment', [$memorial->id, $attachment->id]) }}?v={{ $cacheBuster }}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
-                                            {{ $attachment->original_name }}
-                                        </a>
-                                    @endforeach
-                                @else
-                                    -
-                                @endif
-                            </td>
-                            <td class="text-end">{{ number_format($memorial->cash_in ?? 0, 0, ',', '.') }}</td>
-                            <td class="text-end">{{ number_format($memorial->cash_out ?? 0, 0, ',', '.') }}</td>
-                            <td>
-                                <div class="btn-list flex-nowrap">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="viewMemorial({{ $memorial->id }})">
-                                        View
-                                    </button>
-                                    @if(!$memorial->is_posted)
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMemorial({{ $memorial->id }})">
-                                        Hapus
-                                    </button>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center">Tanggal</th>
+                                <th class="text-center">Keterangan</th>
+                                <th class="text-center">PIC</th>
+                                <th class="text-center">No Bukti</th>
+                                <th class="text-center">Dokumen</th>
+                                <th class="text-center">Debit (Rp)</th>
+                                <th class="text-center">Kredit (Rp)</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($memorials ?? [] as $memorial)
+                            <tr>
+                                <td class="text-center">{{ $memorial->date->format('d/m/Y') }}</td>
+                                <td>{{ $memorial->description }}</td>
+                                <td class="text-center">{{ $memorial->pic ?? '-' }}</td>
+                                <td class="text-center">{{ $memorial->proof_number ?? '-' }}</td>
+                                <td class="text-center">
+                                    @if($memorial->attachments && $memorial->attachments->count() > 0)
+                                        @foreach($memorial->attachments as $attachment)
+                                            <a href="{{ route('memorials.view-attachment', [$memorial->id, $attachment->id]) }}?v={{ $cacheBuster }}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
+                                                {{ $attachment->original_name }}
+                                            </a>
+                                        @endforeach
+                                    @else
+                                        -
                                     @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
-                                Belum ada memorial
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                </td>
+                                <td class="text-end">{{ number_format($memorial->cash_in ?? 0, 0, ',', '.') }}</td>
+                                <td class="text-end">{{ number_format($memorial->cash_out ?? 0, 0, ',', '.') }}</td>
+                                <td class="text-center">
+                                    <div class="btn-list flex-nowrap">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewMemorial({{ $memorial->id }})">
+                                            View
+                                        </button>
+                                        @if(!$memorial->is_posted)
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteMemorial({{ $memorial->id }})">
+                                            Hapus
+                                        </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    Belum ada memorial
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

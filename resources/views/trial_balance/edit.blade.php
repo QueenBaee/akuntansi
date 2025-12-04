@@ -4,6 +4,16 @@
 <div class="container">
     <h4>Edit Trial Balance</h4>
 
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('trial-balance.update', $trial_balance->id) }}" method="POST">
         @csrf
         @method('PUT')
