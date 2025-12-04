@@ -190,13 +190,13 @@ class JournalController extends Controller
 
     public function destroy(Journal $journal)
     {
-        if ($journal->status === 'posted') {
+        if ($journal->is_posted) {
             return response()->json([
                 'message' => 'Cannot delete posted journal'
             ], 422);
         }
 
-        $journal->delete();
+        $journal->delete(); // This will soft delete
 
         return response()->json([
             'message' => 'Journal deleted successfully'

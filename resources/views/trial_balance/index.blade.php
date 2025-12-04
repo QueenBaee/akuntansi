@@ -7,7 +7,7 @@
     <h2 class="page-title">Trial Balance</h2>
 @endsection
 
-@section('page-actions')
+{{-- @section('page-actions')
     <a href="{{ route('trial-balance.create') }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
@@ -16,7 +16,7 @@
         </svg>
         Tambah Root
     </a>
-@endsection
+@endsection --}}
 
 @section('content')
 <div class="row">
@@ -76,7 +76,6 @@
                                     echo '<td>
                                             <div class="btn-list flex-nowrap">
                                                 <a href="' . route('trial-balance.edit', $item->id) . '" class="btn btn-sm btn-outline-primary">Edit</a>
-                                                <a href="' . route('trial-balance.create') . '?parent_id=' . $item->id . '" class="btn btn-sm btn-outline-success">Tambah</a>
                                                 <form action="' . route('trial-balance.destroy', $item->id) . '" method="POST" class="d-inline">
                                                     ' . csrf_field() . '
                                                     ' . method_field('DELETE') . '
@@ -143,7 +142,6 @@
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a href="{{ route('trial-balance.edit', $item->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <a href="{{ route('trial-balance.create') }}?parent_id={{ $item->id }}" class="btn btn-sm btn-outline-success">Tambah</a>
                                             <form action="{{ route('trial-balance.destroy', $item->id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
