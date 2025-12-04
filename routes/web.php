@@ -7,6 +7,8 @@ use App\Http\Controllers\CashBankJournalController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\TrialBalanceReportController;
+use App\Http\Controllers\CashflowReportController;
 
 // Guest routes (login)
 Route::middleware('guest')->group(function () {
@@ -52,7 +54,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('users', \App\Http\Controllers\Web\UserController::class);
         Route::resource('accounts', \App\Http\Controllers\Web\AccountController::class);
         Route::resource('user-accounts', \App\Http\Controllers\Web\UserAccountController::class);
-        
+
         // User Ledgers (master data) - SPA routes
         Route::get('user-ledgers', [\App\Http\Controllers\Web\UserLedgerController::class, 'index'])->name('user-ledgers.index');
         Route::get('user-ledgers/create', [\App\Http\Controllers\UserLedgerController::class, 'create']);
@@ -61,7 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::get('user-ledgers/{userLedger}/edit', [\App\Http\Controllers\UserLedgerController::class, 'edit']);
         Route::put('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'update']);
         Route::delete('user-ledgers/{userLedger}', [\App\Http\Controllers\UserLedgerController::class, 'destroy']);
-        
+
         // Fixed Assets
         Route::get('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'index'])->name('fixed-assets.index');
         Route::get('fixed-assets/create', [\App\Http\Controllers\FixedAssetController::class, 'create'])->name('fixed-assets.create');
@@ -71,21 +73,23 @@ Route::middleware('auth')->group(function () {
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
-        
+
         // Asset Depreciation
-        Route::post('fixed-assets/{id}/depreciation/{period}/post', 
-            [\App\Http\Controllers\AssetDepreciationController::class, 'postMemorial'])
+        Route::post(
+            'fixed-assets/{id}/depreciation/{period}/post',
+            [\App\Http\Controllers\AssetDepreciationController::class, 'postMemorial']
+        )
             ->name('fixed-assets.depreciation.post');
         Route::get('asset-depreciations', [\App\Http\Controllers\AssetDepreciationController::class, 'index'])
             ->name('asset-depreciations.index');
-        
+
         // Cash Accounts
         Route::resource('cash-accounts', CashAccountController::class);
         Route::resource('bank-accounts', BankAccountController::class);
-        
+
         // Ledgers
         Route::resource('ledgers', LedgerController::class)->middleware('ledger.access');
-        
+
         // Ledgers with type filter
         Route::get('ledgers-cash', [LedgerController::class, 'index'])->name('ledgers.cash');
         Route::get('ledgers-bank', [LedgerController::class, 'index'])->name('ledgers.bank');
@@ -100,7 +104,7 @@ Route::middleware('auth')->group(function () {
     Route::put('journals/{id}', [CashBankJournalController::class, 'update'])->name('journals.update');
     Route::get('journals/{id}/attachments', [CashBankJournalController::class, 'getAttachments'])->name('journals.attachments');
     Route::delete('journals/{id}', [CashBankJournalController::class, 'destroy'])->name('journals.destroy');
-    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create','store','destroy']);
+    Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create', 'store', 'destroy']);
 
     // Memorials - redirect to create like cash/bank
     Route::get('memorials', [\App\Http\Controllers\MemorialController::class, 'create'])->name('memorials.index');
@@ -118,14 +122,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('cashflow', CashflowController::class);
 
     // Trial Balance Report
-    Route::get('/trial-balance-report', function() {
-        return view('trial_balance.report');
-    })->name('trial_balance_report.index');
+    Route::get('/trial-balance-report', [TrialBalanceReportController::class, 'index'])
+        ->name('trial_balance_report.index');
 
     // Cashflow Report
-    Route::get('/reports/cashflow', function() {
-        return view('cashflow.report');
-    })->name('reports.cashflow');
+    Route::get('/reports/cashflow', [CashflowReportController::class, 'index'])
+        ->name('reports.cashflow');
+
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
     // ->name('trial.balance.report');
