@@ -231,7 +231,7 @@
                                     <a class="dropdown-item {{ request()->routeIs('memorials.*') ? 'active' : '' }}"
                                         href="{{ route('memorials.index') }}">Jurnal Memorial</a>
                                     <a class="dropdown-item {{ request()->routeIs('maklon.*') ? 'active' : '' }}"
-                                        href="#" onclick="return false;">Data Maklon</a>
+                                        href="{{ route('maklon.index') }}">Data Maklon</a>
                                 </div>
                             </li>
                             
