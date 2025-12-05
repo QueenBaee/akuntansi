@@ -23,10 +23,7 @@ class Account extends Model
         'is_active' => 'boolean',
     ];
 
-    public function journalDetails()
-    {
-        return $this->hasMany(JournalDetail::class);
-    }
+
 
     public function cashTransactions()
     {
@@ -45,11 +42,25 @@ class Account extends Model
 
     public function getCurrentBalance()
     {
-        $totalDebit = $this->journalDetails()->sum('debit');
-        $totalCredit = $this->journalDetails()->sum('credit');
+        $journals = Journal::where(function($query) {
+                $query->where('debit_account_id', $this->id)
+                      ->orWhere('credit_account_id', $this->id);
+            })
+            ->where('is_posted', true)
+            ->get();
+            
+        $balance = $this->opening_balance;
         
-        // Both kas and bank are asset accounts (debit increases balance)
-        return $this->opening_balance + $totalDebit - $totalCredit;
+        foreach ($journals as $journal) {
+            if ($journal->debit_account_id == $this->id) {
+                $balance += $journal->total_amount;
+            }
+            if ($journal->credit_account_id == $this->id) {
+                $balance -= $journal->total_amount;
+            }
+        }
+        
+        return $balance;
     }
 
     public function scopeActive($query)

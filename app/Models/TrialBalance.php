@@ -40,9 +40,5 @@ class TrialBalance extends Model
         return $this->hasMany(Cashflow::class);
     }
 
-    /** RELASI YANG BENAR KE JOURNAL DETAILS */
-    public function journalDetails()
-    {
-        return $this->hasMany(JournalDetail::class, 'trial_balance_id');
-    }
+
 }

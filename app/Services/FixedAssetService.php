@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\FixedAsset;
 use App\Models\AssetDepreciation;
 use App\Models\Journal;
-use App\Models\JournalDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -140,28 +139,12 @@ class FixedAssetService
             'pic' => 'System',
             'total_debit' => $amount,
             'total_credit' => $amount,
+            'debit_account_id' => $asset->expense_account_id,
+            'credit_account_id' => $asset->accumulated_account_id,
             'source_module' => 'asset_depreciation',
             'source_id' => $asset->id,
             'is_posted' => true,
             'created_by' => $userId,
-        ]);
-
-        // Debit: Depreciation Expense
-        JournalDetail::create([
-            'journal_id' => $journal->id,
-            'trial_balance_id' => $asset->expense_account_id,
-            'debit' => $amount,
-            'credit' => 0,
-            'description' => "Beban penyusutan {$asset->name}",
-        ]);
-
-        // Credit: Accumulated Depreciation
-        JournalDetail::create([
-            'journal_id' => $journal->id,
-            'trial_balance_id' => $asset->accumulated_account_id,
-            'debit' => 0,
-            'credit' => $amount,
-            'description' => "Akumulasi penyusutan {$asset->name}",
         ]);
 
         return $journal;

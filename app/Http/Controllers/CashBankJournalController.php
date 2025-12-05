@@ -7,7 +7,7 @@ use App\Models\Account;
 use App\Models\Ledger;
 use App\Models\Cashflow;
 use App\Models\TrialBalance;
-use App\Models\JournalDetail;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
