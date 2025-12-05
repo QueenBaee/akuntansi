@@ -94,6 +94,12 @@
                             background: #f8f9fa !important;
                             font-weight: bold !important;
                         }
+                        
+                        .surplus-row {
+                            background: #e3f2fd !important;
+                            font-weight: bold !important;
+                            border-top: 3px solid #1976d2 !important;
+                        }
                     </style>
 
                     <table class="table table-bordered table-striped no-equal-width">
@@ -251,6 +257,16 @@
                                 
                                 renderCashflowRows($flattenedData, $data);
                             @endphp
+                            
+                            <!-- SURPLUS/(DEFISIT) USAHA Row -->
+                            <tr class="total-row" style="border-top: 3px solid #000;">
+                                <td><strong>S/D</strong></td>
+                                <td><strong>SURPLUS/(DEFISIT) USAHA</strong></td>
+                                @for ($m = 1; $m <= 12; $m++)
+                                    <td><strong>{{ formatAccounting($surplusDeficit["month_$m"] ?? 0) }}</strong></td>
+                                @endfor
+                                <td><strong>{{ formatAccounting($surplusDeficit['total'] ?? 0) }}</strong></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
