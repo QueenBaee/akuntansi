@@ -42,7 +42,7 @@
         </svg>
         Tambah Akun Trial Balance
     </a>
-@endsection --}}
+@endsection
 
 @section('content')
 <style>
