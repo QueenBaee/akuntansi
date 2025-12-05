@@ -114,149 +114,50 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                function renderCashflowRows($flattenedData, $data) {
-                                    $levelGroups = [];
-                                    
-                                    // Group by level 0 (top level)
-                                    $currentGroup = null;
-                                    foreach ($flattenedData as $row) {
-                                        if ($row['depth'] == 0) {
-                                            if ($currentGroup) {
-                                                $levelGroups[] = $currentGroup;
-                                            }
-                                            $currentGroup = ['parent' => $row, 'children' => []];
-                                        } else {
-                                            $currentGroup['children'][] = $row;
-                                        }
-                                    }
-                                    if ($currentGroup) {
-                                        $levelGroups[] = $currentGroup;
-                                    }
-                                    
-                                    // Render each group with summary
-                                    foreach ($levelGroups as $group) {
-                                        $parent = $group['parent'];
-                                        
-                                        // Render parent header
-                                        if ($parent['is_leaf']) {
-                                            echo '<tr class="level-' . $parent['depth'] . '-row">';
-                                            echo '<td>' . $parent['code'] . '</td>';
-                                            echo '<td><div class="cf-text level-' . $parent['depth'] . '">' . $parent['name'] . '</div></td>';
-                                            
-                                            for ($m = 1; $m <= 12; $m++) {
-                                                $val = $data[$parent['id']]["month_$m"] ?? 0;
-                                                echo '<td>' . formatAccounting($val) . '</td>';
-                                            }
-                                            
-                                            $total = $data[$parent['id']]['total'] ?? 0;
-                                            echo '<td>' . formatAccounting($total) . '</td>';
-                                            echo '</tr>';
-                                        } else {
-                                            echo '<tr class="level-' . $parent['depth'] . '-row">';
-                                            echo '<td>' . $parent['code'] . '</td>';
-                                            echo '<td><div class="cf-text level-' . $parent['depth'] . '">' . $parent['name'] . '</div></td>';
-                                            echo '<td colspan="13"></td>';
-                                            echo '</tr>';
-                                        }
-                                        
-                                        // Group level 1 children by level 1 parents
-                                        $level1Groups = [];
-                                        $currentLevel1 = null;
-                                        
-                                        foreach ($group['children'] as $child) {
-                                            if ($child['depth'] == 1) {
-                                                if ($currentLevel1) {
-                                                    $level1Groups[] = $currentLevel1;
-                                                }
-                                                $currentLevel1 = ['parent' => $child, 'children' => []];
-                                            } else {
-                                                $currentLevel1['children'][] = $child;
-                                            }
-                                        }
-                                        if ($currentLevel1) {
-                                            $level1Groups[] = $currentLevel1;
-                                        }
-                                        
-                                        // Render level 1 groups
-                                        foreach ($level1Groups as $level1Group) {
-                                            $level1Parent = $level1Group['parent'];
-                                            
-                                            // Render level 1 parent
-                                            if ($level1Parent['is_leaf']) {
-                                                echo '<tr class="level-' . $level1Parent['depth'] . '-row">';
-                                                echo '<td>' . $level1Parent['code'] . '</td>';
-                                                echo '<td><div class="cf-text level-' . $level1Parent['depth'] . '">' . $level1Parent['name'] . '</div></td>';
-                                                
-                                                for ($m = 1; $m <= 12; $m++) {
-                                                    $val = $data[$level1Parent['id']]["month_$m"] ?? 0;
-                                                    echo '<td>' . formatAccounting($val) . '</td>';
-                                                }
-                                                
-                                                $total = $data[$level1Parent['id']]['total'] ?? 0;
-                                                echo '<td>' . formatAccounting($total) . '</td>';
-                                                echo '</tr>';
-                                            } else {
-                                                echo '<tr class="level-' . $level1Parent['depth'] . '-row">';
-                                                echo '<td>' . $level1Parent['code'] . '</td>';
-                                                echo '<td><div class="cf-text level-' . $level1Parent['depth'] . '">' . $level1Parent['name'] . '</div></td>';
-                                                echo '<td colspan="13"></td>';
-                                                echo '</tr>';
-                                            }
-                                            
-                                            // Render level 1 children (level 2+)
-                                            foreach ($level1Group['children'] as $child) {
-                                                echo '<tr class="level-' . $child['depth'] . '-row">';
-                                                echo '<td>' . $child['code'] . '</td>';
-                                                echo '<td><div class="cf-text level-' . $child['depth'] . '">' . $child['name'] . '</div></td>';
-                                                
-                                                for ($m = 1; $m <= 12; $m++) {
-                                                    $val = $data[$child['id']]["month_$m"] ?? 0;
-                                                    echo '<td>' . formatAccounting($val) . '</td>';
-                                                }
-                                                
-                                                $total = $data[$child['id']]['total'] ?? 0;
-                                                echo '<td>' . formatAccounting($total) . '</td>';
-                                                echo '</tr>';
-                                            }
-                                            
-                                            // Add level 1 summary
-                                            if (!$level1Parent['is_leaf']) {
-                                                echo '<tr class="total-row">';
-                                                echo '<td><strong>' . $level1Parent['code'] . '</strong></td>';
-                                                echo '<td><strong>TOTAL ' . $level1Parent['name'] . '</strong></td>';
-                                                
-                                                for ($m = 1; $m <= 12; $m++) {
-                                                    $val = $data[$level1Parent['id']]["month_$m"] ?? 0;
-                                                    echo '<td><strong>' . formatAccounting($val) . '</strong></td>';
-                                                }
-                                                
-                                                $total = $data[$level1Parent['id']]['total'] ?? 0;
-                                                echo '<td><strong>' . formatAccounting($total) . '</strong></td>';
-                                                echo '</tr>';
-                                            }
-                                        }
-                                        
-                                        // Add level 0 summary
-                                        if (!$parent['is_leaf']) {
-                                            echo '<tr class="total-row">';
-                                            echo '<td><strong>' . $parent['code'] . '</strong></td>';
-                                            echo '<td><strong>TOTAL ' . $parent['name'] . '</strong></td>';
-                                            
-                                            for ($m = 1; $m <= 12; $m++) {
-                                                $val = $data[$parent['id']]["month_$m"] ?? 0;
-                                                echo '<td><strong>' . formatAccounting($val) . '</strong></td>';
-                                            }
-                                            
-                                            $total = $data[$parent['id']]['total'] ?? 0;
-                                            echo '<td><strong>' . formatAccounting($total) . '</strong></td>';
-                                            echo '</tr>';
-                                        }
-                                    }
-                                }
-                                
-                                renderCashflowRows($flattenedData, $data);
-                            @endphp
+                            @foreach($flattenedData as $row)
+                                @if(isset($row['is_header']) && $row['is_header'])
+                                    {{-- Header row for parent categories --}}
+                                    <tr class="level-{{ $row['depth'] }}-row">
+                                        <td>{{ $row['code'] }}</td>
+                                        <td>
+                                            <div class="cf-text level-{{ $row['depth'] }}">
+                                                {{ $row['name'] }}
+                                            </div>
+                                        </td>
+                                        <td colspan="13"></td>
+                                    </tr>
+                                @else
+                                    {{-- Data row (leaf) or Summary row --}}
+                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }}">
+                                        <td>{{ isset($row['is_summary']) && $row['is_summary'] ? '' : $row['code'] }}</td>
+                                        <td>
+                                            <div class="cf-text level-{{ $row['depth'] }}">
+                                                @if(isset($row['is_summary']) && $row['is_summary'])
+                                                    <strong>{{ $row['name'] }}</strong>
+                                                @else
+                                                    {{ $row['name'] }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        @for ($m = 1; $m <= 12; $m++)
+                                            <td>
+                                                @if(isset($row['is_summary']) && $row['is_summary'])
+                                                    <strong>{{ formatAccounting($data[$row['id']]["month_$m"] ?? 0) }}</strong>
+                                                @else
+                                                    {{ formatAccounting($data[$row['id']]["month_$m"] ?? 0) }}
+                                                @endif
+                                            </td>
+                                        @endfor
+                                        <td>
+                                            @if(isset($row['is_summary']) && $row['is_summary'])
+                                                <strong>{{ formatAccounting($data[$row['id']]['total'] ?? 0) }}</strong>
+                                            @else
+                                                {{ formatAccounting($data[$row['id']]['total'] ?? 0) }}
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endif
+                            @endforeach
                             
                             <!-- SURPLUS/(DEFISIT) USAHA Row -->
                             <tr class="total-row" style="border-top: 3px solid #000;">
