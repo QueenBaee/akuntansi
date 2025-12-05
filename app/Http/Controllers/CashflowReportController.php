@@ -28,11 +28,13 @@ class CashflowReportController extends Controller
         
         $this->calculateTotals($tree, $data);
         $surplusDeficit = $this->calculateSurplusDeficit($tree, $data);
+        $netSurplusDeficit = $this->calculateNetSurplusDeficit($tree, $data, $surplusDeficit);
         
         $flattenedData = $this->flattenTreeWithSummaries($tree);
         
         // Add surplus deficit data to main data array
         $data['surplus_deficit'] = $surplusDeficit;
+        $data['net_surplus_deficit'] = $netSurplusDeficit;
         
         return view('cashflow_report.index', compact('flattenedData', 'data', 'year', 'surplusDeficit'));
     }
@@ -145,6 +147,31 @@ class CashflowReportController extends Controller
         return $surplusDeficit;
     }
 
+    private function calculateNetSurplusDeficit($nodes, $data, $surplusDeficit)
+    {
+        $netSurplusDeficit = array_fill_keys(array_merge(['total'], array_map(fn($m) => "month_$m", range(1, 12))), 0);
+        
+        // Find INVESTASI DAN PENDANAAN (F) total
+        $investmentFinancingTotal = array_fill_keys(array_map(fn($m) => "month_$m", range(1, 12)), 0);
+        
+        foreach ($nodes as $node) {
+            if ($node['code'] === 'F' && $node['parent_id'] === null) {
+                for ($m = 1; $m <= 12; $m++) {
+                    $investmentFinancingTotal["month_$m"] = $data[$node['id']]["month_$m"] ?? 0;
+                }
+                break;
+            }
+        }
+        
+        // Calculate net surplus/deficit = surplus/deficit + investment & financing
+        for ($m = 1; $m <= 12; $m++) {
+            $netSurplusDeficit["month_$m"] = $surplusDeficit["month_$m"] + $investmentFinancingTotal["month_$m"];
+            $netSurplusDeficit['total'] += $netSurplusDeficit["month_$m"];
+        }
+        
+        return $netSurplusDeficit;
+    }
+
     private function flattenTreeWithSummaries($nodes, $depth = 0)
     {
         $result = [];
@@ -207,6 +234,22 @@ class CashflowReportController extends Controller
                         'is_header' => false,
                         'is_summary' => true,
                         'is_surplus_deficit' => true
+                    ];
+                }
+                
+                // Add net surplus/deficit after total investment & financing
+                if ($node['code'] === 'F' && $node['parent_id'] === null) {
+                    $result[] = [
+                        'id' => 'net_surplus_deficit',
+                        'code' => 'S/D NET',
+                        'name' => 'SURPLUS/(DEFISIT) BERSIH',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_net_surplus_deficit' => true
                     ];
                 }
             }

@@ -112,6 +112,12 @@
                             font-weight: bold !important;
                             border-top: 3px solid #1976d2 !important;
                         }
+                        
+                        .net-surplus-row {
+                            background: #e8f5e8 !important;
+                            font-weight: bold !important;
+                            border-top: 3px solid #4caf50 !important;
+                        }
                     </style>
 
                     <table class="table table-bordered table-striped no-equal-width">
@@ -144,8 +150,9 @@
                                     </tr>
                                 @else
                                     {{-- Data row (leaf) or Summary row --}}
-                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }}" 
-                                        @if(isset($row['is_surplus_deficit']) && $row['is_surplus_deficit']) style="border-top: 3px solid #000;" @endif>
+                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }} {{ isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit'] ? 'net-surplus-row' : '' }}" 
+                                        @if(isset($row['is_surplus_deficit']) && $row['is_surplus_deficit']) style="border-top: 3px solid #000;" @endif
+                                        @if(isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit']) style="border-top: 3px solid #4caf50;" @endif>
                                         <td>{{ isset($row['is_summary']) && $row['is_summary'] ? $row['code'] : $row['code'] }}</td>
                                         <td>
                                             <div class="cf-text level-{{ $row['depth'] }}">
