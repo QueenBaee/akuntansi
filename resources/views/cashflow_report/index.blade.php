@@ -4,7 +4,7 @@
 
 @section('page-header')
     <div class="page-pretitle">Laporan</div>
-    <h2 class="page-title">Arus Kas Tahun {{ $year }}</h2>
+    <h2 class="page-title">Cashflow Report</h2>
 @endsection
 
 @section('page-actions')
@@ -17,10 +17,7 @@
 @section('content')
     <div class="row">
         <div class="col-12">
-
             <div class="card">
-
-
                 <div class="table-responsive">
                     <style>
                         .cf-text {
@@ -29,13 +26,43 @@
                             font-size: 14px;
                         }
 
-                        /* Kolom kode dilebarkan */
-                        .table td:nth-child(1),
-                        .table th:nth-child(1) {
-                            min-width: 100px;
-                            width: 100px;
-                            white-space: nowrap;
-                            font-weight: 600;
+                        .no-equal-width th {
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                            font-weight: 600 !important;
+                            background-color: #f8f9fa !important;
+                        }
+
+                        .no-equal-width td:nth-child(1),
+                        .no-equal-width th:nth-child(1) {
+                            min-width: 80px !important;
+                            text-align: left !important;
+                            font-weight: 600 !important;
+                        }
+
+                        .no-equal-width td:nth-child(2),
+                        .no-equal-width th:nth-child(2) {
+                            min-width: 300px !important;
+                            text-align: left !important;
+                        }
+
+                        .no-equal-width td:nth-child(n+3):nth-child(-n+14),
+                        .no-equal-width th:nth-child(n+3):nth-child(-n+14) {
+                            text-align: right !important;
+                            min-width: 80px !important;
+                            width: 80px !important;
+                        }
+
+                        .no-equal-width td:nth-child(15),
+                        .no-equal-width th:nth-child(15) {
+                            min-width: 80px !important;
+                            text-align: left !important;
+                        }
+
+                        .no-equal-width td:nth-child(16),
+                        .no-equal-width th:nth-child(16) {
+                            min-width: 200px !important;
+                            text-align: left !important;
                         }
 
                         .level-0 {
@@ -44,39 +71,79 @@
                         }
 
                         .level-1 {
-                            margin-left: 15px;
+                            margin-left: 20px;
                             font-weight: 700;
                         }
 
                         .level-2 {
-                            margin-left: 30px;
+                            margin-left: 40px;
                             font-weight: 600;
                         }
 
                         .level-3 {
-                            margin-left: 45px;
+                            margin-left: 60px;
+                            font-weight: 500;
                         }
 
                         .level-4 {
-                            margin-left: 60px;
+                            margin-left: 80px;
+                            font-weight: 400;
                         }
 
                         tr.level-0-row {
-                            background: #eaf6ff !important;
-                            font-weight: bold;
+                            background: #f8f9fa !important;
                         }
 
                         tr.level-1-row {
-                            background: #f4fbff !important;
+                            background: #ffffff !important;
                         }
 
                         tr.level-2-row {
                             background: #ffffff !important;
                         }
 
+                        .total-row {
+                            background: #f8f9fa !important;
+                            font-weight: bold !important;
+                        }
+                        
+                        .surplus-row {
+                            background: #f0f0f0 !important;
+                            font-weight: bold !important;
+                            border-top: 3px solid #000 !important;
+                        }
+                        
+                        .net-surplus-row {
+                            background: #e8e8e8 !important;
+                            font-weight: bold !important;
+                            border-top: 3px solid #000 !important;
+                        }
+                        
+                        .cash-bank-opening-row {
+                            background: #f5f5f5 !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
+                        }
+                        
+                        .cash-bank-closing-row {
+                            background: #eeeeee !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
+                        }
+                        
+                        .cash-bank-detail-row {
+                            background: #f9f9f9 !important;
+                            font-style: italic;
+                        }
+                        
+                        .cash-bank-detail-total-row {
+                            background: #e0e0e0 !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
+                        }
                     </style>
 
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
                                 <th>Kode</th>
@@ -85,38 +152,68 @@
                                     <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
                                 <th>{{ $year }}</th>
-                                <th>{{ $year - 1 }}</th>
+                                <th>Kode TB</th>
+                                <th>Akun Laporan Keuangan</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($enhancedItems as $item)
-                                <tr class="level-{{ min($item->level ?? 0, 4) }}-row">
-                                    <td>{{ $item->kode ?? '' }}</td>
-                                    <td>
-                                        <div class="cf-text level-{{ min($item->level ?? 0, 4) }}">
-                                            {{ $item->keterangan }}
-                                        </div>
-                                    </td>
-                                    @for ($m = 1; $m <= 12; $m++)
-                                        @php
-                                            $val = $data[$item->id]["month_$m"] ?? 0;
-                                            $display = $val == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($val);
-                                        @endphp
-                                        <td>{{ $display }}</td>
-                                    @endfor
-                                    @php
-                                        $t = $data[$item->id]['total'] ?? 0;
-                                        $o = $data[$item->id]['opening'] ?? 0;
-                                    @endphp
-                                    <td>{{ $t == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($t) }}</td>
-                                    <td>{{ $o == 0 ? '' : \App\Helpers\AccountingHelper::formatAccounting($o) }}</td>
-                                </tr>
+                            @foreach($flattenedData as $row)
+                                @if(isset($row['is_header']) && $row['is_header'])
+                                    {{-- Header row for parent categories --}}
+                                    <tr class="level-{{ $row['depth'] }}-row">
+                                        <td>{{ $row['code'] }}</td>
+                                        <td>
+                                            <div class="cf-text level-{{ $row['depth'] }}">
+                                                {{ $row['name'] }}
+                                            </div>
+                                        </td>
+                                        <td colspan="13"></td>
+                                        <td>{{ $row['trial_balance_code'] ?? '' }}</td>
+                                        <td>{{ $row['trial_balance_name'] ?? '' }}</td>
+                                    </tr>
+                                @else
+                                    {{-- Data row (leaf) or Summary row --}}
+                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }} {{ isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit'] ? 'net-surplus-row' : '' }} {{ isset($row['is_cash_bank_opening']) && $row['is_cash_bank_opening'] ? 'cash-bank-opening-row' : '' }} {{ isset($row['is_cash_bank_closing']) && $row['is_cash_bank_closing'] ? 'cash-bank-closing-row' : '' }} {{ isset($row['is_cash_bank_detail']) && $row['is_cash_bank_detail'] ? 'cash-bank-detail-row' : '' }} {{ isset($row['is_cash_bank_detail_total']) && $row['is_cash_bank_detail_total'] ? 'cash-bank-detail-total-row' : '' }}" 
+                                        @if(isset($row['is_surplus_deficit']) && $row['is_surplus_deficit']) style="border-top: 3px solid #000;" @endif
+                                        @if(isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit']) style="border-top: 3px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_opening']) && $row['is_cash_bank_opening']) style="border-top: 2px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_closing']) && $row['is_cash_bank_closing']) style="border-top: 2px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_detail_total']) && $row['is_cash_bank_detail_total']) style="border-top: 2px solid #000;" @endif>
+                                        <td>{{ isset($row['is_summary']) && $row['is_summary'] ? $row['code'] : $row['code'] }}</td>
+                                        <td>
+                                            <div class="cf-text level-{{ $row['depth'] }}">
+                                                @if(isset($row['is_summary']) && $row['is_summary'])
+                                                    <strong>{{ $row['name'] }}</strong>
+                                                @else
+                                                    {{ $row['name'] }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        @for ($m = 1; $m <= 12; $m++)
+                                            <td>
+                                                @if(isset($row['is_summary']) && $row['is_summary'])
+                                                    <strong>{{ formatAccounting($data[$row['id']]["month_$m"] ?? 0) }}</strong>
+                                                @else
+                                                    {{ formatAccounting($data[$row['id']]["month_$m"] ?? 0) }}
+                                                @endif
+                                            </td>
+                                        @endfor
+                                        <td>
+                                            @if(isset($row['is_summary']) && $row['is_summary'])
+                                                <strong>{{ formatAccounting($data[$row['id']]['total'] ?? 0) }}</strong>
+                                            @else
+                                                {{ formatAccounting($data[$row['id']]['total'] ?? 0) }}
+                                            @endif
+                                        </td>
+                                        <td>{{ $row['trial_balance_code'] ?? '' }}</td>
+                                        <td>{{ $row['trial_balance_name'] ?? '' }}</td>
+                                    </tr>
+                                @endif
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 @endsection

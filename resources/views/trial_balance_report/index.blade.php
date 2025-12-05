@@ -41,15 +41,16 @@
                         .no-equal-width th:nth-child(1) {
                             min-width: 80px !important;
                             width: 80px !important;
-                            text-align: center !important;
+                            text-align: left !important;
                             font-weight: 600 !important;
                         }
 
                         .no-equal-width td:nth-child(2),
                         .no-equal-width th:nth-child(2) {
                             min-width: 200px !important;
-                            width: 200px !important;
+                            width: auto !important;
                             text-align: left !important;
+                            white-space: nowrap !important;
                         }
 
                         .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
@@ -85,11 +86,11 @@
                         }
 
                         tr.level-0-row {
-                            background: #e3f2fd !important;
+                            background: #f8f9fa !important;
                         }
 
                         tr.level-1-row {
-                            background: #f1f8ff !important;
+                            background: #ffffff !important;
                         }
 
                         tr.level-2-row {
@@ -118,33 +119,48 @@
                                         if($item->kode == 'PB') continue;
                                         
                                         echo '<tr class="level-' . $item->level . '-row">';
-                                        echo '<td>' . $item->kode . '</td>';
-                                        echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
                                         
-                                        // Nilai bulan
-                                        for ($m = 1; $m <= 12; $m++) {
-                                            $val = $data[$item->id]["month_$m"] ?? 0;
-                                            echo '<td>' . formatAccounting($val) . '</td>';
+                                        // For parent rows (level 0-3 with children), use colspan
+                                        if ($item->children->count() > 0 && $item->level <= 3) {
+                                            echo '<td>' . $item->kode . '</td>';
+                                            echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
+                                            echo '<td colspan="14"></td>';
+                                        } else {
+                                            // Regular detail rows
+                                            echo '<td>' . $item->kode . '</td>';
+                                            echo '<td><div class="tb-text level-' . $item->level . '">' . $prefix . $item->keterangan . '</div></td>';
+                                            
+                                            // Nilai bulan
+                                            for ($m = 1; $m <= 12; $m++) {
+                                                $val = $data[$item->id]["month_$m"] ?? 0;
+                                                echo '<td>' . formatAccounting($val) . '</td>';
+                                            }
+                                            
+                                            // Total tahun berjalan
+                                            $total = $data[$item->id]['total'] ?? 0;
+                                            echo '<td>' . formatAccounting($total) . '</td>';
+                                            
+                                            // Saldo awal
+                                            $start = $data[$item->id]['opening'] ?? 0;
+                                            echo '<td>' . formatAccounting($start) . '</td>';
                                         }
-                                        
-                                        // Total tahun berjalan
-                                        $total = $data[$item->id]['total'] ?? 0;
-                                        echo '<td>' . formatAccounting($total) . '</td>';
-                                        
-                                        // Saldo awal
-                                        $start = $data[$item->id]['opening'] ?? 0;
-                                        echo '<td>' . formatAccounting($start) . '</td>';
                                         
                                         echo '</tr>';
                                         
                                         if ($item->children->count() > 0) {
-                                            renderRowsReport($item->children, $data, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
+                                            renderRowsReport($item->children->sortBy('id'), $data, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
                                         }
                                     }
                                 }
                                 
-                                $rootItems = $items->whereNull('parent_id');
+                                $rootItems = $items->whereNull('parent_id')->where('kode', '!=', 'M')->sortBy('id');
                                 renderRowsReport($rootItems, $data);
+                            @endphp
+                            
+                            {{-- Memorial Accounts --}}
+                            @php
+                                $memorialItems = $items->where('kode', 'AM');
+                                renderRowsReport($memorialItems, $data);
                             @endphp
                             
                             {{-- Bagian Pindah Buku --}}

@@ -10,8 +10,8 @@ class MenuComposer
     public function compose(View $view)
     {
         // Ambil data untuk menu
-        $cashAccounts = Ledger::where('is_active', true)->where('tipe_ledger', 'kas')->orderBy('nama_ledger')->get();
-        $bankAccounts = Ledger::where('is_active', true)->where('tipe_ledger', 'bank')->orderBy('nama_ledger')->get();
+        $cashAccounts = Ledger::where('is_active', true)->where('tipe_ledger', 'kas')->orderBy('trial_balance_id')->get();
+        $bankAccounts = Ledger::where('is_active', true)->where('tipe_ledger', 'bank')->orderBy('trial_balance_id')->get();
         
         // Determine active navigation context
         $activeContext = $this->determineActiveContext();

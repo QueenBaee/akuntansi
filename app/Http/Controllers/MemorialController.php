@@ -12,12 +12,17 @@ class MemorialController extends Controller
 {
     public function create(Request $request)
     {
-        $accounts = TrialBalance::orderBy('kode')
+        $accounts = TrialBalance::with('parent')
             ->where('level', 4)
             ->where(function($query) {
                 $query->where('is_kas_bank', false)
                       ->orWhereNull('is_kas_bank');
             })
+            ->whereHas('parent', function($query) {
+                $query->where('is_kas_bank', false)
+                      ->orWhereNull('is_kas_bank');
+            })
+            ->orderBy('kode')
             ->get();
         $year = $request->get('year', date('Y'));
         $memorialsHistory = $this->getMemorialsHistory($year);
@@ -226,8 +231,8 @@ class MemorialController extends Controller
 
     private function getMemorialsHistory($year = null)
     {
-        $query = Journal::with(['debitAccount', 'creditAccount', 'attachments', 'details.trialBalance'])
-            ->whereIn('source_module', ['memorial', 'asset_depreciation']);
+        $query = Journal::with(['debitAccount', 'creditAccount', 'attachments'])
+            ->whereIn('source_module', ['memorial', 'maklon']);
             
         if ($year) {
             $query->whereYear('date', $year);
@@ -240,38 +245,18 @@ class MemorialController extends Controller
         $history = [];
 
         foreach ($journals as $journal) {
-            if ($journal->source_module === 'asset_depreciation') {
-                // For asset depreciation, get details from journal_details
-                $debitDetail = $journal->details->where('debit', '>', 0)->first();
-                $creditDetail = $journal->details->where('credit', '>', 0)->first();
-                
-                $history[] = [
-                    'journal_id' => $journal->id,
-                    'date' => $journal->date->format('d/m/Y'),
-                    'description' => $journal->description,
-                    'pic' => $journal->pic,
-                    'proof_number' => $journal->proof_number,
-                    'debit_amount' => $debitDetail ? $debitDetail->debit : 0,
-                    'credit_amount' => $creditDetail ? $creditDetail->credit : 0,
-                    'debit_account' => $debitDetail && $debitDetail->trialBalance ? $debitDetail->trialBalance->kode . ' - ' . $debitDetail->trialBalance->keterangan : '-',
-                    'credit_account' => $creditDetail && $creditDetail->trialBalance ? $creditDetail->trialBalance->kode . ' - ' . $creditDetail->trialBalance->keterangan : '-',
-                    'attachments' => $journal->attachments,
-                ];
-            } else {
-                // For manual memorial entries
-                $history[] = [
-                    'journal_id' => $journal->id,
-                    'date' => $journal->date->format('d/m/Y'),
-                    'description' => $journal->description,
-                    'pic' => $journal->pic,
-                    'proof_number' => $journal->proof_number,
-                    'debit_amount' => $journal->cash_in,
-                    'credit_amount' => $journal->cash_out,
-                    'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
-                    'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
-                    'attachments' => $journal->attachments,
-                ];
-            }
+            $history[] = [
+                'journal_id' => $journal->id,
+                'date' => $journal->date->format('d/m/Y'),
+                'description' => $journal->description,
+                'pic' => $journal->pic,
+                'proof_number' => $journal->proof_number,
+                'debit_amount' => $journal->cash_in,
+                'credit_amount' => $journal->cash_out,
+                'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
+                'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
+                'attachments' => $journal->attachments,
+            ];
         }
 
         return $history;

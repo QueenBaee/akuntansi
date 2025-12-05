@@ -115,6 +115,14 @@ Route::middleware('auth')->group(function () {
     Route::get('memorials/{id}/attachments/{attachmentId}', [\App\Http\Controllers\MemorialController::class, 'viewAttachment'])->name('memorials.view-attachment');
     Route::delete('memorials/{id}', [\App\Http\Controllers\MemorialController::class, 'destroy'])->name('memorials.destroy');
 
+    // Maklon
+    Route::get('maklon', [\App\Http\Controllers\MaklonController::class, 'index'])->name('maklon.index');
+    Route::post('maklon', [\App\Http\Controllers\MaklonController::class, 'store'])->name('maklon.store');
+    Route::put('maklon/{id}', [\App\Http\Controllers\MaklonController::class, 'update'])->name('maklon.update');
+    Route::delete('maklon/{id}', [\App\Http\Controllers\MaklonController::class, 'destroy'])->name('maklon.destroy');
+    Route::post('maklon/{id}/post', [\App\Http\Controllers\MaklonController::class, 'post'])->name('maklon.post');
+    Route::get('maklon/{id}/attachments/{attachmentId}', [\App\Http\Controllers\MaklonController::class, 'viewAttachment'])->name('maklon.view-attachment');
+
     // Trial Balance
     Route::resource('trial-balance', TrialBalanceController::class);
 
@@ -140,6 +148,7 @@ Route::middleware('auth')->group(function () {
 // API Routes
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
+    Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
 });
 
 // *** Catch-all route HARUS PALING BAWAH ***

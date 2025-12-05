@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Journal;
-use App\Models\JournalDetail;
 use App\Models\TrialBalance;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -34,16 +33,6 @@ class MemorialService
                 'created_by' => auth()->id(),
             ]);
             
-            foreach ($data['details'] as $detail) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'account_id' => $detail['account_id'],
-                    'debit' => $detail['debit'] ?? 0,
-                    'credit' => $detail['credit'] ?? 0,
-                    'description' => $detail['description'] ?? $data['description'],
-                ]);
-            }
-            
             return $journal;
         });
     }
@@ -51,8 +40,6 @@ class MemorialService
     public function updateMemorial(Journal $journal, array $data): Journal
     {
         return DB::transaction(function () use ($journal, $data) {
-            $journal->details()->delete();
-            
             $totalDebit = collect($data['details'])->sum('debit');
             $totalCredit = collect($data['details'])->sum('credit');
             
@@ -68,16 +55,6 @@ class MemorialService
                 'total_credit' => $totalCredit,
                 'total_amount' => $totalDebit,
             ]);
-            
-            foreach ($data['details'] as $detail) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'account_id' => $detail['account_id'],
-                    'debit' => $detail['debit'] ?? 0,
-                    'credit' => $detail['credit'] ?? 0,
-                    'description' => $detail['description'] ?? $data['description'],
-                ]);
-            }
             
             return $journal;
         });
@@ -98,30 +75,29 @@ class MemorialService
     
     public function getAccountBalance(int $accountId, string $endDate = null): float
     {
-        $query = JournalDetail::where('account_id', $accountId)
-            ->whereHas('journal', function ($q) use ($endDate) {
-                $q->where('is_posted', true)
-                  ->where('source_module', 'memorial');
-                if ($endDate) {
-                    $q->whereDate('date', '<=', $endDate);
-                }
-            });
+        $query = Journal::where(function($q) use ($accountId) {
+                $q->where('debit_account_id', $accountId)
+                  ->orWhere('credit_account_id', $accountId);
+            })
+            ->where('is_posted', true)
+            ->where('source_module', 'memorial');
             
-        $totalDebit = $query->sum('debit');
-        $totalCredit = $query->sum('credit');
-        
-        $account = TrialBalance::find($accountId);
-        
-        switch ($account->type ?? 'asset') {
-            case 'asset':
-            case 'expense':
-                return $totalDebit - $totalCredit;
-            case 'liability':
-            case 'equity':
-            case 'revenue':
-                return $totalCredit - $totalDebit;
-            default:
-                return 0;
+        if ($endDate) {
+            $query->whereDate('date', '<=', $endDate);
         }
+        
+        $journals = $query->get();
+        $balance = 0;
+        
+        foreach ($journals as $journal) {
+            if ($journal->debit_account_id == $accountId) {
+                $balance += $journal->total_amount;
+            }
+            if ($journal->credit_account_id == $accountId) {
+                $balance -= $journal->total_amount;
+            }
+        }
+        
+        return $balance;
     }
 }

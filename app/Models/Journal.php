@@ -45,10 +45,7 @@ class Journal extends Model
         'is_posted' => 'boolean',
     ];
 
-    public function details()
-    {
-        return $this->hasMany(JournalDetail::class);
-    }
+
 
     public function creator()
     {
@@ -140,7 +137,6 @@ class Journal extends Model
             }
             
             // Soft delete related records
-            $journal->details()->delete();
             $journal->attachments()->delete();
         });
     }
@@ -149,7 +145,6 @@ class Journal extends Model
     public function restoreWithRelated()
     {
         $this->restore();
-        $this->details()->withTrashed()->restore();
         $this->attachments()->withTrashed()->restore();
     }
 }

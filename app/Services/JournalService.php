@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Journal;
-use App\Models\JournalDetail;
 use App\Models\Account;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -37,16 +36,6 @@ class JournalService
                 'created_by' => auth()->id(),
             ]);
             
-            // Create journal details
-            foreach ($data['details'] as $detail) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'trial_balance_id' => $detail['account_id'],
-                    'debit' => $detail['debit'] ?? 0,
-                    'credit' => $detail['credit'] ?? 0,
-                ]);
-            }
-            
             return $journal;
         });
     }
@@ -54,13 +43,10 @@ class JournalService
     public function updateJournal(Journal $journal, array $data): Journal
     {
         return DB::transaction(function () use ($journal, $data) {
-            // Delete existing details
-            $journal->details()->delete();
-            
             // Validate double entry
             $totalDebit = collect($data['details'])->sum('debit');
             $totalCredit = collect($data['details'])->sum('credit');
-            
+
             if ($totalDebit != $totalCredit) {
                 throw new \Exception('Total debit harus sama dengan total kredit');
             }
@@ -74,16 +60,6 @@ class JournalService
                 'total_credit' => $totalCredit,
                 'total_amount' => $totalDebit,
             ]);
-            
-            // Create new journal details
-            foreach ($data['details'] as $detail) {
-                JournalDetail::create([
-                    'journal_id' => $journal->id,
-                    'trial_balance_id' => $detail['account_id'],
-                    'debit' => $detail['debit'] ?? 0,
-                    'credit' => $detail['credit'] ?? 0,
-                ]);
-            }
             
             return $journal;
         });
@@ -103,23 +79,28 @@ class JournalService
     
     public function getAccountBalance(int $accountId, string $endDate = null): float
     {
-        $query = JournalDetail::where('trial_balance_id', $accountId)
-            ->whereHas('journal', function ($q) use ($endDate) {
-                $q->where('is_posted', true);
-                if ($endDate) {
-                    $q->whereDate('date', '<=', $endDate);
-                }
-            });
+        $query = Journal::where(function($q) use ($accountId) {
+                $q->where('debit_account_id', $accountId)
+                  ->orWhere('credit_account_id', $accountId);
+            })
+            ->where('is_posted', true);
             
-        $totalDebit = $query->sum('debit');
-        $totalCredit = $query->sum('credit');
+        if ($endDate) {
+            $query->whereDate('date', '<=', $endDate);
+        }
         
-        $account = TrialBalance::find($accountId);
+        $journals = $query->get();
+        $balance = 0;
         
-        // Normal balance calculation based on account type
-        if (!$account) return 0;
+        foreach ($journals as $journal) {
+            if ($journal->debit_account_id == $accountId) {
+                $balance += $journal->total_amount;
+            }
+            if ($journal->credit_account_id == $accountId) {
+                $balance -= $journal->total_amount;
+            }
+        }
         
-        // Assuming trial balance has similar type logic
-        return $totalDebit - $totalCredit;
+        return $balance;
     }
 }

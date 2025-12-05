@@ -42,7 +42,7 @@
         </svg>
         Tambah Akun Trial Balance
     </a>
-@endsection --}}
+@endsection
 
 @section('content')
 <style>
@@ -122,8 +122,6 @@
                         <tr>
                             <th>Kode</th>
                             <th>Keterangan</th>
-                            <th>Parent</th>
-                            <th>Level</th>
                             <th class="text-center">Kas/Bank</th>
                             <th>2024 (Rp)</th>
                             <th class="w-1">Aksi</th>
@@ -131,7 +129,7 @@
                     </thead>
                     <tbody id="trial-balance-tbody">
                         <tr id="loading-row">
-                            <td colspan="7" class="text-center py-4">
+                            <td colspan="5" class="text-center py-4">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
@@ -174,7 +172,7 @@ function loadTrialBalanceData() {
             console.error('Error loading trial balance data:', error);
             alert('Error loading data: ' + error.message);
             document.getElementById('trial-balance-tbody').innerHTML = 
-                '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
+                '<tr><td colspan="5" class="text-center text-danger">Error loading data</td></tr>';
         });
 }
 
@@ -195,8 +193,6 @@ function renderTrialBalanceRow(item, prefix) {
     let html = `<tr class="level-${item.level}-row">`;
     html += `<td>${item.kode}</td>`;
     html += `<td><div class="tb-text level-${item.level}">${prefix}${item.keterangan}</div></td>`;
-    html += `<td>${item.parent?.kode || '-'}</td>`;
-    html += `<td>${item.level}</td>`;
     
     // Kas/Bank Status
     html += '<td class="text-center">';

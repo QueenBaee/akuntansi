@@ -17,7 +17,7 @@ class JournalController extends Controller
 
     public function index(Request $request)
     {
-        $query = Journal::with(['details.account', 'createdBy']);
+        $query = Journal::with(['debitAccount', 'creditAccount', 'creator']);
 
         if ($request->has('search')) {
             $search = $request->get('search');
@@ -55,7 +55,6 @@ class JournalController extends Controller
 
     public function store(Request $request)
     {
-        // dd($request);
         $validated = $request->validate([
             'date' => 'required|date',
             'reference' => 'nullable|string|max:255',
@@ -64,29 +63,14 @@ class JournalController extends Controller
             'proof_number' => 'nullable|string|max:255',
             'cash_in' => 'nullable|numeric|min:0',
             'cash_out' => 'nullable|numeric|min:0',
-            'debit_account_id' => 'nullable|exists:accounts,id',
-            'credit_account_id' => 'nullable|exists:accounts,id',
+            'debit_account_id' => 'required|exists:trial_balances,id',
+            'credit_account_id' => 'required|exists:trial_balances,id',
             'cashflow_id' => 'nullable|exists:cashflows,id',
             'balance' => 'nullable|numeric',
+            'total_amount' => 'required|numeric|min:0',
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:10240', // 10MB max per file
-            'details' => 'required|array|min:2',
-            'details.*.account_id' => 'required|exists:accounts,id',
-            'details.*.debit' => 'required|numeric|min:0',
-            'details.*.credit' => 'required|numeric|min:0',
-            'details.*.description' => 'nullable|string'
         ]);
-
-        // Validate double entry
-        $totalDebit = collect($validated['details'])->sum('debit');
-        $totalCredit = collect($validated['details'])->sum('credit');
-
-        if ($totalDebit != $totalCredit) {
-            return response()->json([
-                'message' => 'Total debit must equal total credit',
-                'errors' => ['details' => ['Total debit must equal total credit']]
-            ], 422);
-        }
 
         $journal = Journal::create([
             'date' => $validated['date'],
@@ -97,20 +81,17 @@ class JournalController extends Controller
             'proof_number' => $validated['proof_number'] ?? null,
             'cash_in' => $validated['cash_in'] ?? 0,
             'cash_out' => $validated['cash_out'] ?? 0,
-            'debit_account_id' => $validated['debit_account_id'] ?? null,
-            'credit_account_id' => $validated['credit_account_id'] ?? null,
+            'debit_account_id' => $validated['debit_account_id'],
+            'credit_account_id' => $validated['credit_account_id'],
             'cashflow_id' => $validated['cashflow_id'] ?? null,
             'balance' => $validated['balance'] ?? 0,
-            'total_debit' => $totalDebit,
-            'total_credit' => $totalCredit,
+            'total_debit' => $validated['total_amount'],
+            'total_credit' => $validated['total_amount'],
+            'total_amount' => $validated['total_amount'],
             'source_module' => 'manual',
             'is_posted' => false,
             'created_by' => auth()->id()
         ]);
-
-        foreach ($validated['details'] as $detail) {
-            $journal->details()->create($detail);
-        }
 
         // Handle file attachments
         if ($request->hasFile('attachments')) {
@@ -129,14 +110,14 @@ class JournalController extends Controller
 
         return response()->json([
             'message' => 'Journal created successfully',
-            'data' => $journal->load(['details.account', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
+            'data' => $journal->load(['attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ], 201);
     }
 
     public function show(Journal $journal)
     {
         return response()->json([
-            'data' => $journal->load(['details.account', 'creator', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
+            'data' => $journal->load(['creator', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ]);
     }
 
@@ -152,39 +133,25 @@ class JournalController extends Controller
             'date' => 'required|date',
             'reference' => 'required|string|max:255',
             'description' => 'required|string',
-            'details' => 'required|array|min:2',
-            'details.*.account_id' => 'required|exists:accounts,id',
-            'details.*.debit' => 'required|numeric|min:0',
-            'details.*.credit' => 'required|numeric|min:0',
-            'details.*.description' => 'nullable|string'
+            'debit_account_id' => 'required|exists:trial_balances,id',
+            'credit_account_id' => 'required|exists:trial_balances,id',
+            'total_amount' => 'required|numeric|min:0'
         ]);
-
-        // Validate double entry
-        $totalDebit = collect($validated['details'])->sum('debit');
-        $totalCredit = collect($validated['details'])->sum('credit');
-
-        if ($totalDebit != $totalCredit) {
-            return response()->json([
-                'message' => 'Total debit must equal total credit',
-                'errors' => ['details' => ['Total debit must equal total credit']]
-            ], 422);
-        }
 
         $journal->update([
             'date' => $validated['date'],
             'reference' => $validated['reference'],
-            'description' => $validated['description']
+            'description' => $validated['description'],
+            'debit_account_id' => $validated['debit_account_id'],
+            'credit_account_id' => $validated['credit_account_id'],
+            'total_debit' => $validated['total_amount'],
+            'total_credit' => $validated['total_amount'],
+            'total_amount' => $validated['total_amount']
         ]);
-
-        // Delete existing details and create new ones
-        $journal->details()->delete();
-        foreach ($validated['details'] as $detail) {
-            $journal->details()->create($detail);
-        }
 
         return response()->json([
             'message' => 'Journal updated successfully',
-            'data' => $journal->load(['details.account', 'attachments', 'debitAccount', 'creditAccount', 'cashflow'])
+            'data' => $journal->load(['attachments', 'debitAccount', 'creditAccount', 'cashflow'])
         ]);
     }
 

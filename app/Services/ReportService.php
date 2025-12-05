@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Account;
 use App\Models\Journal;
-use App\Models\JournalDetail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -13,12 +12,6 @@ class ReportService
     public function getTrialBalance(Carbon $asOfDate): array
     {
         $accounts = Account::active()
-            ->with(['journalDetails' => function ($query) use ($asOfDate) {
-                $query->whereHas('journal', function ($q) use ($asOfDate) {
-                    $q->where('date', '<=', $asOfDate)
-                      ->where('is_posted', true);
-                });
-            }])
             ->get();
             
         $trialBalance = [];
@@ -26,13 +19,7 @@ class ReportService
         $totalCredit = 0;
         
         foreach ($accounts as $account) {
-            $debitSum = $account->journalDetails->sum('debit');
-            $creditSum = $account->journalDetails->sum('credit');
-            
-            $balance = match($account->type) {
-                'asset', 'expense' => $account->opening_balance + $debitSum - $creditSum,
-                'liability', 'equity', 'revenue' => $account->opening_balance + $creditSum - $debitSum,
-            };
+            $balance = $this->getAccountBalance($account->id, $asOfDate);
             
             if ($balance != 0) {
                 $debitBalance = $balance > 0 ? $balance : 0;
@@ -118,12 +105,12 @@ class ReportService
             ->orWhere('name', 'like', '%bank%')
             ->pluck('id');
             
-        $cashTransactions = JournalDetail::whereIn('account_id', $cashAccounts)
-            ->whereHas('journal', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate])
-                      ->where('is_posted', true);
+        $cashTransactions = Journal::where(function($query) use ($cashAccounts) {
+                $query->whereIn('debit_account_id', $cashAccounts)
+                      ->orWhereIn('credit_account_id', $cashAccounts);
             })
-            ->with(['journal', 'account'])
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('is_posted', true)
             ->get();
             
         $operating = [];
@@ -131,16 +118,21 @@ class ReportService
         $financing = [];
         
         foreach ($cashTransactions as $transaction) {
-            $amount = $transaction->debit - $transaction->credit;
+            $amount = 0;
+            if (in_array($transaction->debit_account_id, $cashAccounts->toArray())) {
+                $amount = $transaction->total_amount;
+            } elseif (in_array($transaction->credit_account_id, $cashAccounts->toArray())) {
+                $amount = -$transaction->total_amount;
+            }
             
-            // Categorize based on contra account or transaction type
+            // Categorize based on transaction type
             $category = $this->categorizeCashFlow($transaction);
             
             $item = [
-                'date' => $transaction->journal->date,
+                'date' => $transaction->date,
                 'description' => $transaction->description,
                 'amount' => $amount,
-                'journal_number' => $transaction->journal->number,
+                'journal_number' => $transaction->number,
             ];
             
             match($category) {
@@ -171,21 +163,21 @@ class ReportService
     {
         $account = Account::findOrFail($accountId);
         
-        $transactions = JournalDetail::where('account_id', $accountId)
-            ->whereHas('journal', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate])
-                      ->where('is_posted', true);
+        $transactions = Journal::where(function($query) use ($accountId) {
+                $query->where('debit_account_id', $accountId)
+                      ->orWhere('credit_account_id', $accountId);
             })
-            ->with(['journal'])
-            ->orderBy('created_at')
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('is_posted', true)
+            ->orderBy('date')
             ->get();
             
         $runningBalance = $account->opening_balance;
         $ledgerEntries = [];
         
         foreach ($transactions as $transaction) {
-            $debit = $transaction->debit;
-            $credit = $transaction->credit;
+            $debit = $transaction->debit_account_id == $accountId ? $transaction->total_amount : 0;
+            $credit = $transaction->credit_account_id == $accountId ? $transaction->total_amount : 0;
             
             // Calculate running balance based on account type
             if (in_array($account->type, ['asset', 'expense'])) {
@@ -195,10 +187,10 @@ class ReportService
             }
             
             $ledgerEntries[] = [
-                'date' => $transaction->journal->date,
-                'journal_number' => $transaction->journal->number,
+                'date' => $transaction->date,
+                'journal_number' => $transaction->number,
                 'description' => $transaction->description,
-                'reference' => $transaction->journal->reference,
+                'reference' => $transaction->reference,
                 'debit' => $debit,
                 'credit' => $credit,
                 'balance' => $runningBalance,
@@ -221,32 +213,43 @@ class ReportService
         ];
     }
     
+    private function getAccountBalance(int $accountId, Carbon $endDate): float
+    {
+        $account = Account::find($accountId);
+        if (!$account) return 0;
+        
+        $journals = Journal::where(function($query) use ($accountId) {
+                $query->where('debit_account_id', $accountId)
+                      ->orWhere('credit_account_id', $accountId);
+            })
+            ->where('date', '<=', $endDate)
+            ->where('is_posted', true)
+            ->get();
+            
+        $balance = $account->opening_balance;
+        
+        foreach ($journals as $journal) {
+            if ($journal->debit_account_id == $accountId) {
+                $balance += $journal->total_amount;
+            }
+            if ($journal->credit_account_id == $accountId) {
+                $balance -= $journal->total_amount;
+            }
+        }
+        
+        return $balance;
+    }
+    
     private function getAccountBalancesByType(string $type, ?Carbon $startDate, Carbon $endDate): array
     {
         $accounts = Account::where('type', $type)
             ->where('is_active', true)
-            ->with(['journalDetails' => function ($query) use ($startDate, $endDate) {
-                $query->whereHas('journal', function ($q) use ($startDate, $endDate) {
-                    if ($startDate) {
-                        $q->whereBetween('date', [$startDate, $endDate]);
-                    } else {
-                        $q->where('date', '<=', $endDate);
-                    }
-                    $q->where('is_posted', true);
-                });
-            }])
             ->get();
             
         $balances = [];
         
         foreach ($accounts as $account) {
-            $debitSum = $account->journalDetails->sum('debit');
-            $creditSum = $account->journalDetails->sum('credit');
-            
-            $balance = match($type) {
-                'asset', 'expense' => ($startDate ? 0 : $account->opening_balance) + $debitSum - $creditSum,
-                'liability', 'equity', 'revenue' => ($startDate ? 0 : $account->opening_balance) + $creditSum - $debitSum,
-            };
+            $balance = $this->getAccountBalance($account->id, $endDate);
             
             if ($balance != 0) {
                 $balances[] = [
@@ -261,7 +264,7 @@ class ReportService
         return $balances;
     }
     
-    private function categorizeCashFlow(JournalDetail $transaction): string
+    private function categorizeCashFlow(Journal $transaction): string
     {
         // Simple categorization logic - can be enhanced with more sophisticated rules
         $description = strtolower($transaction->description);

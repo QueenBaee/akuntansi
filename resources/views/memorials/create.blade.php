@@ -19,6 +19,50 @@
     body {
         overflow-x: hidden;
     }
+    
+    /* Searchable Select Styles */
+    .searchable-select {
+        position: static;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    .searchable-select input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    .searchable-select .dropdown-list {
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10000;
+        display: none;
+        min-width: 250px;
+    }
+    
+    .searchable-select .dropdown-item {
+        padding: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .searchable-select .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .searchable-select .dropdown-item.selected {
+        background-color: #007bff;
+        color: white;
+    }
 </style>
 
 <!-- Alert Messages -->
@@ -43,11 +87,7 @@
             @csrf
 
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="card-title">Memorial Entry</h3>
-                    </div>
-                </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
@@ -114,9 +154,18 @@
             // Build account options
             let accountOptions = '<option value="">Pilih Akun</option>';
             @foreach ($accounts as $account)
-                accountOptions +=
-                    '<option value="{{ $account->id }}">{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}</option>';
+                accountOptions += '<option value="{{ $account->id }}">' + {!! json_encode($account->kode . ' - ' . $account->keterangan) !!} + '</option>';
             @endforeach
+            
+            // Build account data array
+            const accountData = [
+                @foreach ($accounts as $account)
+                    {
+                        id: {{ $account->id }},
+                        text: {!! json_encode($account->kode . ' - ' . $account->keterangan) !!}
+                    }@if(!$loop->last),@endif
+                @endforeach
+            ];
 
             function showAlert(type, message) {
                 const container = document.getElementById('alert-container');
@@ -174,20 +223,22 @@
                     '][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" multiple>' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                    '<select name="entries[' + currentIndex +
-                    '][debit_account_id]" class="form-control form-control-sm debit-account searchable-select" style="border: none; font-size: 12px;">' +
-                    accountOptions +
-                    '</select>' +
+                        '<div class="searchable-select">' +
+                            '<input type="text" class="form-control form-control-sm debit-input" placeholder="Pilih Akun Debit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
+                            '<input type="hidden" name="entries[' + currentIndex + '][debit_account_id]" class="debit-account">' +
+                            '<div class="dropdown-list debit-dropdown"></div>' +
+                        '</div>' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="number" name="entries[' + currentIndex +
                     '][debit_amount]" class="form-control form-control-sm debit-amount" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" oninput="handleAmountInput(this, \'debit\')">' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                    '<select name="entries[' + currentIndex +
-                    '][credit_account_id]" class="form-control form-control-sm credit-account searchable-select" style="border: none; font-size: 12px;">' +
-                    accountOptions +
-                    '</select>' +
+                        '<div class="searchable-select">' +
+                            '<input type="text" class="form-control form-control-sm credit-input" placeholder="Pilih Akun Kredit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
+                            '<input type="hidden" name="entries[' + currentIndex + '][credit_account_id]" class="credit-account">' +
+                            '<div class="dropdown-list credit-dropdown"></div>' +
+                        '</div>' +
                     '</td>' +
                     '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
                     '<input type="number" name="entries[' + currentIndex +
@@ -198,50 +249,26 @@
                     '</td>';
 
                 tbody.appendChild(row);
-                lineIndex++;
                 
-                // Initialize Select2 for new row with AJAX
-                setTimeout(() => {
-                    $(row).find('.searchable-select').select2({
-                        theme: 'default',
-                        width: '100%',
-                        placeholder: 'Ketik untuk mencari akun...',
-                        allowClear: true,
-                        ajax: {
-                            url: '/api/accounts/search',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function (params) {
-                                return {
-                                    q: params.term,
-                                    exclude_kas_bank: true
-                                };
-                            },
-                            processResults: function (data) {
-                                return {
-                                    results: data.results
-                                };
-                            },
-                            cache: true
-                        },
-                        minimumInputLength: 1
-                    });
-                    
-                    // Refresh table widths after adding new row
-                    refreshTableWidths();
-                }, 100);
+                // Initialize dropdowns for the new row
+                initializeDropdowns(row);
+                
+                // Scroll to the new row
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                lineIndex++;
             }
 
             function handleAmountInput(input, type) {
                 const row = input.closest('tr');
-                const debitAccountSelect = row.querySelector('.debit-account');
-                const creditAccountSelect = row.querySelector('.credit-account');
+                const debitAccountHidden = row.querySelector('.debit-account');
+                const creditAccountHidden = row.querySelector('.credit-account');
                 const debitInput = row.querySelector('.debit-amount');
                 const creditInput = row.querySelector('.credit-amount');
                 const currentValue = parseFloat(input.value) || 0;
 
                 // Check if both accounts are selected
-                if (currentValue > 0 && (!debitAccountSelect.value || !creditAccountSelect.value)) {
+                if (currentValue > 0 && (!debitAccountHidden.value || !creditAccountHidden.value)) {
                     showAlert('error', 'Pilih akun debit dan kredit terlebih dahulu sebelum mengisi nominal');
                     input.value = '';
                     return;
@@ -269,6 +296,173 @@
             function updateProofNumber(input) {
                 // No auto-generation, user inputs manually
             }
+            
+            // Searchable dropdown functions
+            function initializeDropdowns(row) {
+                const debitDropdown = row.querySelector('.debit-dropdown');
+                const creditDropdown = row.querySelector('.credit-dropdown');
+                
+                // Populate account dropdowns
+                const accountItems = accountData.map(item => 
+                    `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                ).join('');
+                
+                debitDropdown.innerHTML = accountItems;
+                creditDropdown.innerHTML = accountItems;
+                
+                // Add click handlers
+                debitDropdown.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dropdown-item')) {
+                        selectDropdownItem(row, 'debit', e.target.dataset.value, e.target.textContent);
+                    }
+                });
+                
+                creditDropdown.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dropdown-item')) {
+                        selectDropdownItem(row, 'credit', e.target.dataset.value, e.target.textContent);
+                    }
+                });
+            }
+            
+            function toggleDropdown(input) {
+                const dropdown = input.nextElementSibling.nextElementSibling;
+                const isVisible = dropdown.style.display === 'block';
+                
+                // Hide all other dropdowns
+                document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
+                
+                if (!isVisible) {
+                    // Position dropdown relative to input
+                    const rect = input.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    const dropdownHeight = 200; // max-height of dropdown
+                    
+                    // Check if dropdown should appear above or below
+                    const spaceBelow = viewportHeight - rect.bottom;
+                    const spaceAbove = rect.top;
+                    
+                    let top;
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        // Show below
+                        top = rect.bottom + window.scrollY;
+                    } else {
+                        // Show above
+                        top = rect.top + window.scrollY - dropdownHeight;
+                    }
+                    
+                    dropdown.style.left = rect.left + 'px';
+                    dropdown.style.top = top + 'px';
+                    dropdown.style.width = Math.max(rect.width, 250) + 'px';
+                    
+                    // Make input editable for search
+                    input.readOnly = false;
+                    input.focus();
+                    input.select();
+                    
+                    // Show dropdown
+                    dropdown.style.display = 'block';
+                    
+                    // Add search functionality
+                    const originalValue = input.value;
+                    input.addEventListener('input', function searchHandler(e) {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const items = dropdown.querySelectorAll('.dropdown-item');
+                        
+                        items.forEach(item => {
+                            const text = item.textContent.toLowerCase();
+                            item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                        });
+                    });
+                    
+                    // Handle blur to restore readonly and original value if no selection
+                    input.addEventListener('blur', function blurHandler(e) {
+                        setTimeout(() => {
+                            if (!dropdown.contains(document.activeElement)) {
+                                input.readOnly = true;
+                                dropdown.style.display = 'none';
+                                
+                                // Restore original value if no valid selection
+                                const hidden = input.nextElementSibling;
+                                if (!hidden.value) {
+                                    input.value = originalValue;
+                                }
+                                
+                                // Remove event listeners
+                                input.removeEventListener('input', searchHandler);
+                                input.removeEventListener('blur', blurHandler);
+                            }
+                        }, 150);
+                    });
+                }
+            }
+            
+            function selectDropdownItem(row, type, value, text) {
+                const input = row.querySelector(`.${type}-input`);
+                const hidden = row.querySelector(`.${type}-account`);
+                const dropdown = row.querySelector(`.${type}-dropdown`);
+                
+                input.value = text;
+                input.readOnly = true;
+                hidden.value = value;
+                dropdown.style.display = 'none';
+                
+                // Show all items again for next search
+                dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.style.display = 'block';
+                });
+            }
+            
+            function initializeEditDropdowns(row) {
+                const debitDropdown = row.querySelector('.edit-debit-dropdown');
+                const creditDropdown = row.querySelector('.edit-credit-dropdown');
+                
+                // Populate dropdowns
+                const accountItems = accountData.map(item => 
+                    `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                ).join('');
+                
+                debitDropdown.innerHTML = accountItems;
+                creditDropdown.innerHTML = accountItems;
+                
+                // Add click handlers
+                debitDropdown.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dropdown-item')) {
+                        setEditDropdownValue(row, 'debit', e.target.dataset.value, e.target.textContent);
+                    }
+                });
+                
+                creditDropdown.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('dropdown-item')) {
+                        setEditDropdownValue(row, 'credit', e.target.dataset.value, e.target.textContent);
+                    }
+                });
+            }
+            
+            function setEditDropdownValue(row, type, value, text) {
+                const input = row.querySelector(`.edit-${type}-input`);
+                const hidden = row.querySelector(`.edit-${type}-account`);
+                const dropdown = row.querySelector(`.edit-${type}-dropdown`);
+                
+                if (input && hidden) {
+                    input.value = text;
+                    input.readOnly = true;
+                    hidden.value = value;
+                    if (dropdown) {
+                        dropdown.style.display = 'none';
+                        // Show all items again for next search
+                        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                            item.style.display = 'block';
+                        });
+                    }
+                }
+            }
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.searchable-select')) {
+                    document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
+                }
+            });
 
             function viewAttachments(journalId) {
                 const modal = document.createElement('div');
@@ -365,61 +559,49 @@
                     `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
                 cells[4].innerHTML =
                     `<input type="file" class="form-control form-control-sm edit-attachments" accept=".jpg,.jpeg,.png,.pdf" multiple style="font-size: 11px; border: none;">`;
-                cells[5].innerHTML =
-                    `<select class="form-control form-control-sm edit-debit-account debit-account searchable-select" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                cells[5].innerHTML = `
+                    <div class="searchable-select">
+                        <input type="text" class="form-control form-control-sm edit-debit-input" placeholder="Pilih Akun Debit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">
+                        <input type="hidden" class="edit-debit-account debit-account">
+                        <div class="dropdown-list edit-debit-dropdown"></div>
+                    </div>`;
                 cells[6].innerHTML =
                     `<input type="number" class="form-control form-control-sm edit-debit debit-amount" value="${debitAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'debit')">`;
-                cells[7].innerHTML =
-                    `<select class="form-control form-control-sm edit-credit-account credit-account searchable-select" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                cells[7].innerHTML = `
+                    <div class="searchable-select">
+                        <input type="text" class="form-control form-control-sm edit-credit-input" placeholder="Pilih Akun Kredit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">
+                        <input type="hidden" class="edit-credit-account credit-account">
+                        <div class="dropdown-list edit-credit-dropdown"></div>
+                    </div>`;
                 cells[8].innerHTML =
                     `<input type="number" class="form-control form-control-sm edit-credit credit-amount" value="${creditAmount}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleAmountInput(this, 'credit')">`;
 
+                // Initialize edit dropdowns
+                initializeEditDropdowns(row);
+                
                 // Set current selections
                 setTimeout(() => {
-                    // Initialize Select2 for edit mode with AJAX
-                    $(row).find('.searchable-select').select2({
-                        theme: 'default',
-                        width: '100%',
-                        placeholder: 'Ketik untuk mencari akun...',
-                        allowClear: true,
-                        ajax: {
-                            url: '/api/accounts/search',
-                            dataType: 'json',
-                            delay: 250,
-                            data: function (params) {
-                                return {
-                                    q: params.term,
-                                    exclude_kas_bank: true
-                                };
-                            },
-                            processResults: function (data) {
-                                return {
-                                    results: data.results
-                                };
-                            },
-                            cache: true
-                        },
-                        minimumInputLength: 1
-                    });
-                    
                     // Set account selections by text
-                    const debitSelect = row.querySelector('.edit-debit-account');
-                    const creditSelect = row.querySelector('.edit-credit-account');
-
-                    for (let option of debitSelect.options) {
-                        if (option.text === debitAccount) {
-                            $(debitSelect).val(option.value).trigger('change');
-                            break;
+                    const debitItem = accountData.find(item => item.text === debitAccount);
+                    if (debitItem) {
+                        const debitInput = row.querySelector('.edit-debit-input');
+                        const debitHidden = row.querySelector('.edit-debit-account');
+                        if (debitInput && debitHidden) {
+                            debitInput.value = debitItem.text;
+                            debitHidden.value = debitItem.id;
                         }
                     }
-
-                    for (let option of creditSelect.options) {
-                        if (option.text === creditAccount) {
-                            $(creditSelect).val(option.value).trigger('change');
-                            break;
+                    
+                    const creditItem = accountData.find(item => item.text === creditAccount);
+                    if (creditItem) {
+                        const creditInput = row.querySelector('.edit-credit-input');
+                        const creditHidden = row.querySelector('.edit-credit-account');
+                        if (creditInput && creditHidden) {
+                            creditInput.value = creditItem.text;
+                            creditHidden.value = creditItem.id;
                         }
                     }
-                }, 100);
+                }, 50);
 
                 // Change button to save
                 editButton.innerHTML = '✓';
@@ -614,8 +796,8 @@
                     const pic = row.querySelector('input[name*="[pic]"]')?.value;
                     const debitAmount = parseFloat(row.querySelector('input[name*="[debit_amount]"]')?.value) || 0;
                     const creditAmount = parseFloat(row.querySelector('input[name*="[credit_amount]"]')?.value) || 0;
-                    const debitAccountId = row.querySelector('select[name*="[debit_account_id]"]')?.value;
-                    const creditAccountId = row.querySelector('select[name*="[credit_account_id]"]')?.value;
+                    const debitAccountId = row.querySelector('input[name*="[debit_account_id]"]')?.value;
+                    const creditAccountId = row.querySelector('input[name*="[credit_account_id]"]')?.value;
 
                     const hasAmount = debitAmount > 0 || creditAmount > 0;
 

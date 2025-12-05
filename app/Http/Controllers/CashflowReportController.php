@@ -2,269 +2,542 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Cashflow;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CashflowReportController extends Controller
 {
     public function index(Request $request)
     {
-        $request->validate([
-            'year' => 'nullable|integer|min:2000|max:' . (date('Y') + 10)
-        ]);
-
-        $year = (int) ($request->year ?? date('Y'));
-
-        // Load all cashflow items in stable order by kode so grouping follows kode order
-        $items = Cashflow::orderBy('id')->get();
-
-        // Build maps for quick access
-        $itemsByKode = [];
-        foreach ($items as $it) {
-            $itemsByKode[$it->kode] = $it;
-        }
-
-        // Determine parent kode for each item:
-        // - If kode contains '-', parent is everything before last '-'
-        // - Else if kode length > 1 and starts with letter+digit (e.g., R1), parent is first letter (R)
-        // - Else no parent (root)
-        $parentOf = [];
-        foreach ($items as $it) {
-            $kode = $it->kode;
-            $parent = null;
-            if (strpos($kode, '-') !== false) {
-                $parent = substr($kode, 0, strrpos($kode, '-'));
-            } else {
-                // Handle codes like R1 -> parent R
-                if (preg_match('/^[A-Z]\d+$/i', $kode)) {
-                    $parent = substr($kode, 0, 1);
-                } else {
-                    // single letter like R has no parent
-                    $parent = null;
-                }
-            }
-            if ($parent && isset($itemsByKode[$parent])) {
-                $parentOf[$kode] = $parent;
-            } else {
-                $parentOf[$kode] = null;
-            }
-        }
-
-        // Build children lists preserving original kode order
-        $children = [];
-        foreach ($items as $it) {
-            $children[$it->kode] = [];
-        }
-        foreach ($items as $it) {
-            $p = $parentOf[$it->kode];
-            if ($p !== null) {
-                $children[$p][] = $it->kode;
-            }
-        }
-
-        // Find roots (items that have no parent)
-        $roots = [];
-        foreach ($items as $it) {
-            if ($parentOf[$it->kode] === null) {
-                $roots[] = $it->kode;
-            }
-        }
-
-        // Load opening balances: sum(debit) - sum(credit) for journals before $year
-        $openingQuery = DB::table('journals as j')
-            ->join('cashflows as c', 'j.cashflow_id', '=', 'c.id')
-            ->select(
-                'j.cashflow_id',
-                DB::raw('SUM(CASE WHEN j.debit_account_id = c.trial_balance_id THEN j.total_debit ELSE 0 END) as total_debit'),
-                DB::raw('SUM(CASE WHEN j.credit_account_id = c.trial_balance_id THEN j.total_credit ELSE 0 END) as total_credit')
-            )
-            ->whereYear('j.date', '<', $year)
-            ->groupBy('j.cashflow_id')
+        $year = $request->input('year', date('Y'));
+        
+        // Filter unique cashflows to avoid duplicates
+        $cashflows = Cashflow::with('trialBalance')
+            ->orderBy('id')
             ->get()
-            ->keyBy('cashflow_id');
-
-        $openingBalance = [];
-        foreach ($items as $it) {
-            $row = $openingQuery[$it->id] ?? null;
-            $openingBalance[$it->id] = $row ? ($row->total_debit - $row->total_credit) : 0;
+            ->unique(function($item) {
+                return $item->kode . '-' . ($item->parent_id ?? 'root');
+            })
+            ->values();
+        
+        $journalData = $this->getJournalData($year);
+        
+        $data = $this->buildMonthlyData($cashflows, $journalData);
+        $tree = $this->buildTree($cashflows);
+        
+        $this->calculateTotals($tree, $data);
+        $surplusDeficit = $this->calculateSurplusDeficit($tree, $data);
+        $netSurplusDeficit = $this->calculateNetSurplusDeficit($tree, $data, $surplusDeficit);
+        $cashBankBalances = $this->calculateCashBankBalance($year, $netSurplusDeficit);
+        $cashBankDetails = $this->calculateCashBankDetails($year);
+        
+        $flattenedData = $this->flattenTreeWithSummaries($tree);
+        
+        // Add surplus deficit data to main data array
+        $data['surplus_deficit'] = $surplusDeficit;
+        $data['net_surplus_deficit'] = $netSurplusDeficit;
+        $data['cash_bank_opening'] = $cashBankBalances['opening'];
+        $data['cash_bank_closing'] = $cashBankBalances['closing'];
+        
+        // Add detailed cash bank data with prefixed keys to avoid conflicts
+        foreach ($cashBankDetails as $id => $detail) {
+            $data['tb_' . $id] = $detail;
         }
+        
+        // Calculate total for cash bank details
+        $data['cash_bank_detail_total'] = $this->calculateCashBankDetailTotal($cashBankDetails);
+        
+        return view('cashflow_report.index', compact('flattenedData', 'data', 'year', 'surplusDeficit'));
+    }
 
-        // Load monthly journal movements for year
-        $journalMonthly = DB::table('journals as j')
-            ->join('cashflows as c', 'j.cashflow_id', '=', 'c.id')
-            ->select(
-                'j.cashflow_id',
-                DB::raw('MONTH(j.date) as month'),
-                DB::raw('SUM(CASE WHEN j.debit_account_id = c.trial_balance_id THEN j.total_debit ELSE 0 END) as total_debit'),
-                DB::raw('SUM(CASE WHEN j.credit_account_id = c.trial_balance_id THEN j.total_credit ELSE 0 END) as total_credit')
-            )
-            ->whereYear('j.date', $year)
-            ->groupBy('j.cashflow_id', 'month')
+    private function getJournalData($year)
+    {
+        return DB::table('journals')
+            ->select('cashflow_id', DB::raw('MONTH(date) as month, SUM(cash_in) as total_in, SUM(cash_out) as total_out'))
+            ->whereNotNull('cashflow_id')
+            ->whereYear('date', $year)
+            ->groupBy('cashflow_id', 'month')
             ->get()
-            ->groupBy('cashflow_id');
+            ->groupBy('cashflow_id')
+            ->map(fn($rows) => $rows->keyBy('month'));
+    }
 
-        // Compute running balances per item (opening + month deltas)
+    private function buildMonthlyData($cashflows, $journalData)
+    {
         $data = [];
-        foreach ($items as $it) {
-            $saldo = $openingBalance[$it->id] ?? 0;
-            $row = [];
-            $trx = $journalMonthly[$it->id] ?? collect();
-
+        
+        foreach ($cashflows as $cashflow) {
+            $monthlyData = ['total' => 0];
+            $isExpense = str_starts_with($cashflow->kode, 'E');
+            
             for ($m = 1; $m <= 12; $m++) {
-                $monthData = $trx->where('month', $m)->first();
-                if ($monthData) {
-                    $saldo += ($monthData->total_debit - $monthData->total_credit);
+                $monthVal = 0;
+                if (isset($journalData[$cashflow->id][$m])) {
+                    $row = $journalData[$cashflow->id][$m];
+                    $monthVal = $isExpense ? 
+                        ($row->total_out - $row->total_in) : 
+                        ($row->total_in - $row->total_out);
                 }
-                $row["month_$m"] = $saldo;
+                $monthlyData["month_$m"] = $monthVal;
+                $monthlyData['total'] += $monthVal;
             }
-
-            $row['total'] = $saldo;
-            $row['opening'] = $openingBalance[$it->id] ?? 0;
-            $data[$it->kode] = $row; // key by kode for easier aggregation
-            $data[$it->id] = $row;   // also keep id key for existing view access
+            
+            $data[$cashflow->id] = $monthlyData;
         }
+        
+        return $data;
+    }
 
-        // Helper to sum two aggregate rows
-        $sumRows = function ($a, $b) {
-            $res = [];
-            for ($m = 1; $m <= 12; $m++) {
-                $res["month_$m"] = ($a["month_$m"] ?? 0) + ($b["month_$m"] ?? 0);
-            }
-            $res['total'] = ($a['total'] ?? 0) + ($b['total'] ?? 0);
-            $res['opening'] = ($a['opening'] ?? 0) + ($b['opening'] ?? 0);
-            return $res;
-        };
+    private function buildTree($cashflows)
+    {
+        $indexed = $cashflows->keyBy('id')->map(fn($cf) => [
+            'id' => $cf->id,
+            'code' => $cf->kode,
+            'name' => $cf->keterangan,
+            'parent_id' => $cf->parent_id,
+            'trial_balance_code' => $cf->trialBalance?->kode ?? '',
+            'trial_balance_name' => $cf->trialBalance?->keterangan ?? '',
+            'children' => [],
+            'is_leaf' => true
+        ])->toArray();
 
-        // Recursive traversal that builds enhancedItems and returns aggregated sums for parent
-        $enhancedItems = [];
-        $visited = [];
-
-        $buildRec = function ($kode) use (&$buildRec, &$enhancedItems, &$children, $itemsByKode, $data, $sumRows, &$visited) {
-            // Prevent infinite loop
-            if (isset($visited[$kode])) {
-                return ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
-            }
-            $visited[$kode] = true;
-
-            // push current node (if exists in itemsByKode)
-            if (isset($itemsByKode[$kode])) {
-                $enhancedItems[] = $itemsByKode[$kode];
-            }
-
-            // aggregate starts with current node's own row (so parent totals include its own value)
-            $agg = $data[$kode] ?? ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
-
-            // process children in original children order
-            if (!empty($children[$kode])) {
-                foreach ($children[$kode] as $childKode) {
-                    $childAgg = $buildRec($childKode);
-                    // accumulate into parent's agg
-                    $agg = $sumRows($agg, $childAgg);
-                }
-
-                // After processing children, insert a subtotal row for this group that sums children + self.
-                // Make sure subtotal id unique and not colliding with real kode
-                $subtotalId = 'subtotal_' . $kode;
-                $subtotalItem = (object)[
-                    'id' => $subtotalId,
-                    'kode' => '',
-                    'keterangan' => 'Subtotal ' . $kode,
-                    // level: if parent exists and has level, use parent level; else fallback to 0
-                    'level' => (isset($itemsByKode[$kode]) ? ($itemsByKode[$kode]->level ?? 0) : 0),
-                    'is_subtotal' => true
-                ];
-                $enhancedItems[] = $subtotalItem;
-                // store aggregated data under that id so view can read it
-                $data[$subtotalId] = $agg;
-                // return agg to upper caller
-                return $agg;
-            }
-
-            // no children: return own agg
-            return $agg;
-        };
-
-        // Loop through roots in items order
-        foreach ($roots as $rootKode) {
-            $buildRec($rootKode);
-        }
-
-        // After building enhancedItems we might want top-level totals per main code (R, E, F)
-        // Compute totals by scanning enhancedItems aggregations for root groups starting with letter R/E/F
-        $mainTotals = [];
-        foreach ($enhancedItems as $ei) {
-            $key = $ei->kode ?? $ei->id;
-            // only consider root real items (exist in itemsByKode and single-letter kode)
-            if (isset($itemsByKode[$key]) && strlen($key) === 1) {
-                // find aggregated row stored at subtotal key (subtotal_rootKode) if exists; else use data[$key]
-                $agg = $data['subtotal_' . $key] ?? ($data[$key] ?? null);
-                if ($agg) {
-                    $mainTotals[$key] = $agg;
-                } else {
-                    // fallback zero
-                    $mainTotals[$key] = ['month_1'=>0,'month_2'=>0,'month_3'=>0,'month_4'=>0,'month_5'=>0,'month_6'=>0,'month_7'=>0,'month_8'=>0,'month_9'=>0,'month_10'=>0,'month_11'=>0,'month_12'=>0,'total'=>0,'opening'=>0];
-                }
+        $tree = [];
+        foreach ($indexed as $id => $node) {
+            if ($node['parent_id']) {
+                $indexed[$node['parent_id']]['children'][] = &$indexed[$id];
+                $indexed[$node['parent_id']]['is_leaf'] = false;
+            } else {
+                $tree[] = &$indexed[$id];
             }
         }
+        
+        return $tree;
+    }
 
-        // Append grand total rows for R, E, F in the order they appear among roots (if present)
-        foreach ($roots as $rKode) {
-            if (in_array($rKode, ['R','E','F']) && isset($mainTotals[$rKode])) {
-                $totalItem = (object)[
-                    'id' => 'total_' . $rKode,
-                    'kode' => '',
-                    'keterangan' => ($rKode === 'R' ? 'TOTAL PEMASUKAN' : ($rKode === 'E' ? 'TOTAL PENGELUARAN' : ($rKode === 'F' ? 'TOTAL INVESTASI & PENDANAAN' : 'TOTAL ' . $rKode))),
-                    'level' => 0,
-                    'is_total' => true
-                ];
-                $enhancedItems[] = $totalItem;
-                $data[$totalItem->id] = $mainTotals[$rKode];
-            }
-        }
-
-        // SURPLUS/DEFICIT operational (R - E)
-        if (isset($mainTotals['R']) && isset($mainTotals['E'])) {
-            $surplusData = [];
-            for ($m = 1; $m <= 12; $m++) {
-                $surplusData["month_$m"] = ($mainTotals['R']["month_$m"] ?? 0) - ($mainTotals['E']["month_$m"] ?? 0);
-            }
-            $surplusData['total'] = ($mainTotals['R']['total'] ?? 0) - ($mainTotals['E']['total'] ?? 0);
-            $surplusData['opening'] = ($mainTotals['R']['opening'] ?? 0) - ($mainTotals['E']['opening'] ?? 0);
-
-            $surplusItem = (object)[
-                'id' => 'surplus_operational',
-                'kode' => '',
-                'keterangan' => 'SURPLUS / DEFISIT USAHA',
-                'level' => 0,
-                'is_surplus' => true
-            ];
-            $enhancedItems[] = $surplusItem;
-            $data[$surplusItem->id] = $surplusData;
-
-            // If F exists, final surplus = operational + F
-            if (isset($mainTotals['F'])) {
-                $finalSurplus = [];
+    private function calculateTotals(&$nodes, &$data)
+    {
+        foreach ($nodes as &$node) {
+            if ($node['is_leaf']) continue;
+            
+            $data[$node['id']] = array_fill_keys(array_merge(['total'], array_map(fn($m) => "month_$m", range(1, 12))), 0);
+            
+            $this->calculateTotals($node['children'], $data);
+            
+            foreach ($node['children'] as $child) {
+                $data[$node['id']]['total'] += $data[$child['id']]['total'];
                 for ($m = 1; $m <= 12; $m++) {
-                    $finalSurplus["month_$m"] = $surplusData["month_$m"] + ($mainTotals['F']["month_$m"] ?? 0);
+                    $data[$node['id']]["month_$m"] += $data[$child['id']]["month_$m"];
                 }
-                $finalSurplus['total'] = $surplusData['total'] + ($mainTotals['F']['total'] ?? 0);
-                $finalSurplus['opening'] = $surplusData['opening'] + ($mainTotals['F']['opening'] ?? 0);
+            }
+        }
+    }
 
-                $finalItem = (object)[
-                    'id' => 'surplus_final',
-                    'kode' => '',
-                    'keterangan' => 'SURPLUS / DEFISIT BERSIH',
-                    'level' => 0,
-                    'is_surplus' => true
+    private function calculateSurplusDeficit($nodes, $data)
+    {
+        $surplusDeficit = array_fill_keys(array_merge(['total'], array_map(fn($m) => "month_$m", range(1, 12))), 0);
+        $pemasukan = $pengeluaran = array_fill_keys(array_map(fn($m) => "month_$m", range(1, 12)), 0);
+        
+        foreach ($nodes as $node) {
+            if ($node['parent_id'] !== null || !in_array($node['code'], ['R', 'E'])) continue;
+            
+            for ($m = 1; $m <= 12; $m++) {
+                $value = $data[$node['id']]["month_$m"] ?? 0;
+                if ($node['code'] === 'R') {
+                    $pemasukan["month_$m"] += $value;
+                } else {
+                    $pengeluaran["month_$m"] += $value;
+                }
+            }
+        }
+        
+        for ($m = 1; $m <= 12; $m++) {
+            $surplusDeficit["month_$m"] = $pemasukan["month_$m"] - $pengeluaran["month_$m"];
+            $surplusDeficit['total'] += $surplusDeficit["month_$m"];
+        }
+        
+        return $surplusDeficit;
+    }
+
+    private function calculateNetSurplusDeficit($nodes, $data, $surplusDeficit)
+    {
+        $netSurplusDeficit = array_fill_keys(array_merge(['total'], array_map(fn($m) => "month_$m", range(1, 12))), 0);
+        
+        // Find INVESTASI DAN PENDANAAN (F) total
+        $investmentFinancingTotal = array_fill_keys(array_map(fn($m) => "month_$m", range(1, 12)), 0);
+        
+        foreach ($nodes as $node) {
+            if ($node['code'] === 'F' && $node['parent_id'] === null) {
+                for ($m = 1; $m <= 12; $m++) {
+                    $investmentFinancingTotal["month_$m"] = $data[$node['id']]["month_$m"] ?? 0;
+                }
+                break;
+            }
+        }
+        
+        // Calculate net surplus/deficit = surplus/deficit + investment & financing
+        for ($m = 1; $m <= 12; $m++) {
+            $netSurplusDeficit["month_$m"] = $surplusDeficit["month_$m"] + $investmentFinancingTotal["month_$m"];
+            $netSurplusDeficit['total'] += $netSurplusDeficit["month_$m"];
+        }
+        
+        return $netSurplusDeficit;
+    }
+
+    private function flattenTreeWithSummaries($nodes, $depth = 0)
+    {
+        $result = [];
+        foreach ($nodes as $node) {
+            // Add header for non-leaf nodes
+            if (!$node['is_leaf']) {
+                $result[] = [
+                    'id' => $node['id'],
+                    'code' => $node['code'],
+                    'name' => $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
+                    'depth' => $depth,
+                    'is_leaf' => false,
+                    'is_header' => true
                 ];
-                $enhancedItems[] = $finalItem;
-                $data[$finalItem->id] = $finalSurplus;
+            }
+            
+            // Add children
+            if (!empty($node['children'])) {
+                $result = array_merge($result, $this->flattenTreeWithSummaries($node['children'], $depth + 1));
+            }
+            
+            // Add leaf nodes or summary for non-leaf
+            if ($node['is_leaf']) {
+                $result[] = [
+                    'id' => $node['id'],
+                    'code' => $node['code'],
+                    'name' => $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
+                    'depth' => $depth,
+                    'is_leaf' => true,
+                    'is_header' => false
+                ];
+            } else {
+                // Add summary row for non-leaf nodes
+                $result[] = [
+                    'id' => $node['id'],
+                    'code' => $node['code'],
+                    'name' => 'TOTAL ' . $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
+                    'depth' => $depth,
+                    'is_leaf' => false,
+                    'is_header' => false,
+                    'is_summary' => true
+                ];
+                
+                // Add surplus/deficit after total expenses
+                if ($node['code'] === 'E' && $node['parent_id'] === null) {
+                    $result[] = [
+                        'id' => 'surplus_deficit',
+                        'code' => 'S/D',
+                        'name' => 'SURPLUS/(DEFISIT) USAHA',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_surplus_deficit' => true
+                    ];
+                }
+                
+                // Add net surplus/deficit after total investment & financing
+                if ($node['code'] === 'F' && $node['parent_id'] === null) {
+                    $result[] = [
+                        'id' => 'net_surplus_deficit',
+                        'code' => 'S/D NET',
+                        'name' => 'SURPLUS/(DEFISIT) BERSIH',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_net_surplus_deficit' => true
+                    ];
+                    
+                    // Add cash & bank opening balance row
+                    $result[] = [
+                        'id' => 'cash_bank_opening',
+                        'code' => 'AWAL',
+                        'name' => 'SALDO AWAL KAS & BANK',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_cash_bank_opening' => true
+                    ];
+                    
+                    // Add cash & bank closing balance row
+                    $result[] = [
+                        'id' => 'cash_bank_closing',
+                        'code' => 'AKHIR',
+                        'name' => 'SALDO AKHIR KAS & BANK',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_cash_bank_closing' => true
+                    ];
+                    
+                    // Add detailed cash & bank breakdown
+                    $result = array_merge($result, $this->getCashBankDetailRows());
+                }
+            }
+        }
+        return $result;
+    }
+
+    private function calculateCashBankBalance($year, $netSurplusDeficit)
+    {
+        $previousYear = $year - 1;
+        $startBaseYear = 2025;
+        
+        // Get cash & bank trial balance accounts for opening balance
+        $cashBankAccounts = DB::table('trial_balances as tb')
+            ->leftJoin('trial_balances as parent', 'tb.parent_id', '=', 'parent.id')
+            ->where(function($query) {
+                $query->where('tb.is_kas_bank', true)
+                      ->orWhere('parent.is_kas_bank', true);
+            })
+            ->select('tb.id', 'tb.tahun_2024')
+            ->get();
+
+        // Calculate opening balance (Trial Balance logic for opening only)
+        $totalOpening = 0;
+        if ($previousYear >= $startBaseYear) {
+            $debitPrev = DB::table('journals')
+                ->select(
+                    DB::raw("debit_account_id AS account_id"),
+                    DB::raw("SUM(total_debit) AS debit_amount"),
+                    DB::raw("0 AS credit_amount")
+                )
+                ->whereYear('date', '>=', $startBaseYear)
+                ->whereYear('date', '<=', $previousYear)
+                ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+                ->groupBy('account_id');
+
+            $creditPrev = DB::table('journals')
+                ->select(
+                    DB::raw("credit_account_id AS account_id"),
+                    DB::raw("0 AS debit_amount"),
+                    DB::raw("SUM(total_credit) AS credit_amount")
+                )
+                ->whereYear('date', '>=', $startBaseYear)
+                ->whereYear('date', '<=', $previousYear)
+                ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+                ->groupBy('account_id');
+
+            $prevQuery = $debitPrev->unionAll($creditPrev)->get()->groupBy('account_id');
+            
+            foreach ($cashBankAccounts as $account) {
+                $rows = $prevQuery[$account->id] ?? collect();
+                $debit = $rows->sum('debit_amount');
+                $credit = $rows->sum('credit_amount');
+                $totalOpening += ($account->tahun_2024 ?? 0) + ($debit - $credit);
+            }
+        } else {
+            $totalOpening = $cashBankAccounts->sum('tahun_2024');
+        }
+        
+        // Use cashflow-based calculation for running balances
+        $openingData = ['opening' => $totalOpening];
+        $closingData = ['opening' => $totalOpening];
+        $runningBalance = $totalOpening;
+        
+        for ($m = 1; $m <= 12; $m++) {
+            // Opening balance for this month is previous month's closing
+            $openingData["month_$m"] = $runningBalance;
+            
+            // Add this month's net surplus/deficit (cashflow-based)
+            $runningBalance += $netSurplusDeficit["month_$m"] ?? 0;
+            
+            // Closing balance for this month
+            $closingData["month_$m"] = $runningBalance;
+        }
+        
+        $openingData['total'] = $totalOpening;
+        $closingData['total'] = $runningBalance;
+        
+        return [
+            'opening' => $openingData,
+            'closing' => $closingData
+        ];
+    }
+
+    private function calculateCashBankDetails($year)
+    {
+        $previousYear = $year - 1;
+        $startBaseYear = 2025;
+        
+        // Get cash & bank trial balance accounts
+        $cashBankAccounts = DB::table('trial_balances as tb')
+            ->leftJoin('trial_balances as parent', 'tb.parent_id', '=', 'parent.id')
+            ->where(function($query) {
+                $query->where('tb.is_kas_bank', true)
+                      ->orWhere('parent.is_kas_bank', true);
+            })
+            ->select('tb.id', 'tb.kode', 'tb.keterangan', 'tb.tahun_2024')
+            ->get();
+
+        // Calculate opening balance (same logic as Trial Balance Report)
+        $openingBalance = [];
+        if ($previousYear >= $startBaseYear) {
+            // Get previous year mutations
+            $debitPrev = DB::table('journals')
+                ->select(
+                    DB::raw("debit_account_id AS account_id"),
+                    DB::raw("SUM(total_debit) AS debit_amount"),
+                    DB::raw("0 AS credit_amount")
+                )
+                ->whereYear('date', '>=', $startBaseYear)
+                ->whereYear('date', '<=', $previousYear)
+                ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+                ->groupBy('account_id');
+
+            $creditPrev = DB::table('journals')
+                ->select(
+                    DB::raw("credit_account_id AS account_id"),
+                    DB::raw("0 AS debit_amount"),
+                    DB::raw("SUM(total_credit) AS credit_amount")
+                )
+                ->whereYear('date', '>=', $startBaseYear)
+                ->whereYear('date', '<=', $previousYear)
+                ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+                ->groupBy('account_id');
+
+            $prevQuery = $debitPrev->unionAll($creditPrev)->get()->groupBy('account_id');
+            
+            foreach ($cashBankAccounts as $account) {
+                $rows = $prevQuery[$account->id] ?? collect();
+                $debit = $rows->sum('debit_amount');
+                $credit = $rows->sum('credit_amount');
+                $openingBalance[$account->id] = ($account->tahun_2024 ?? 0) + ($debit - $credit);
+            }
+        } else {
+            foreach ($cashBankAccounts as $account) {
+                $openingBalance[$account->id] = $account->tahun_2024 ?? 0;
             }
         }
 
-        // Note: $enhancedItems elements may be Eloquent models (original rows) or stdClass objects for subtotal/total.
-        // The Blade expects $data indexed by item->id or custom id strings; we filled both forms.
-        return view('cashflow_report.index', compact('enhancedItems', 'data', 'year'));
+        // Get current year monthly mutations (same logic as Trial Balance Report)
+        $debits = DB::table('journals')
+            ->select(
+                DB::raw("debit_account_id AS account_id"),
+                DB::raw("MONTH(date) AS month"),
+                DB::raw("SUM(total_debit) AS debit_amount"),
+                DB::raw("0 AS credit_amount")
+            )
+            ->whereYear('date', $year)
+            ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+            ->groupBy('account_id', 'month');
+
+        $credits = DB::table('journals')
+            ->select(
+                DB::raw("credit_account_id AS account_id"),
+                DB::raw("MONTH(date) AS month"),
+                DB::raw("0 AS debit_amount"),
+                DB::raw("SUM(total_credit) AS credit_amount")
+            )
+            ->whereYear('date', $year)
+            ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+            ->groupBy('account_id', 'month');
+
+        $journalMonthly = $debits->unionAll($credits)->get()->groupBy('account_id');
+
+        // Calculate running balances (same logic as Trial Balance Report)
+        $details = [];
+        foreach ($cashBankAccounts as $account) {
+            $saldo = $openingBalance[$account->id] ?? 0;
+            $monthlyData = ['opening' => $saldo];
+            
+            for ($m = 1; $m <= 12; $m++) {
+                $trx = $journalMonthly[$account->id] ?? collect();
+                $debit = $trx->where('month', $m)->sum('debit_amount');
+                $credit = $trx->where('month', $m)->sum('credit_amount');
+                
+                $saldo = $saldo + $debit - $credit;
+                $monthlyData["month_$m"] = $saldo;
+            }
+            
+            $monthlyData['total'] = $saldo;
+            $details[$account->id] = $monthlyData;
+        }
+        
+        return $details;
+    }
+
+    private function getCashBankDetailRows()
+    {
+        $cashBankAccounts = DB::table('trial_balances as tb')
+            ->leftJoin('trial_balances as parent', 'tb.parent_id', '=', 'parent.id')
+            ->where('tb.level', 4)
+            ->where(function($query) {
+                $query->where('tb.is_kas_bank', true)
+                      ->orWhere('parent.is_kas_bank', true);
+            })
+            ->select('tb.id', 'tb.kode', 'tb.keterangan')
+            ->orderBy('tb.sort_order')
+            ->get();
+
+        $result = [];
+        
+        foreach ($cashBankAccounts as $account) {
+            $result[] = [
+                'id' => 'tb_' . $account->id,
+                'code' => $account->kode,
+                'name' => $account->keterangan,
+                'trial_balance_code' => $account->kode,
+                'trial_balance_name' => $account->keterangan,
+                'depth' => 1,
+                'is_leaf' => true,
+                'is_header' => false,
+                'is_cash_bank_detail' => true
+            ];
+        }
+        
+        // Add total detail row
+        $result[] = [
+            'id' => 'cash_bank_detail_total',
+            'code' => 'TOTAL',
+            'name' => 'TOTAL RINCIAN KAS & BANK',
+            'trial_balance_code' => '',
+            'trial_balance_name' => '',
+            'depth' => 0,
+            'is_leaf' => false,
+            'is_header' => false,
+            'is_summary' => true,
+            'is_cash_bank_detail_total' => true
+        ];
+        
+        return $result;
+    }
+
+    private function calculateCashBankDetailTotal($cashBankDetails)
+    {
+        $total = array_fill_keys(array_merge(['opening', 'total'], array_map(fn($m) => "month_$m", range(1, 12))), 0);
+        
+        foreach ($cashBankDetails as $detail) {
+            $total['opening'] += $detail['opening'];
+            $total['total'] += $detail['total'];
+            
+            for ($m = 1; $m <= 12; $m++) {
+                $total["month_$m"] += $detail["month_$m"];
+            }
+        }
+        
+        return $total;
     }
 }

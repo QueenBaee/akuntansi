@@ -35,6 +35,50 @@
     body {
         overflow-x: hidden;
     }
+    
+    /* Searchable Select Styles */
+    .searchable-select {
+        position: static;
+        display: inline-block;
+        width: 100%;
+    }
+    
+    .searchable-select input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    .searchable-select .dropdown-list {
+        position: fixed;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 9999;
+        display: none;
+        min-width: 200px;
+    }
+    
+    .searchable-select .dropdown-item {
+        padding: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .searchable-select .dropdown-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .searchable-select .dropdown-item.selected {
+        background-color: #007bff;
+        color: white;
+    }
 </style>
 
     <!-- Alert Messages -->
@@ -194,7 +238,7 @@
                 let lineIndex = 0;
                 let openingBalance = {{ $openingBalance }};
                 let selectedCashAccountId = {{ $selectedAccount ? $selectedAccount->id : 'null' }};
-                let selectedAccountName = {!! json_encode($selectedAccount ? $selectedAccount->keterangan : '') !!};
+                let selectedAccountName = {!! json_encode($selectedAccount ? $selectedAccount->kode . ' - ' . $selectedAccount->keterangan : '') !!};
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 
@@ -220,6 +264,26 @@
                         }@if(!$loop->last),@endif
                     @endforeach
                 };
+                
+                // Build account data array
+                const accountData = [
+                    @foreach ($accounts as $account)
+                        {
+                            id: '{{ $account->id }}',
+                            text: '{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}'
+                        }@if(!$loop->last),@endif
+                    @endforeach
+                ];
+                
+                // Build cashflow data array
+                const cashflowDataArray = [
+                    @foreach ($cashflows as $cashflow)
+                        {
+                            id: '{{ $cashflow->id }}',
+                            text: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode . ' - ' . $cashflow->keterangan) }}'
+                        }@if(!$loop->last),@endif
+                    @endforeach
+                ];
 
                 function showAlert(type, message) {
                     const container = document.getElementById('alert-container');
@@ -290,26 +354,35 @@
                             '<span class="balance-display" style="font-size: 12px; font-weight: bold;">' + formatter.format(currentBalance) + '</span>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                            '<select name="entries[' + currentIndex + '][cashflow_id]" class="form-control form-control-sm cashflow-select" style="border: none; font-size: 12px;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">' +
-                                cashflowOptions +
-                            '</select>' +
-                            '<input type="hidden" class="cashflow-desc">' +
+                            '<div class="searchable-select">' +
+                                '<input type="text" class="form-control form-control-sm cashflow-input" placeholder="Pilih Kode & Akun CF" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
+                                '<input type="hidden" name="entries[' + currentIndex + '][cashflow_id]" class="cashflow-select">' +
+                                '<div class="dropdown-list cashflow-dropdown"></div>' +
+                            '</div>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                            '<select name="entries[' + currentIndex + '][debit_account_id]" class="form-control form-control-sm debit-account" style="border: none; font-size: 12px;">' +
-                                accountOptions +
-                            '</select>' +
+                            '<div class="searchable-select">' +
+                                '<input type="text" class="form-control form-control-sm debit-input" placeholder="Pilih Akun Debit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
+                                '<input type="hidden" name="entries[' + currentIndex + '][debit_account_id]" class="debit-account">' +
+                                '<div class="dropdown-list debit-dropdown"></div>' +
+                            '</div>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
-                            '<select name="entries[' + currentIndex + '][credit_account_id]" class="form-control form-control-sm credit-account" style="border: none; font-size: 12px;">' +
-                                accountOptions +
-                            '</select>' +
+                            '<div class="searchable-select">' +
+                                '<input type="text" class="form-control form-control-sm credit-input" placeholder="Pilih Akun Kredit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
+                                '<input type="hidden" name="entries[' + currentIndex + '][credit_account_id]" class="credit-account">' +
+                                '<div class="dropdown-list credit-dropdown"></div>' +
+                            '</div>' +
                         '</td>' +
                         '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">' +
                             '-' +
                         '</td>';
                     
                     tbody.appendChild(row);
+                    
+                    // Initialize dropdowns for the new row
+                    initializeDropdowns(row);
+                    
                     lineIndex++;
                 }
 
@@ -317,69 +390,53 @@
                     const row = input.closest('tr');
                     const cashInInput = row.querySelector('.cash-in');
                     const cashOutInput = row.querySelector('.cash-out');
-                    const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
-                    const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
-                    const cashflowSelect = row.querySelector('.cashflow-select');
+                    const debitInput = row.querySelector('.debit-input');
+                    const creditInput = row.querySelector('.credit-input');
+                    const debitHidden = row.querySelector('.debit-account');
+                    const creditHidden = row.querySelector('.credit-account');
+                    const cashflowHidden = row.querySelector('.cashflow-select');
 
                     if (input.value && parseFloat(input.value) > 0) {
                         if (type === 'in') {
                             cashOutInput.value = '';
-                            debitSelect.value = selectedCashAccountId;
-                            debitSelect.disabled = true;
-                            debitSelect.style.backgroundColor = '#e9ecef';
-                            let hiddenDebit = row.querySelector('.hidden-debit');
-                            if (!hiddenDebit) {
-                                hiddenDebit = document.createElement('input');
-                                hiddenDebit.type = 'hidden';
-                                hiddenDebit.className = 'hidden-debit';
-                                hiddenDebit.name = debitSelect.name;
-                                row.appendChild(hiddenDebit);
-                            }
-                            hiddenDebit.value = selectedCashAccountId;
-                            creditSelect.disabled = false;
-                            creditSelect.style.backgroundColor = '';
-                            const hiddenCredit = row.querySelector('.hidden-credit');
-                            if (hiddenCredit) hiddenCredit.remove();
+                            // Set debit to cash account
+                            setDropdownValue(row, 'debit', selectedCashAccountId, selectedAccountName);
+                            debitInput.style.backgroundColor = '#e9ecef';
+                            debitInput.disabled = true;
+                            creditInput.disabled = false;
+                            creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
-                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
                             }
                         } else {
                             cashInInput.value = '';
-                            creditSelect.value = selectedCashAccountId;
-                            creditSelect.disabled = true;
-                            creditSelect.style.backgroundColor = '#e9ecef';
-                            let hiddenCredit = row.querySelector('.hidden-credit');
-                            if (!hiddenCredit) {
-                                hiddenCredit = document.createElement('input');
-                                hiddenCredit.type = 'hidden';
-                                hiddenCredit.className = 'hidden-credit';
-                                hiddenCredit.name = creditSelect.name;
-                                row.appendChild(hiddenCredit);
-                            }
-                            hiddenCredit.value = selectedCashAccountId;
-                            debitSelect.disabled = false;
-                            debitSelect.style.backgroundColor = '';
-                            const hiddenDebit = row.querySelector('.hidden-debit');
-                            if (hiddenDebit) hiddenDebit.remove();
+                            // Set credit to cash account
+                            setDropdownValue(row, 'credit', selectedCashAccountId, selectedAccountName);
+                            creditInput.style.backgroundColor = '#e9ecef';
+                            creditInput.disabled = true;
+                            debitInput.disabled = false;
+                            debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
-                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
                             }
                         }
                     } else {
-                        debitSelect.disabled = false;
-                        creditSelect.disabled = false;
-                        debitSelect.style.backgroundColor = '';
-                        creditSelect.style.backgroundColor = '';
-                        debitSelect.value = '';
-                        creditSelect.value = '';
-                        const hiddenDebit = row.querySelector('.hidden-debit');
-                        const hiddenCredit = row.querySelector('.hidden-credit');
-                        if (hiddenDebit) hiddenDebit.remove();
-                        if (hiddenCredit) hiddenCredit.remove();
+                        debitInput.disabled = false;
+                        creditInput.disabled = false;
+                        debitInput.style.backgroundColor = '';
+                        creditInput.style.backgroundColor = '';
+                        clearDropdownValue(row, 'debit');
+                        clearDropdownValue(row, 'credit');
                     }
                 }
 
@@ -524,6 +581,146 @@
                     });
                 }
 
+                // Searchable dropdown functions
+                function initializeDropdowns(row) {
+                    const cashflowDropdown = row.querySelector('.cashflow-dropdown');
+                    const debitDropdown = row.querySelector('.debit-dropdown');
+                    const creditDropdown = row.querySelector('.credit-dropdown');
+                    
+                    // Populate cashflow dropdown
+                    cashflowDropdown.innerHTML = cashflowDataArray.map(item => 
+                        `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                    ).join('');
+                    
+                    // Populate account dropdowns
+                    const accountItems = accountData.map(item => 
+                        `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                    ).join('');
+                    
+                    debitDropdown.innerHTML = accountItems;
+                    creditDropdown.innerHTML = accountItems;
+                    
+                    // Add click handlers
+                    cashflowDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            selectDropdownItem(row, 'cashflow', e.target.dataset.value, e.target.textContent);
+                            updateTrialBalanceFromCashflow(row);
+                        }
+                    });
+                    
+                    debitDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            selectDropdownItem(row, 'debit', e.target.dataset.value, e.target.textContent);
+                        }
+                    });
+                    
+                    creditDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            selectDropdownItem(row, 'credit', e.target.dataset.value, e.target.textContent);
+                        }
+                    });
+                }
+                
+                function toggleDropdown(input) {
+                    const dropdown = input.nextElementSibling.nextElementSibling;
+                    const isVisible = dropdown.style.display === 'block';
+                    
+                    // Hide all other dropdowns
+                    document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
+                    
+                    if (!isVisible) {
+                        // Position dropdown relative to input
+                        const rect = input.getBoundingClientRect();
+                        dropdown.style.left = rect.left + 'px';
+                        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                        dropdown.style.width = Math.max(rect.width, 200) + 'px';
+                        
+                        // Make input editable for search
+                        input.readOnly = false;
+                        input.focus();
+                        input.select();
+                        
+                        // Show dropdown
+                        dropdown.style.display = 'block';
+                        
+                        // Add search functionality
+                        const originalValue = input.value;
+                        input.addEventListener('input', function searchHandler(e) {
+                            const searchTerm = e.target.value.toLowerCase();
+                            const items = dropdown.querySelectorAll('.dropdown-item');
+                            
+                            items.forEach(item => {
+                                const text = item.textContent.toLowerCase();
+                                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                            });
+                        });
+                        
+                        // Handle blur to restore readonly and original value if no selection
+                        input.addEventListener('blur', function blurHandler(e) {
+                            setTimeout(() => {
+                                if (!dropdown.contains(document.activeElement)) {
+                                    input.readOnly = true;
+                                    dropdown.style.display = 'none';
+                                    
+                                    // Restore original value if no valid selection
+                                    const hidden = input.nextElementSibling;
+                                    if (!hidden.value) {
+                                        input.value = originalValue;
+                                    }
+                                    
+                                    // Remove event listeners
+                                    input.removeEventListener('input', searchHandler);
+                                    input.removeEventListener('blur', blurHandler);
+                                }
+                            }, 150);
+                        });
+                    }
+                }
+                
+                function selectDropdownItem(row, type, value, text) {
+                    const input = row.querySelector(`.${type}-input`);
+                    const hidden = row.querySelector(`.${type}-account, .${type}-select`);
+                    const dropdown = row.querySelector(`.${type}-dropdown`);
+                    
+                    input.value = text;
+                    input.readOnly = true;
+                    hidden.value = value;
+                    dropdown.style.display = 'none';
+                    
+                    // Show all items again for next search
+                    dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                        item.style.display = 'block';
+                    });
+                }
+                
+                function setDropdownValue(row, type, value, text) {
+                    const input = row.querySelector(`.${type}-input`);
+                    const hidden = row.querySelector(`.${type}-account`);
+                    
+                    if (input && hidden) {
+                        input.value = text;
+                        hidden.value = value;
+                    }
+                }
+                
+                function clearDropdownValue(row, type) {
+                    const input = row.querySelector(`.${type}-input`);
+                    const hidden = row.querySelector(`.${type}-account`);
+                    
+                    if (input && hidden) {
+                        input.value = '';
+                        hidden.value = '';
+                    }
+                }
+                
+                function findAccountById(id) {
+                    return accountData.find(account => account.id == id);
+                }
+                
+                function findCashflowById(id) {
+                    return cashflowDataArray.find(cashflow => cashflow.id == id);
+                }
+                
                 function updateCashflowDescription(selectElement) {
                     const row = selectElement.closest('tr');
                     const selectedId = selectElement.value;
@@ -554,14 +751,21 @@
                     }
                 }
 
-                function updateTrialBalanceFromCashflow(selectElement) {
-                    const row = selectElement.closest('tr');
-                    const selectedId = selectElement.value;
+                function updateTrialBalanceFromCashflow(row) {
+                    const cashflowHidden = row.querySelector('.cashflow-select');
+                    const selectedId = cashflowHidden.value;
                     
                     if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
                         setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
                     }
                 }
+                
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.searchable-select')) {
+                        document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
+                    }
+                });
 
                 function editTransaction(button, journalId) {
                     const row = button.closest('tr');
@@ -606,38 +810,46 @@
                     cells[4].innerHTML = `<input type="text" class="form-control form-control-sm edit-proof" value="${proofNumber}" style="font-size: 12px; border: none;">`;
                     cells[5].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-in cash-in" value="${cashIn}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'in')">`;
                     cells[6].innerHTML = `<input type="number" class="form-control form-control-sm edit-cash-out cash-out" value="${cashOut}" style="font-size: 12px; text-align: right; border: none;" min="0" oninput="handleEditCashInput(this, 'out')">`;
-                    cells[8].innerHTML = `<select class="form-control form-control-sm edit-cashflow cashflow-select" style="font-size: 12px; border: none;" onchange="updateCashflowDescription(this); updateTrialBalanceFromCashflow(this)">${cashflowOptions}</select>`;
-                    cells[9].innerHTML = `<select class="form-control form-control-sm edit-debit debit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
-                    cells[10].innerHTML = `<select class="form-control form-control-sm edit-credit credit-account" style="font-size: 12px; border: none;">${accountOptions}</select>`;
+                    cells[8].innerHTML = `
+                        <div class="searchable-select">
+                            <input type="text" class="form-control form-control-sm edit-cashflow-input" placeholder="Pilih Kode & Akun CF" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">
+                            <input type="hidden" class="edit-cashflow cashflow-select">
+                            <div class="dropdown-list edit-cashflow-dropdown"></div>
+                        </div>`;
+                    cells[9].innerHTML = `
+                        <div class="searchable-select">
+                            <input type="text" class="form-control form-control-sm edit-debit-input" placeholder="Pilih Akun Debit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">
+                            <input type="hidden" class="edit-debit debit-account">
+                            <div class="dropdown-list edit-debit-dropdown"></div>
+                        </div>`;
+                    cells[10].innerHTML = `
+                        <div class="searchable-select">
+                            <input type="text" class="form-control form-control-sm edit-credit-input" placeholder="Pilih Akun Kredit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">
+                            <input type="hidden" class="edit-credit credit-account">
+                            <div class="dropdown-list edit-credit-dropdown"></div>
+                        </div>`;
+                    
+                    // Initialize edit dropdowns
+                    initializeEditDropdowns(row);
                     
                     // Set current selections
                     setTimeout(() => {
-                        // Set cashflow selection by code (now combined with description)
-                        const cashflowSelect = row.querySelector('.edit-cashflow');
-                        const combinedCashflowText = cells[8].textContent.trim();
-                        for (let option of cashflowSelect.options) {
-                            if (option.text === combinedCashflowText) {
-                                cashflowSelect.value = option.value;
-                                break;
-                            }
+                        // Set cashflow selection by text
+                        const combinedCashflowText = cashflowCode;
+                        const cashflowItem = cashflowDataArray.find(item => item.text === combinedCashflowText);
+                        if (cashflowItem) {
+                            setEditDropdownValue(row, 'cashflow', cashflowItem.id, cashflowItem.text);
                         }
                         
                         // Set account selections by text
-                        const debitSelect = row.querySelector('.edit-debit');
-                        const creditSelect = row.querySelector('.edit-credit');
-                        
-                        for (let option of debitSelect.options) {
-                            if (option.text === debitAccount) {
-                                debitSelect.value = option.value;
-                                break;
-                            }
+                        const debitItem = accountData.find(item => item.text === debitAccount);
+                        if (debitItem) {
+                            setEditDropdownValue(row, 'debit', debitItem.id, debitItem.text);
                         }
                         
-                        for (let option of creditSelect.options) {
-                            if (option.text === creditAccount) {
-                                creditSelect.value = option.value;
-                                break;
-                            }
+                        const creditItem = accountData.find(item => item.text === creditAccount);
+                        if (creditItem) {
+                            setEditDropdownValue(row, 'credit', creditItem.id, creditItem.text);
                         }
                     }, 10);
                     
@@ -691,47 +903,109 @@
                     });
                 }
 
+                function initializeEditDropdowns(row) {
+                    const cashflowDropdown = row.querySelector('.edit-cashflow-dropdown');
+                    const debitDropdown = row.querySelector('.edit-debit-dropdown');
+                    const creditDropdown = row.querySelector('.edit-credit-dropdown');
+                    
+                    // Populate dropdowns
+                    cashflowDropdown.innerHTML = cashflowDataArray.map(item => 
+                        `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                    ).join('');
+                    
+                    const accountItems = accountData.map(item => 
+                        `<div class="dropdown-item" data-value="${item.id}">${item.text}</div>`
+                    ).join('');
+                    
+                    debitDropdown.innerHTML = accountItems;
+                    creditDropdown.innerHTML = accountItems;
+                    
+                    // Add click handlers
+                    cashflowDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            setEditDropdownValue(row, 'cashflow', e.target.dataset.value, e.target.textContent);
+                        }
+                    });
+                    
+                    debitDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            setEditDropdownValue(row, 'debit', e.target.dataset.value, e.target.textContent);
+                        }
+                    });
+                    
+                    creditDropdown.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('dropdown-item')) {
+                            setEditDropdownValue(row, 'credit', e.target.dataset.value, e.target.textContent);
+                        }
+                    });
+                }
+                
+                function setEditDropdownValue(row, type, value, text) {
+                    const input = row.querySelector(`.edit-${type}-input`);
+                    const hidden = row.querySelector(`.edit-${type}`);
+                    const dropdown = row.querySelector(`.edit-${type}-dropdown`);
+                    
+                    if (input && hidden) {
+                        input.value = text;
+                        input.readOnly = true;
+                        hidden.value = value;
+                        if (dropdown) {
+                            dropdown.style.display = 'none';
+                            // Show all items again for next search
+                            dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                                item.style.display = 'block';
+                            });
+                        }
+                    }
+                }
+                
                 function handleEditCashInput(input, type) {
                     const row = input.closest('tr');
                     const cashInInput = row.querySelector('.edit-cash-in');
                     const cashOutInput = row.querySelector('.edit-cash-out');
-                    const debitSelect = row.querySelector('.edit-debit');
-                    const creditSelect = row.querySelector('.edit-credit');
-                    const cashflowSelect = row.querySelector('.edit-cashflow');
+                    const debitInput = row.querySelector('.edit-debit-input');
+                    const creditInput = row.querySelector('.edit-credit-input');
+                    const cashflowHidden = row.querySelector('.edit-cashflow');
 
                     if (input.value && parseFloat(input.value) > 0) {
                         if (type === 'in') {
                             cashOutInput.value = '';
-                            debitSelect.value = selectedCashAccountId;
-                            debitSelect.disabled = true;
-                            debitSelect.style.backgroundColor = '#e9ecef';
-                            creditSelect.disabled = false;
-                            creditSelect.style.backgroundColor = '';
+                            setEditDropdownValue(row, 'debit', selectedCashAccountId, selectedAccountName);
+                            debitInput.disabled = true;
+                            debitInput.style.backgroundColor = '#e9ecef';
+                            creditInput.disabled = false;
+                            creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
-                                creditSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setEditDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
                             }
                         } else {
                             cashInInput.value = '';
-                            creditSelect.value = selectedCashAccountId;
-                            creditSelect.disabled = true;
-                            creditSelect.style.backgroundColor = '#e9ecef';
-                            debitSelect.disabled = false;
-                            debitSelect.style.backgroundColor = '';
+                            setEditDropdownValue(row, 'credit', selectedCashAccountId, selectedAccountName);
+                            creditInput.disabled = true;
+                            creditInput.style.backgroundColor = '#e9ecef';
+                            debitInput.disabled = false;
+                            debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowSelect.value && cashflowData[cashflowSelect.value] && cashflowData[cashflowSelect.value].trial_balance_id) {
-                                debitSelect.value = cashflowData[cashflowSelect.value].trial_balance_id;
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setEditDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
                             }
                         }
                     } else {
-                        debitSelect.disabled = false;
-                        creditSelect.disabled = false;
-                        debitSelect.style.backgroundColor = '';
-                        creditSelect.style.backgroundColor = '';
-                        debitSelect.value = '';
-                        creditSelect.value = '';
+                        debitInput.disabled = false;
+                        creditInput.disabled = false;
+                        debitInput.style.backgroundColor = '';
+                        creditInput.style.backgroundColor = '';
+                        setEditDropdownValue(row, 'debit', '', '');
+                        setEditDropdownValue(row, 'credit', '', '');
                     }
                 }
 
@@ -869,7 +1143,7 @@
                         const pic = row.querySelector('input[name*="[pic]"]')?.value;
                         const cashIn = row.querySelector('input[name*="[cash_in]"]')?.value;
                         const cashOut = row.querySelector('input[name*="[cash_out]"]')?.value;
-                        const cashflowId = row.querySelector('select[name*="[cashflow_id]"]')?.value;
+                        const cashflowId = row.querySelector('input[name*="[cashflow_id]"]')?.value;
 
                         const hasCashValue = (cashIn && parseFloat(cashIn) > 0) || (cashOut && parseFloat(cashOut) > 0);
                         
