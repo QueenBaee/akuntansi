@@ -19,7 +19,7 @@ class LedgerController extends Controller
             $type = 'bank';
         }
         
-        $query = Ledger::with('trialBalance')->orderBy('nama_ledger');
+        $query = Ledger::with('trialBalance')->orderBy('trial_balance_id');
         
         // Apply access control based on user role
         if (!auth()->user()->hasRole('admin')) {
