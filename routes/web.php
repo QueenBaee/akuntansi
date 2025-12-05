@@ -140,6 +140,7 @@ Route::middleware('auth')->group(function () {
 // API Routes
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
+    Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
 });
 
 // *** Catch-all route HARUS PALING BAWAH ***

@@ -43,15 +43,13 @@
                         <tr>
                             <th>Kode</th>
                             <th>Keterangan</th>
-                            <th>Parent</th>
                             <th>Akun TB</th>
-                            <th>Level</th>
                             <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="cashflow-tbody">
                         <tr id="loading-row">
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="4" class="text-center py-4">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
@@ -94,7 +92,7 @@ function loadCashflowData() {
             console.error('Error loading cashflow data:', error);
             alert('Error loading data: ' + error.message);
             document.getElementById('cashflow-tbody').innerHTML = 
-                '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+                '<tr><td colspan="4" class="text-center text-danger">Error loading data</td></tr>';
         });
 }
 
@@ -120,16 +118,13 @@ function renderCashflowRow(item) {
     }
     html += `<td>${indentation}${item.keterangan}</td>`;
     
-    html += `<td>${item.parent?.keterangan || '-'}</td>`;
-    
     // Trial Balance info for level 3
-    if (item.level == 3 && item.trial_balance) {
+    if (item.level == 3 && item.trial_balance_id && item.trial_balance) {
         html += `<td>${item.trial_balance.kode} - ${item.trial_balance.keterangan}</td>`;
     } else {
         html += '<td>-</td>';
     }
     
-    html += `<td>${item.level}</td>`;
     html += `<td>
         <div class="btn-list flex-nowrap">
             <a href="/cashflow/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
