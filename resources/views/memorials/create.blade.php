@@ -87,11 +87,7 @@
             @csrf
 
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h3 class="card-title">Memorial Entry</h3>
-                    </div>
-                </div>
+
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
