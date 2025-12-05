@@ -148,13 +148,19 @@
                                         echo '</tr>';
                                         
                                         if ($item->children->count() > 0) {
-                                            renderRowsReport($item->children, $data, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
+                                            renderRowsReport($item->children->sortBy('id'), $data, $prefix . '&nbsp;&nbsp;&nbsp;&nbsp;');
                                         }
                                     }
                                 }
                                 
-                                $rootItems = $items->whereNull('parent_id');
+                                $rootItems = $items->whereNull('parent_id')->where('kode', '!=', 'M')->sortBy('id');
                                 renderRowsReport($rootItems, $data);
+                            @endphp
+                            
+                            {{-- Memorial Accounts --}}
+                            @php
+                                $memorialItems = $items->where('kode', 'AM');
+                                renderRowsReport($memorialItems, $data);
                             @endphp
                             
                             {{-- Bagian Pindah Buku --}}
