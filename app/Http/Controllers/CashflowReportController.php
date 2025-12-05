@@ -13,7 +13,8 @@ class CashflowReportController extends Controller
         $year = $request->input('year', date('Y'));
         
         // Filter unique cashflows to avoid duplicates
-        $cashflows = Cashflow::orderBy('id')
+        $cashflows = Cashflow::with('trialBalance')
+            ->orderBy('id')
             ->get()
             ->unique(function($item) {
                 return $item->kode . '-' . ($item->parent_id ?? 'root');
@@ -81,6 +82,8 @@ class CashflowReportController extends Controller
             'code' => $cf->kode,
             'name' => $cf->keterangan,
             'parent_id' => $cf->parent_id,
+            'trial_balance_code' => $cf->trialBalance?->kode ?? '',
+            'trial_balance_name' => $cf->trialBalance?->keterangan ?? '',
             'children' => [],
             'is_leaf' => true
         ])->toArray();
@@ -152,6 +155,8 @@ class CashflowReportController extends Controller
                     'id' => $node['id'],
                     'code' => $node['code'],
                     'name' => $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
                     'depth' => $depth,
                     'is_leaf' => false,
                     'is_header' => true
@@ -169,6 +174,8 @@ class CashflowReportController extends Controller
                     'id' => $node['id'],
                     'code' => $node['code'],
                     'name' => $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
                     'depth' => $depth,
                     'is_leaf' => true,
                     'is_header' => false
@@ -179,6 +186,8 @@ class CashflowReportController extends Controller
                     'id' => $node['id'],
                     'code' => $node['code'],
                     'name' => 'TOTAL ' . $node['name'],
+                    'trial_balance_code' => $node['trial_balance_code'] ?? '',
+                    'trial_balance_name' => $node['trial_balance_name'] ?? '',
                     'depth' => $depth,
                     'is_leaf' => false,
                     'is_header' => false,
@@ -191,6 +200,8 @@ class CashflowReportController extends Controller
                         'id' => 'surplus_deficit',
                         'code' => 'S/D',
                         'name' => 'SURPLUS/(DEFISIT) USAHA',
+                        'trial_balance_code' => '',
+                        'trial_balance_name' => '',
                         'depth' => 0,
                         'is_leaf' => false,
                         'is_header' => false,

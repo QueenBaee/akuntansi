@@ -46,11 +46,23 @@
                             text-align: left !important;
                         }
 
-                        .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
-                        .no-equal-width th:not(:nth-child(1)):not(:nth-child(2)) {
+                        .no-equal-width td:nth-child(n+3):nth-child(-n+14),
+                        .no-equal-width th:nth-child(n+3):nth-child(-n+14) {
                             text-align: right !important;
                             min-width: 80px !important;
                             width: 80px !important;
+                        }
+
+                        .no-equal-width td:nth-child(15),
+                        .no-equal-width th:nth-child(15) {
+                            min-width: 80px !important;
+                            text-align: left !important;
+                        }
+
+                        .no-equal-width td:nth-child(16),
+                        .no-equal-width th:nth-child(16) {
+                            min-width: 200px !important;
+                            text-align: left !important;
                         }
 
                         .level-0 {
@@ -111,6 +123,8 @@
                                     <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
                                 <th>{{ $year }}</th>
+                                <th>Kode TB</th>
+                                <th>Akun Laporan Keuangan</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -125,6 +139,8 @@
                                             </div>
                                         </td>
                                         <td colspan="13"></td>
+                                        <td>{{ $row['trial_balance_code'] ?? '' }}</td>
+                                        <td>{{ $row['trial_balance_name'] ?? '' }}</td>
                                     </tr>
                                 @else
                                     {{-- Data row (leaf) or Summary row --}}
@@ -156,6 +172,8 @@
                                                 {{ formatAccounting($data[$row['id']]['total'] ?? 0) }}
                                             @endif
                                         </td>
+                                        <td>{{ $row['trial_balance_code'] ?? '' }}</td>
+                                        <td>{{ $row['trial_balance_name'] ?? '' }}</td>
                                     </tr>
                                 @endif
                             @endforeach
