@@ -108,15 +108,38 @@
                         }
                         
                         .surplus-row {
-                            background: #e3f2fd !important;
+                            background: #f0f0f0 !important;
                             font-weight: bold !important;
-                            border-top: 3px solid #1976d2 !important;
+                            border-top: 3px solid #000 !important;
                         }
                         
                         .net-surplus-row {
-                            background: #e8f5e8 !important;
+                            background: #e8e8e8 !important;
                             font-weight: bold !important;
-                            border-top: 3px solid #4caf50 !important;
+                            border-top: 3px solid #000 !important;
+                        }
+                        
+                        .cash-bank-opening-row {
+                            background: #f5f5f5 !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
+                        }
+                        
+                        .cash-bank-closing-row {
+                            background: #eeeeee !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
+                        }
+                        
+                        .cash-bank-detail-row {
+                            background: #f9f9f9 !important;
+                            font-style: italic;
+                        }
+                        
+                        .cash-bank-detail-total-row {
+                            background: #e0e0e0 !important;
+                            font-weight: bold !important;
+                            border-top: 2px solid #000 !important;
                         }
                     </style>
 
@@ -150,9 +173,12 @@
                                     </tr>
                                 @else
                                     {{-- Data row (leaf) or Summary row --}}
-                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }} {{ isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit'] ? 'net-surplus-row' : '' }}" 
+                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }} {{ isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit'] ? 'net-surplus-row' : '' }} {{ isset($row['is_cash_bank_opening']) && $row['is_cash_bank_opening'] ? 'cash-bank-opening-row' : '' }} {{ isset($row['is_cash_bank_closing']) && $row['is_cash_bank_closing'] ? 'cash-bank-closing-row' : '' }} {{ isset($row['is_cash_bank_detail']) && $row['is_cash_bank_detail'] ? 'cash-bank-detail-row' : '' }} {{ isset($row['is_cash_bank_detail_total']) && $row['is_cash_bank_detail_total'] ? 'cash-bank-detail-total-row' : '' }}" 
                                         @if(isset($row['is_surplus_deficit']) && $row['is_surplus_deficit']) style="border-top: 3px solid #000;" @endif
-                                        @if(isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit']) style="border-top: 3px solid #4caf50;" @endif>
+                                        @if(isset($row['is_net_surplus_deficit']) && $row['is_net_surplus_deficit']) style="border-top: 3px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_opening']) && $row['is_cash_bank_opening']) style="border-top: 2px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_closing']) && $row['is_cash_bank_closing']) style="border-top: 2px solid #000;" @endif
+                                        @if(isset($row['is_cash_bank_detail_total']) && $row['is_cash_bank_detail_total']) style="border-top: 2px solid #000;" @endif>
                                         <td>{{ isset($row['is_summary']) && $row['is_summary'] ? $row['code'] : $row['code'] }}</td>
                                         <td>
                                             <div class="cf-text level-{{ $row['depth'] }}">
