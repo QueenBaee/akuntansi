@@ -128,8 +128,9 @@
                                     </tr>
                                 @else
                                     {{-- Data row (leaf) or Summary row --}}
-                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }}">
-                                        <td>{{ isset($row['is_summary']) && $row['is_summary'] ? '' : $row['code'] }}</td>
+                                    <tr class="level-{{ $row['depth'] }}-row {{ isset($row['is_summary']) && $row['is_summary'] ? 'total-row' : '' }} {{ isset($row['is_surplus_deficit']) && $row['is_surplus_deficit'] ? 'surplus-row' : '' }}" 
+                                        @if(isset($row['is_surplus_deficit']) && $row['is_surplus_deficit']) style="border-top: 3px solid #000;" @endif>
+                                        <td>{{ isset($row['is_summary']) && $row['is_summary'] ? $row['code'] : $row['code'] }}</td>
                                         <td>
                                             <div class="cf-text level-{{ $row['depth'] }}">
                                                 @if(isset($row['is_summary']) && $row['is_summary'])
@@ -158,16 +159,6 @@
                                     </tr>
                                 @endif
                             @endforeach
-                            
-                            <!-- SURPLUS/(DEFISIT) USAHA Row -->
-                            <tr class="total-row" style="border-top: 3px solid #000;">
-                                <td><strong>S/D</strong></td>
-                                <td><strong>SURPLUS/(DEFISIT) USAHA</strong></td>
-                                @for ($m = 1; $m <= 12; $m++)
-                                    <td><strong>{{ formatAccounting($surplusDeficit["month_$m"] ?? 0) }}</strong></td>
-                                @endfor
-                                <td><strong>{{ formatAccounting($surplusDeficit['total'] ?? 0) }}</strong></td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>

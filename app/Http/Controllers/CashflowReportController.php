@@ -30,6 +30,9 @@ class CashflowReportController extends Controller
         
         $flattenedData = $this->flattenTreeWithSummaries($tree);
         
+        // Add surplus deficit data to main data array
+        $data['surplus_deficit'] = $surplusDeficit;
+        
         return view('cashflow_report.index', compact('flattenedData', 'data', 'year', 'surplusDeficit'));
     }
 
@@ -181,6 +184,20 @@ class CashflowReportController extends Controller
                     'is_header' => false,
                     'is_summary' => true
                 ];
+                
+                // Add surplus/deficit after total expenses
+                if ($node['code'] === 'E' && $node['parent_id'] === null) {
+                    $result[] = [
+                        'id' => 'surplus_deficit',
+                        'code' => 'S/D',
+                        'name' => 'SURPLUS/(DEFISIT) USAHA',
+                        'depth' => 0,
+                        'is_leaf' => false,
+                        'is_header' => false,
+                        'is_summary' => true,
+                        'is_surplus_deficit' => true
+                    ];
+                }
             }
         }
         return $result;
