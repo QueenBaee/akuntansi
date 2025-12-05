@@ -36,7 +36,7 @@
                         .no-equal-width td:nth-child(1),
                         .no-equal-width th:nth-child(1) {
                             min-width: 80px !important;
-                            text-align: center !important;
+                            text-align: left !important;
                             font-weight: 600 !important;
                         }
 
@@ -79,11 +79,11 @@
                         }
 
                         tr.level-0-row {
-                            background: #e3f2fd !important;
+                            background: #f8f9fa !important;
                         }
 
                         tr.level-1-row {
-                            background: #f1f8ff !important;
+                            background: #ffffff !important;
                         }
 
                         tr.level-2-row {
@@ -91,7 +91,7 @@
                         }
 
                         .total-row {
-                            background: #fff3cd !important;
+                            background: #f8f9fa !important;
                             font-weight: bold !important;
                         }
                     </style>
