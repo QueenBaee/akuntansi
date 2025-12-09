@@ -305,13 +305,14 @@ class CashflowReportController extends Controller
         $previousYear = $year - 1;
         $startBaseYear = 2025;
         
-        // Get cash & bank trial balance accounts for opening balance
+        // Get cash & bank trial balance accounts for opening balance (only with values)
         $cashBankAccounts = DB::table('trial_balances as tb')
             ->leftJoin('trial_balances as parent', 'tb.parent_id', '=', 'parent.id')
             ->where(function($query) {
                 $query->where('tb.is_kas_bank', true)
                       ->orWhere('parent.is_kas_bank', true);
             })
+            ->where('tb.tahun_2024', '>', 0) // Filter only accounts with value
             ->select('tb.id', 'tb.tahun_2024')
             ->get();
 
@@ -382,13 +383,14 @@ class CashflowReportController extends Controller
         $previousYear = $year - 1;
         $startBaseYear = 2025;
         
-        // Get cash & bank trial balance accounts
+        // Get cash & bank trial balance accounts (only with values)
         $cashBankAccounts = DB::table('trial_balances as tb')
             ->leftJoin('trial_balances as parent', 'tb.parent_id', '=', 'parent.id')
             ->where(function($query) {
                 $query->where('tb.is_kas_bank', true)
                       ->orWhere('parent.is_kas_bank', true);
             })
+            ->where('tb.tahun_2024', '>', 0) // Filter only accounts with value
             ->select('tb.id', 'tb.kode', 'tb.keterangan', 'tb.tahun_2024')
             ->get();
 
@@ -488,6 +490,7 @@ class CashflowReportController extends Controller
                 $query->where('tb.is_kas_bank', true)
                       ->orWhere('parent.is_kas_bank', true);
             })
+            ->where('tb.tahun_2024', '>', 0) // Filter only accounts with value
             ->select('tb.id', 'tb.kode', 'tb.keterangan')
             ->orderBy('tb.sort_order')
             ->get();

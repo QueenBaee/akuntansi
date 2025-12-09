@@ -16,11 +16,13 @@ class TrialBalance extends Model
         'level',
         'sort_order',
         'tahun_2024',
-        'is_kas_bank'
+        'is_kas_bank',
+        'is_aset'
     ];
 
     protected $casts = [
-        'is_kas_bank' => 'boolean'
+        'is_kas_bank' => 'boolean',
+        'is_aset' => 'boolean'
     ];
 
     /** RELASI PARENT - CHILD */
