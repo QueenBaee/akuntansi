@@ -32,19 +32,27 @@
 @endsection
 
 @section('content')
+<style>
+.table td, .table th {
+    white-space: nowrap !important;
+}
+.table {
+    width: max-content !important;
+    min-width: 100% !important;
+}
+</style>
 <div class="row">
     <div class="col-12">
 
         <div class="card">
-
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
+            <div style="overflow-x: auto;">
+                <table class="table table-vcenter card-table mb-0" style="width: auto; table-layout: auto;">
                     <thead>
                         <tr>
                             <th>Kode</th>
                             <th>Keterangan</th>
                             <th>Akun TB</th>
-                            <th class="w-1">Aksi</th>
+                            <th style="text-align: center;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="cashflow-tbody">
@@ -59,8 +67,6 @@
                     </tbody>
                 </table>
             </div>
-            
-
         </div>
 
     </div>
@@ -82,7 +88,9 @@ function loadCashflowData() {
             return response.json();
         })
         .then(data => {
+            console.log('Full response data:', data);
             if (data.status === 'success') {
+                console.log('Items array:', data.data.items);
                 renderCashflowTable(data.data.items);
             } else {
                 throw new Error(data.message || 'Failed to load data');
@@ -99,6 +107,11 @@ function loadCashflowData() {
 function renderCashflowTable(items) {
     const tbody = document.getElementById('cashflow-tbody');
     let html = '';
+    
+    // Debug: log first item to see structure
+    if (items.length > 0) {
+        console.log('First item structure:', items[0]);
+    }
     
     items.forEach(item => {
         html += renderCashflowRow(item);
@@ -118,14 +131,14 @@ function renderCashflowRow(item) {
     }
     html += `<td>${indentation}${item.keterangan}</td>`;
     
-    // Trial Balance info for level 3
-    if (item.level == 3 && item.trial_balance_id && item.trial_balance) {
+    // Trial Balance info
+    if (item.trial_balance_id && item.trial_balance) {
         html += `<td>${item.trial_balance.kode} - ${item.trial_balance.keterangan}</td>`;
     } else {
         html += '<td>-</td>';
     }
     
-    html += `<td>
+    html += `<td class="text-end">
         <div class="btn-list flex-nowrap">
             <a href="/cashflow/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
             <form action="/cashflow/${item.id}" method="POST" class="d-inline">
