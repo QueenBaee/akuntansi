@@ -668,18 +668,27 @@
                                 method: 'DELETE',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                                        'content'),
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                                     'Accept': 'application/json'
                                 }
                             })
-                            .then(response => response.json())
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
                             .then(data => {
-                                showAlert('success', 'Memorial berhasil dihapus!');
-                                setTimeout(() => window.location.reload(), 1500);
+                                if (data.success) {
+                                    showAlert('success', 'Memorial berhasil dihapus!');
+                                    setTimeout(() => window.location.reload(), 1500);
+                                } else {
+                                    showAlert('error', data.error || 'Gagal menghapus memorial');
+                                }
                             })
                             .catch(error => {
-                                showAlert('error', 'Gagal menghapus memorial');
+                                console.error('Error:', error);
+                                showAlert('error', 'Gagal menghapus memorial: ' + error.message);
                             });
                     }
                 );
@@ -711,72 +720,6 @@
                     bsModal.hide();
                     onConfirm();
                 });
-
-                modal.addEventListener('hidden.bs.modal', () => {
-                    document.body.removeChild(modal);
-                });
-            }
-
-            function showSuccessModal(title, message, onClose = null) {
-                const modal = document.createElement('div');
-                modal.className = 'modal modal-blur fade';
-                modal.innerHTML = `
-                    <div class="modal-dialog modal-sm modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body text-center">
-                                <div class="text-success mb-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
-                                        <path d="m5 12l5 5l10 -10"></path>
-                                    </svg>
-                                </div>
-                                <div class="modal-title">${title}</div>
-                                <div>${message}</div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                const bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
-
-                modal.addEventListener('hidden.bs.modal', () => {
-                    document.body.removeChild(modal);
-                    if (onClose) onClose();
-                });
-            }
-
-            function showErrorModal(title, message) {
-                const modal = document.createElement('div');
-                modal.className = 'modal modal-blur fade';
-                modal.innerHTML = `
-                    <div class="modal-dialog modal-sm modal-dialog-centered">
-                        <div class="modal-content">
-                            <div class="modal-body text-center">
-                                <div class="text-danger mb-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
-                                        <path d="m18 6l-12 12"></path>
-                                        <path d="m6 6l12 12"></path>
-                                    </svg>
-                                </div>
-                                <div class="modal-title">${title}</div>
-                                <div>${message}</div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                const bsModal = new bootstrap.Modal(modal);
-                bsModal.show();
 
                 modal.addEventListener('hidden.bs.modal', () => {
                     document.body.removeChild(modal);
@@ -821,7 +764,6 @@
                         if (creditAmount > 0 && !creditAccountId) {
                             errors.push(`Baris ${index + 1}: Akun kredit wajib dipilih`);
                         }
-
                     }
                 });
 
