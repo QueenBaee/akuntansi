@@ -407,12 +407,7 @@
                             creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
-                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
-                                if (trialBalanceAccount) {
-                                    setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
-                                }
-                            }
+                            handleCashflowSelection(row, cashflowHidden.value);
                         } else {
                             cashInInput.value = '';
                             // Set credit to cash account
@@ -423,12 +418,7 @@
                             debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
-                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
-                                if (trialBalanceAccount) {
-                                    setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
-                                }
-                            }
+                            handleCashflowSelection(row, cashflowHidden.value);
                         }
                     } else {
                         debitInput.disabled = false;
@@ -604,7 +594,7 @@
                     cashflowDropdown.addEventListener('click', (e) => {
                         if (e.target.classList.contains('dropdown-item')) {
                             selectDropdownItem(row, 'cashflow', e.target.dataset.value, e.target.textContent);
-                            updateTrialBalanceFromCashflow(row);
+                            handleCashflowSelection(row, e.target.dataset.value);
                         }
                     });
                     
@@ -751,12 +741,30 @@
                     }
                 }
 
-                function updateTrialBalanceFromCashflow(row) {
-                    const cashflowHidden = row.querySelector('.cashflow-select');
-                    const selectedId = cashflowHidden.value;
+                function handleCashflowSelection(row, cashflowId) {
+                    if (!cashflowId || !cashflowData[cashflowId] || !cashflowData[cashflowId].trial_balance_id) {
+                        return;
+                    }
                     
-                    if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
-                        setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
+                    const trialBalanceAccount = findAccountById(cashflowData[cashflowId].trial_balance_id);
+                    if (!trialBalanceAccount) {
+                        return;
+                    }
+                    
+                    const cashInInput = row.querySelector('.cash-in');
+                    const cashOutInput = row.querySelector('.cash-out');
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    
+                    if (cashIn > 0) {
+                        // Cash in: Debit = Cash Account, Credit = Trial Balance Account
+                        setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                    } else if (cashOut > 0) {
+                        // Cash out: Debit = Trial Balance Account, Credit = Cash Account
+                        setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                    } else {
+                        // No cash amount yet, set both possibilities
+                        // User will choose cash in/out later and it will auto-set correctly
                     }
                 }
                 
@@ -924,6 +932,7 @@
                     cashflowDropdown.addEventListener('click', (e) => {
                         if (e.target.classList.contains('dropdown-item')) {
                             setEditDropdownValue(row, 'cashflow', e.target.dataset.value, e.target.textContent);
+                            handleEditCashflowSelection(row, e.target.dataset.value);
                         }
                     });
                     
@@ -977,12 +986,7 @@
                             creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
-                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
-                                if (trialBalanceAccount) {
-                                    setEditDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
-                                }
-                            }
+                            handleEditCashflowSelection(row, cashflowHidden.value);
                         } else {
                             cashInInput.value = '';
                             setEditDropdownValue(row, 'credit', selectedCashAccountId, selectedAccountName);
@@ -992,12 +996,7 @@
                             debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
-                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
-                                if (trialBalanceAccount) {
-                                    setEditDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
-                                }
-                            }
+                            handleEditCashflowSelection(row, cashflowHidden.value);
                         }
                     } else {
                         debitInput.disabled = false;
@@ -1032,6 +1031,30 @@
                             });
                         }
                     );
+                }
+
+                function handleEditCashflowSelection(row, cashflowId) {
+                    if (!cashflowId || !cashflowData[cashflowId] || !cashflowData[cashflowId].trial_balance_id) {
+                        return;
+                    }
+                    
+                    const trialBalanceAccount = findAccountById(cashflowData[cashflowId].trial_balance_id);
+                    if (!trialBalanceAccount) {
+                        return;
+                    }
+                    
+                    const cashInInput = row.querySelector('.edit-cash-in');
+                    const cashOutInput = row.querySelector('.edit-cash-out');
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    
+                    if (cashIn > 0) {
+                        // Cash in: Debit = Cash Account, Credit = Trial Balance Account
+                        setEditDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                    } else if (cashOut > 0) {
+                        // Cash out: Debit = Trial Balance Account, Credit = Cash Account
+                        setEditDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                    }
                 }
 
                 function showConfirmModal(title, message, onConfirm) {
