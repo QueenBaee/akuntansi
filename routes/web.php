@@ -73,6 +73,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
+        
+        // Fixed Asset API endpoints
+        Route::get('api/fixed-assets/next-number', [\App\Http\Controllers\FixedAssetController::class, 'getNextAssetNumber'])
+            ->name('api.fixed-assets.next-number');
+        Route::get('api/fixed-assets/suggested-accounts', [\App\Http\Controllers\FixedAssetController::class, 'getSuggestedAccounts'])
+            ->name('api.fixed-assets.suggested-accounts');
 
         // Asset Depreciation
         Route::post(
