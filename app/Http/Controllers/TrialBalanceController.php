@@ -98,7 +98,8 @@ class TrialBalanceController extends Controller
             'keterangan' => 'required',
             'parent_id' => 'nullable|exists:trial_balances,id',
             'tahun_2024' => 'nullable|numeric',
-            'is_kas_bank' => 'nullable|boolean'
+            'is_kas_bank' => 'nullable|boolean',
+            'is_aset' => 'nullable|boolean'
         ]);
 
         $level = $request->parent_id ? TrialBalance::find($request->parent_id)->level + 1 : 1;
@@ -125,6 +126,7 @@ class TrialBalanceController extends Controller
             'sort_order' => $sortOrder,
             'tahun_2024' => $request->tahun_2024,
             'is_kas_bank' => $request->boolean('is_kas_bank'),
+            'is_aset' => $request->boolean('is_aset'),
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Trial Balance berhasil ditambahkan.');
@@ -148,6 +150,7 @@ class TrialBalanceController extends Controller
             'keterangan' => $validated['keterangan'],
             'tahun_2024' => $validated['tahun_2024'],
             'is_kas_bank' => $request->has('is_kas_bank'),
+            'is_aset' => $request->has('is_aset'),
         ]);
 
         return redirect()->route('trial-balance.index')->with('success', 'Trial Balance berhasil diupdate.');

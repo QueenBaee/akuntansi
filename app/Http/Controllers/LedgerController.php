@@ -33,7 +33,13 @@ class LedgerController extends Controller
         }
         
         $ledgers = $query->get();
-        $trialBalances = TrialBalance::orderBy('kode')->get();
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
+            ->orderBy('kode')
+            ->get();
 
         return view('ledgers.index', compact('ledgers', 'trialBalances', 'type'));
     }
@@ -46,7 +52,14 @@ class LedgerController extends Controller
         }
         
         $type = $request->get('type');
-        $trialBalances = TrialBalance::orderBy('kode')->get();
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
+            ->orderBy('kode')
+            ->get();
+            
         return view('ledgers.create', compact('trialBalances', 'type'));
     }
 
@@ -115,7 +128,14 @@ class LedgerController extends Controller
         }
         
         $type = $request->get('type');
-        $trialBalances = TrialBalance::orderBy('kode')->get();
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
+            ->orderBy('kode')
+            ->get();
+            
         return view('ledgers.edit', compact('ledger', 'trialBalances', 'type'));
     }
 

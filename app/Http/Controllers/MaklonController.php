@@ -191,9 +191,9 @@ class MaklonController extends Controller
                 $jasaMaklonAccount = TrialBalance::where('kode', 'R11-01')->first();
                 $utangPpnAccount = TrialBalance::where('kode', 'L14-12')->first();
                 $puHmAccount = TrialBalance::where('kode', 'A12-01')->first();
-                $utangPph23Account = TrialBalance::where('kode', 'L14-03')->first();
+                $umpPph23Account = TrialBalance::where('kode', 'A17-02')->first();
 
-                if (!$amAccount || !$jasaMaklonAccount || !$utangPpnAccount || !$puHmAccount || !$utangPph23Account) {
+                if (!$amAccount || !$jasaMaklonAccount || !$utangPpnAccount || !$puHmAccount || !$umpPph23Account) {
                     throw new \Exception('Required accounts not found');
                 }
 
@@ -263,7 +263,7 @@ class MaklonController extends Controller
                     'description' => $maklon->description,
                     'pic' => $maklon->pic,
                     'proof_number' => $maklon->proof_number,
-                    'debit_account_id' => $utangPph23Account->id,
+                    'debit_account_id' => $umpPph23Account->id,
                     'credit_account_id' => $amAccount->id,
                     'cash_in' => $pph23Amount,
                     'cash_out' => $pph23Amount,
