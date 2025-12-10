@@ -217,28 +217,8 @@ class CashflowController extends Controller
     public function getData(Request $request)
     {
         try {
-            // Get transaction counts for each trial balance account
-            $transactionCounts = \DB::table('cash_transactions')
-                ->join('trial_balances', function ($join) {
-                    $join->on('cash_transactions.cash_account_id', '=', 'trial_balances.id')
-                        ->orOn('cash_transactions.contra_account_id', '=', 'trial_balances.id');
-                })
-                ->select('trial_balances.id', \DB::raw('COUNT(*) as transaction_count'))
-                ->groupBy('trial_balances.id')
-                ->pluck('transaction_count', 'id');
-
-            // Get all cashflows with relationships
             $allCashflows = Cashflow::with(['trialBalance', 'parent', 'children'])->get();
-
-            // Add transaction counts to cashflows (default to 0)
-            $allCashflows->each(function ($cashflow) use ($transactionCounts) {
-                $cashflow->transaction_count = $cashflow->trial_balance_id
-                    ? ($transactionCounts[$cashflow->trial_balance_id] ?? 0)
-                    : 0;
-            });
-
-            // Filter and build hierarchy
-            $items = $this->buildFilteredHierarchy($allCashflows);
+            $items = $this->buildHierarchy($allCashflows);
 
             return response()->json([
                 'status' => 'success',

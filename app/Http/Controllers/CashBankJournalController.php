@@ -39,16 +39,11 @@ class CashBankJournalController extends Controller
             }
         }
 
-        $accounts = TrialBalance::orderBy('kode')->where('level', 4)->get();
-        $cashflows = Cashflow::orderBy('kode')->where('level', 3)->get();
-
         return view('journals.create', compact(
             'selectedLedger',
-            'selectedAccount',
+            'selectedAccount', 
             'openingBalance',
-            'journalsHistory',
-            'accounts',
-            'cashflows'
+            'journalsHistory'
         ));
     }
 

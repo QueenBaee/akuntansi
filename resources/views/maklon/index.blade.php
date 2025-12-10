@@ -28,11 +28,9 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
-                        <thead class="table-light">
+            <div style="overflow-x: auto;">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-light">
                             <tr>
                                 <th class="text-center">Tanggal</th>
                                 <th class="text-center">Keterangan</th>
@@ -96,9 +94,8 @@
                                 </td>
                             </tr>
                             @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

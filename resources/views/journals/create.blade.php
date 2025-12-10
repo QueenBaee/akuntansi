@@ -242,48 +242,16 @@
                 let currentBalance = openingBalance;
                 const formatter = new Intl.NumberFormat('id-ID');
 
-                // Build account options
+                // Build account options from trial balance data
                 let accountOptions = '<option value="">Pilih Akun</option>';
-                @foreach ($accounts as $account)
-                    accountOptions += '<option value="{{ $account->id }}">{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}</option>';
-                @endforeach
-
-                // Build cashflow options
+                
+                // Build cashflow options from cashflow master data
                 let cashflowOptions = '<option value="">Pilih Kode & Akun CF</option>';
-                @foreach ($cashflows as $cashflow)
-                    cashflowOptions += '<option value="{{ $cashflow->id }}" data-description="{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}">{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode . ' - ' . $cashflow->keterangan) }}</option>';
-                @endforeach
-
-                // Build cashflow data object
-                const cashflowData = {
-                    @foreach ($cashflows as $cashflow)
-                        '{{ $cashflow->id }}': {
-                            code: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode) }}',
-                            description: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->keterangan) }}',
-                            trial_balance_id: {{ $cashflow->trial_balance_id ?? 'null' }}
-                        }@if(!$loop->last),@endif
-                    @endforeach
-                };
                 
-                // Build account data array
-                const accountData = [
-                    @foreach ($accounts as $account)
-                        {
-                            id: '{{ $account->id }}',
-                            text: '{{ str_replace(["'", '"'], ["\'", '\"'], $account->kode . ' - ' . $account->keterangan) }}'
-                        }@if(!$loop->last),@endif
-                    @endforeach
-                ];
-                
-                // Build cashflow data array
-                const cashflowDataArray = [
-                    @foreach ($cashflows as $cashflow)
-                        {
-                            id: '{{ $cashflow->id }}',
-                            text: '{{ str_replace(["'", '"'], ["\'", '\"'], $cashflow->kode . ' - ' . $cashflow->keterangan) }}'
-                        }@if(!$loop->last),@endif
-                    @endforeach
-                ];
+                // Load data from API
+                let accountData = [];
+                let cashflowData = {};
+                let cashflowDataArray = [];
 
                 function showAlert(type, message) {
                     const container = document.getElementById('alert-container');
@@ -307,18 +275,65 @@
                 }
 
                 document.addEventListener('DOMContentLoaded', function() {
-                    console.log('Cashflow data:', cashflowData);
-                    console.log('Account options length:', accountOptions.length);
-                    console.log('Cashflow options length:', cashflowOptions.length);
-                    console.log('Selected account ID:', selectedCashAccountId);
-                    
-                    const historyRows = document.querySelectorAll('tr[data-existing="1"]');
-                    if (historyRows.length > 0) {
-                        const lastRow = historyRows[historyRows.length - 1];
-                        currentBalance = parseFloat(lastRow.getAttribute('data-balance'));
-                    }
-                    addJournalLine();
+                    // Load master data
+                    loadMasterData().then(() => {
+                        const historyRows = document.querySelectorAll('tr[data-existing="1"]');
+                        if (historyRows.length > 0) {
+                            const lastRow = historyRows[historyRows.length - 1];
+                            currentBalance = parseFloat(lastRow.getAttribute('data-balance'));
+                        }
+                        addJournalLine();
+                    });
                 });
+                
+                async function loadMasterData() {
+                    try {
+                        // Load trial balance accounts
+                        const accountResponse = await fetch('/api/trial-balance');
+                        const accountResult = await accountResponse.json();
+                        console.log('Account response:', accountResult);
+                        
+                        if (accountResult.success) {
+                            accountData = accountResult.data.map(account => ({
+                                id: account.id,
+                                text: account.kode + ' - ' + account.keterangan
+                            }));
+                            
+                            accountOptions = '<option value="">Pilih Akun</option>' + 
+                                accountData.map(account => 
+                                    `<option value="${account.id}">${account.text}</option>`
+                                ).join('');
+                        }
+                        
+                        // Load cashflow data
+                        const cashflowResponse = await fetch('/api/cashflow/get-data');
+                        const cashflowResult = await cashflowResponse.json();
+                        console.log('Cashflow response:', cashflowResult);
+                        
+                        if (cashflowResult.status === 'success' && cashflowResult.data && cashflowResult.data.items) {
+                            cashflowDataArray = cashflowResult.data.items.map(cf => ({
+                                id: cf.id,
+                                text: cf.kode + ' - ' + cf.keterangan
+                            }));
+                            
+                            cashflowResult.data.items.forEach(cf => {
+                                cashflowData[cf.id] = {
+                                    code: cf.kode,
+                                    description: cf.keterangan,
+                                    trial_balance_id: cf.trial_balance_id
+                                };
+                            });
+                            
+                            cashflowOptions = '<option value="">Pilih Kode & Akun CF</option>' + 
+                                cashflowResult.data.items.map(cf => 
+                                    `<option value="${cf.id}">${cf.kode} - ${cf.keterangan}</option>`
+                                ).join('');
+                        }
+                        console.log('Cashflow data loaded:', cashflowDataArray.length, 'items');
+                    } catch (error) {
+                        console.error('Error loading master data:', error);
+                    }
+                }
 
                 function addJournalLine() {
                     const tbody = document.getElementById('journalLines');
@@ -608,6 +623,14 @@
                         }
                     });
                     
+                    // Show dropdown on focus
+                    const cashflowInput = row.querySelector('.cashflow-input');
+                    if (cashflowInput) {
+                        cashflowInput.addEventListener('focus', () => {
+                            cashflowDropdown.style.display = 'block';
+                        });
+                    }
+                    
                     debitDropdown.addEventListener('click', (e) => {
                         if (e.target.classList.contains('dropdown-item')) {
                             selectDropdownItem(row, 'debit', e.target.dataset.value, e.target.textContent);
@@ -645,7 +668,7 @@
                         
                         // Add search functionality
                         const originalValue = input.value;
-                        input.addEventListener('input', function searchHandler(e) {
+                        const searchHandler = function(e) {
                             const searchTerm = e.target.value.toLowerCase();
                             const items = dropdown.querySelectorAll('.dropdown-item');
                             
@@ -653,10 +676,26 @@
                                 const text = item.textContent.toLowerCase();
                                 item.style.display = text.includes(searchTerm) ? 'block' : 'none';
                             });
-                        });
+                        };
+                        input.addEventListener('input', searchHandler);
+                        
+                        // Handle Enter key to select first match
+                        const keyHandler = function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const visibleItems = dropdown.querySelectorAll('.dropdown-item[style*="display: block"], .dropdown-item:not([style*="display: none"])');
+                                if (visibleItems.length > 0) {
+                                    const firstItem = visibleItems[0];
+                                    const type = input.classList.contains('cashflow-input') ? 'cashflow' : 
+                                               input.classList.contains('debit-input') ? 'debit' : 'credit';
+                                    selectDropdownItem(row, type, firstItem.dataset.value, firstItem.textContent);
+                                }
+                            }
+                        };
+                        input.addEventListener('keydown', keyHandler);
                         
                         // Handle blur to restore readonly and original value if no selection
-                        input.addEventListener('blur', function blurHandler(e) {
+                        const blurHandler = function(e) {
                             setTimeout(() => {
                                 if (!dropdown.contains(document.activeElement)) {
                                     input.readOnly = true;
@@ -671,9 +710,11 @@
                                     // Remove event listeners
                                     input.removeEventListener('input', searchHandler);
                                     input.removeEventListener('blur', blurHandler);
+                                    input.removeEventListener('keydown', keyHandler);
                                 }
                             }, 150);
-                        });
+                        };
+                        input.addEventListener('blur', blurHandler);
                     }
                 }
                 
@@ -733,30 +774,26 @@
                     }
                 }
 
-                function setTrialBalanceAccount(row, trialBalanceId) {
-                    const cashInInput = row.querySelector('.cash-in');
-                    const cashOutInput = row.querySelector('.cash-out');
-                    const debitSelect = row.querySelector('select[name*="[debit_account_id]"]');
-                    const creditSelect = row.querySelector('select[name*="[credit_account_id]"]');
-                    
-                    const cashIn = parseFloat(cashInInput.value) || 0;
-                    const cashOut = parseFloat(cashOutInput.value) || 0;
-                    
-                    if (cashIn > 0) {
-                        // For cash in, set credit account to trial balance account
-                        creditSelect.value = trialBalanceId;
-                    } else if (cashOut > 0) {
-                        // For cash out, set debit account to trial balance account
-                        debitSelect.value = trialBalanceId;
-                    }
-                }
+
 
                 function updateTrialBalanceFromCashflow(row) {
                     const cashflowHidden = row.querySelector('.cashflow-select');
                     const selectedId = cashflowHidden.value;
                     
                     if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
-                        setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
+                        const trialBalanceAccount = findAccountById(cashflowData[selectedId].trial_balance_id);
+                        if (trialBalanceAccount) {
+                            const cashInInput = row.querySelector('.cash-in');
+                            const cashOutInput = row.querySelector('.cash-out');
+                            const cashIn = parseFloat(cashInInput.value) || 0;
+                            const cashOut = parseFloat(cashOutInput.value) || 0;
+                            
+                            if (cashIn > 0) {
+                                setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                            } else if (cashOut > 0) {
+                                setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                            }
+                        }
                     }
                 }
                 

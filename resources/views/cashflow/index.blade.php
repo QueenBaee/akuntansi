@@ -46,13 +46,13 @@
 
         <div class="card">
             <div style="overflow-x: auto;">
-                <table class="table table-vcenter card-table mb-0" style="width: auto; table-layout: auto;">
+                <table class="table table-bordered table-striped mb-0">
                     <thead>
                         <tr>
                             <th>Kode</th>
                             <th>Keterangan</th>
                             <th>Akun TB</th>
-                            <th style="text-align: center;">Aksi</th>
+                            <th style="text-align: left;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="cashflow-tbody">
@@ -138,7 +138,7 @@ function renderCashflowRow(item) {
         html += '<td>-</td>';
     }
     
-    html += `<td class="text-end">
+    html += `<td>
         <div class="btn-list flex-nowrap">
             <a href="/cashflow/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
             <form action="/cashflow/${item.id}" method="POST" class="d-inline">

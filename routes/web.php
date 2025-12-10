@@ -148,6 +148,7 @@ Route::middleware('auth')->group(function () {
 // API Routes
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
+    Route::get('trial-balance', [TrialBalanceController::class, 'apiIndex'])->name('api.trial-balance');
     Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
 });
 

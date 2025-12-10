@@ -3,7 +3,7 @@
 @section('title', 'Memorial Entry')
 
 @section('page-header')
-    <div class="page-pretitle">Memorial</div>
+    <div class="page-pretitle">Transaksi</div>
     <h2 class="page-title">Memorial Entry - Tahun {{ request('year', date('Y')) }}</h2>
 @endsection
 
@@ -87,43 +87,41 @@
             @csrf
 
             <div class="card">
-
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
-                            <thead class="table-light">
-                                <tr style="border: 1px solid #dee2e6;">
-                                    <th style="border: 1px solid #dee2e6;">Tanggal</th>
-                                    <th style="border: 1px solid #dee2e6;">Keterangan</th>
-                                    <th style="border: 1px solid #dee2e6;">PIC</th>
-                                    <th style="border: 1px solid #dee2e6;">No Bukti</th>
-                                    <th style="border: 1px solid #dee2e6;">Dokumen</th>
-                                    <th style="border: 1px solid #dee2e6;">Debit</th>
-                                    <th style="border: 1px solid #dee2e6;">Rp</th>
-                                    <th style="border: 1px solid #dee2e6;">Kredit</th>
-                                    <th style="border: 1px solid #dee2e6;">Rp</th>
-                                    <th style="border: 1px solid #dee2e6;">Aksi</th>
-                                </tr>
-                            </thead>
+                <div style="overflow-x: auto;">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center">Tanggal</th>
+                                <th class="text-center">Keterangan</th>
+                                <th class="text-center">PIC</th>
+                                <th class="text-center">No Bukti</th>
+                                <th class="text-center">Dokumen</th>
+                                <th class="text-center">Debit</th>
+                                <th class="text-center">Rp</th>
+                                <th class="text-center">Kredit</th>
+                                <th class="text-center">Rp</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
                             <tbody id="memorialLines">
                                 @foreach ($memorialsHistory as $history)
-                                    <tr data-existing="1" data-journal-id="{{ $history['journal_id'] }}" style="border: 1px solid #dee2e6; background-color: #f8f9fa;">
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['date'] }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['description'] }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['pic'] ?? '-' }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['proof_number'] ?? '-' }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: center;">
+                                    <tr data-existing="1" data-journal-id="{{ $history['journal_id'] }}" style="background-color: #f8f9fa;">
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['date'] }}</td>
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['description'] }}</td>
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['pic'] ?? '-' }}</td>
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['proof_number'] ?? '-' }}</td>
+                                        <td style="padding: 4px; font-size: 12px; text-align: center;">
                                             @if ($history['attachments'] && count($history['attachments']) > 0)
                                                 <button type="button" class="btn btn-sm btn-info" onclick="viewAttachments({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">Lihat Lampiran</button>
                                             @else
                                                 -
                                             @endif
                                         </td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['debit_account'] }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['debit_amount'] > 0 ? number_format($history['debit_amount'], 0, ',', '.') : '' }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $history['credit_account'] }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['credit_amount'] > 0 ? number_format($history['credit_amount'], 0, ',', '.') : '' }}</td>
-                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['debit_account'] }}</td>
+                                        <td style="padding: 4px; font-size: 12px; text-align: right;">{{ $history['debit_amount'] > 0 ? number_format($history['debit_amount'], 0, ',', '.') : '' }}</td>
+                                        <td style="padding: 4px; font-size: 12px;">{{ $history['credit_account'] }}</td>
+                                        <td style="padding: 4px; font-size: 12px; text-align: right;">{{ $history['credit_amount'] > 0 ? number_format($history['credit_amount'], 0, ',', '.') : '' }}</td>
+                                        <td style="padding: 4px; text-align: center;">
                                             <button type="button" class="btn btn-sm btn-warning me-1" onclick="editTransaction(this, {{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">✎</button>
                                             <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">×</button>
                                         </td>
@@ -131,11 +129,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-
-                    @error('entries')
-                        <div class="alert alert-danger">{{ $message }}</div>
-                    @enderror
                 </div>
                 <div class="card-footer text-end">
                     <button type="button" class="btn btn-success me-2" onclick="addMemorialLine()">+ Tambah Baris</button>
@@ -195,56 +188,56 @@
             function addMemorialLine() {
                 const tbody = document.getElementById('memorialLines');
                 const row = document.createElement('tr');
-                row.style.border = '1px solid #dee2e6';
+                // row styling handled by table classes
 
                 const currentDate = '{{ date('Y-m-d') }}';
                 const currentIndex = lineIndex;
 
                 row.innerHTML =
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="date" name="entries[' + currentIndex +
                     '][date]" class="form-control form-control-sm" style="border: none; font-size: 12px;" value="' +
                     currentDate + '">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
                     '][description]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="Deskripsi" maxlength="70">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
                     '][pic]" class="form-control form-control-sm" style="border: none; font-size: 12px;" placeholder="PIC" maxlength="15">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="text" name="entries[' + currentIndex +
                     '][proof_number]" class="form-control form-control-sm proof-number" style="border: none; font-size: 12px;" placeholder="No. Bukti" maxlength="10">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="file" name="entries[' + currentIndex +
                     '][attachments][]" class="form-control form-control-sm" style="border: none; font-size: 11px;" accept=".jpg,.jpeg,.png,.pdf" multiple>' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                         '<div class="searchable-select">' +
                             '<input type="text" class="form-control form-control-sm debit-input" placeholder="Pilih Akun Debit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
                             '<input type="hidden" name="entries[' + currentIndex + '][debit_account_id]" class="debit-account">' +
                             '<div class="dropdown-list debit-dropdown"></div>' +
                         '</div>' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="number" name="entries[' + currentIndex +
                     '][debit_amount]" class="form-control form-control-sm debit-amount" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" oninput="handleAmountInput(this, \'debit\')">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                         '<div class="searchable-select">' +
                             '<input type="text" class="form-control form-control-sm credit-input" placeholder="Pilih Akun Kredit" style="border: none; font-size: 12px;" readonly onclick="toggleDropdown(this)">' +
                             '<input type="hidden" name="entries[' + currentIndex + '][credit_account_id]" class="credit-account">' +
                             '<div class="dropdown-list credit-dropdown"></div>' +
                         '</div>' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px;">' +
+                    '<td style="padding: 2px;">' +
                     '<input type="number" name="entries[' + currentIndex +
                     '][credit_amount]" class="form-control form-control-sm credit-amount" style="border: none; font-size: 12px; text-align: right;" placeholder="0" min="0" step="1" oninput="handleAmountInput(this, \'credit\')">' +
                     '</td>' +
-                    '<td style="border: 1px solid #dee2e6; padding: 2px; text-align: center;">' +
+                    '<td style="padding: 2px; text-align: center;">' +
                     '-' +
                     '</td>';
 
