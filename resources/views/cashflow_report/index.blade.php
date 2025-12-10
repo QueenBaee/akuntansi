@@ -18,8 +18,12 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="table-responsive">
+                <div style="overflow-x: auto;">
                     <style>
+                        .no-equal-width td,
+                        .no-equal-width th {
+                            white-space: nowrap !important;
+                        }
                         .cf-text {
                             display: flex;
                             align-items: center;
@@ -35,33 +39,29 @@
 
                         .no-equal-width td:nth-child(1),
                         .no-equal-width th:nth-child(1) {
-                            min-width: 80px !important;
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
                         .no-equal-width td:nth-child(2),
                         .no-equal-width th:nth-child(2) {
-                            min-width: 300px !important;
                             text-align: left !important;
                         }
 
                         .no-equal-width td:nth-child(n+3):nth-child(-n+14),
                         .no-equal-width th:nth-child(n+3):nth-child(-n+14) {
                             text-align: right !important;
-                            min-width: 80px !important;
                             width: 80px !important;
+                            min-width: 80px !important;
                         }
 
                         .no-equal-width td:nth-child(15),
                         .no-equal-width th:nth-child(15) {
-                            min-width: 80px !important;
                             text-align: left !important;
                         }
 
                         .no-equal-width td:nth-child(16),
                         .no-equal-width th:nth-child(16) {
-                            min-width: 200px !important;
                             text-align: left !important;
                         }
 
@@ -143,7 +143,7 @@
                         }
                     </style>
 
-                    <table class="table table-bordered table-striped no-equal-width">
+                    <table class="table table-bordered table-striped no-equal-width" style="table-layout: auto; width: max-content; min-width: 100%;">
                         <thead>
                             <tr>
                                 <th>Kode</th>
