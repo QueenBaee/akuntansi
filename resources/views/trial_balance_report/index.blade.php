@@ -190,7 +190,7 @@
                             @php
                                 $totalAssets = [];
                                 foreach ($items as $item) {
-                                    if (str_starts_with($item->kode, 'A')) {
+                                    if (str_starts_with($item->kode, 'A') && !str_starts_with($item->kode, 'AM')) {
                                         for ($m = 1; $m <= 12; $m++) {
                                             $totalAssets["month_$m"] = ($totalAssets["month_$m"] ?? 0) + ($data[$item->id]["month_$m"] ?? 0);
                                         }
@@ -242,7 +242,7 @@
                             @php
                                 $totalEquity = [];
                                 foreach ($items as $item) {
-                                    if (str_starts_with($item->kode, 'C')) {
+                                    if (str_starts_with($item->kode, 'C') && $item->kode != 'C21-02' && $item->kode != 'C21-99') {
                                         for ($m = 1; $m <= 12; $m++) {
                                             $totalEquity["month_$m"] = ($totalEquity["month_$m"] ?? 0) + ($data[$item->id]["month_$m"] ?? 0);
                                         }
