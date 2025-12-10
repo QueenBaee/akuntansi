@@ -57,6 +57,7 @@ class CashflowReportController extends Controller
             ->select('cashflow_id', DB::raw('MONTH(date) as month, SUM(cash_in) as total_in, SUM(cash_out) as total_out'))
             ->whereNotNull('cashflow_id')
             ->whereYear('date', $year)
+            ->whereNull('deleted_at')
             ->groupBy('cashflow_id', 'month')
             ->get()
             ->groupBy('cashflow_id')
@@ -328,6 +329,7 @@ class CashflowReportController extends Controller
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
                 ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             $creditPrev = DB::table('journals')
@@ -339,6 +341,7 @@ class CashflowReportController extends Controller
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
                 ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             $prevQuery = $debitPrev->unionAll($creditPrev)->get()->groupBy('account_id');
@@ -407,6 +410,7 @@ class CashflowReportController extends Controller
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
                 ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             $creditPrev = DB::table('journals')
@@ -418,6 +422,7 @@ class CashflowReportController extends Controller
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
                 ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             $prevQuery = $debitPrev->unionAll($creditPrev)->get()->groupBy('account_id');
@@ -444,6 +449,7 @@ class CashflowReportController extends Controller
             )
             ->whereYear('date', $year)
             ->whereIn('debit_account_id', $cashBankAccounts->pluck('id'))
+            ->whereNull('deleted_at')
             ->groupBy('account_id', 'month');
 
         $credits = DB::table('journals')
@@ -455,6 +461,7 @@ class CashflowReportController extends Controller
             )
             ->whereYear('date', $year)
             ->whereIn('credit_account_id', $cashBankAccounts->pluck('id'))
+            ->whereNull('deleted_at')
             ->groupBy('account_id', 'month');
 
         $journalMonthly = $debits->unionAll($credits)->get()->groupBy('account_id');

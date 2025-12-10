@@ -46,6 +46,7 @@ class TrialBalanceReportController extends Controller
                 )
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             // Mutasi kredit
@@ -57,6 +58,7 @@ class TrialBalanceReportController extends Controller
                 )
                 ->whereYear('date', '>=', $startBaseYear)
                 ->whereYear('date', '<=', $previousYear)
+                ->whereNull('deleted_at')
                 ->groupBy('account_id');
 
             $prevQuery = $debitPrev
@@ -97,6 +99,7 @@ class TrialBalanceReportController extends Controller
                 DB::raw("0 AS credit_amount")
             )
             ->whereYear('date', $year)
+            ->whereNull('deleted_at')
             ->groupBy('account_id', 'month');
 
         // Mutasi KREDIT per bulan
@@ -108,6 +111,7 @@ class TrialBalanceReportController extends Controller
                 DB::raw("SUM(total_credit) AS credit_amount")
             )
             ->whereYear('date', $year)
+            ->whereNull('deleted_at')
             ->groupBy('account_id', 'month');
 
         // Gabungkan debit + kredit
