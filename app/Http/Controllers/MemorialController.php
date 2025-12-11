@@ -218,7 +218,7 @@ class MemorialController extends Controller
     private function getMemorialsHistory($year = null)
     {
         $query = Journal::with(['debitAccount', 'creditAccount', 'attachments'])
-            ->whereIn('source_module', ['memorial', 'maklon']);
+            ->whereIn('source_module', ['memorial', 'maklon', 'asset_depreciation']);
             
         if ($year) {
             $query->whereYear('date', $year);

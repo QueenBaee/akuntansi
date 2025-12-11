@@ -20,7 +20,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">Kode Aset <span class="text-danger">*</span></label>
+                                    <label class="form-label">Nomor Aset <span class="text-danger">*</span></label>
                                     <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" 
                                            value="{{ old('code') }}" required>
                                     @error('code')

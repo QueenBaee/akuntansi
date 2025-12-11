@@ -13,7 +13,8 @@ class FixedAssetService
     public function generateDepreciationSchedule(FixedAsset $asset): array
     {
         $schedule = [];
-        $startDate = Carbon::parse($asset->acquisition_date)->startOfMonth();
+        // Start depreciation from the next month after acquisition
+        $startDate = Carbon::parse($asset->acquisition_date)->addMonth()->startOfMonth();
         $monthlyDepreciation = $this->calculateMonthlyDepreciationAmount($asset);
         $accumulatedDepreciation = 0;
         $bookValue = $asset->acquisition_price;
@@ -137,6 +138,8 @@ class FixedAssetService
             'number' => $journalNumber,
             'description' => "Penyusutan {$asset->name} - {$period->format('M Y')}",
             'pic' => 'System',
+            'cash_in' => $amount,
+            'cash_out' => $amount,
             'total_debit' => $amount,
             'total_credit' => $amount,
             'debit_account_id' => $asset->expense_account_id,

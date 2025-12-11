@@ -45,96 +45,199 @@
 
 @section('content')
 <div class="row">
-    <!-- Asset Information -->
-    <div class="col-md-4">
+    <div class="col-12">
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Informasi Aset</h3>
-            </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Kode Aset</label>
-                            <div class="font-weight-medium editable" data-field="code">{{ $fixedAsset->code }}</div>
+                <!-- Identitas Aset -->
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Identitas Aset</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nomor Aset</label>
+                                <div class="font-weight-medium editable" data-field="code">{{ $fixedAsset->code }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nama Aset</label>
+                                <div class="font-weight-medium editable" data-field="name">{{ $fixedAsset->name }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Aset</label>
-                            <div class="font-weight-medium editable" data-field="name">{{ $fixedAsset->name }}</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Jumlah Unit</label>
+                                <div class="editable" data-field="quantity">{{ $fixedAsset->quantity ?? 1 }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Location</label>
+                                <div class="editable" data-field="location">{{ $fixedAsset->location ?? '-' }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Tanggal Perolehan</label>
-                            <div class="editable" data-field="acquisition_date">{{ $fixedAsset->acquisition_date->format('d M Y') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Kelompok</label>
+                                <div class="editable" data-field="group">{{ $fixedAsset->group ?? '-' }}</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Umur Manfaat</label>
-                            <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months }} bulan</div>
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Kondisi</label>
+                                        <div class="editable" data-field="condition">{{ $fixedAsset->condition ?? '-' }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Status</label>
+                                        <div>
+                                            @if($fixedAsset->is_active)
+                                                <span class="badge bg-success">Active</span>
+                                            @else
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Asset Value Summary -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h3 class="card-title">Ringkasan Nilai</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Harga Perolehan</label>
-                            <div class="font-weight-medium text-primary editable" data-field="acquisition_price">{{ number_format($fixedAsset->acquisition_price, 0, ',', '.') }}</div>
+                <!-- Detail Perolehan -->
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Detail Perolehan</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal Perolehan</label>
+                                <div class="editable" data-field="acquisition_date">{{ $fixedAsset->acquisition_date->format('d M Y') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Harga Perolehan</label>
+                                <div class="font-weight-medium text-primary editable" data-field="acquisition_price">{{ number_format($fixedAsset->acquisition_price, 0, ',', '.') }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Nilai Residual</label>
-                            <div class="editable" data-field="residual_value">{{ number_format($fixedAsset->residual_value * 100, 2) }}%</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nilai Residu</label>
+                                <div class="editable" data-field="residual_value">{{ number_format($fixedAsset->residual_value, 0, ',', '.') }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Akumulasi Penyusutan</label>
-                            <div class="text-danger">{{ number_format($fixedAsset->accumulated_depreciation, 0, ',', '.') }}</div>
+                </div>
+
+                <!-- Penyusutan -->
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Penyusutan</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Metode Penyusutan</label>
+                                <div>{{ $fixedAsset->depreciation_method ?? 'garis lurus' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal Mulai Penyusutan</label>
+                                <div>{{ $fixedAsset->depreciation_start_date ? $fixedAsset->depreciation_start_date->format('d M Y') : '-' }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Nilai Buku</label>
-                            <div class="font-weight-medium text-success">{{ number_format($fixedAsset->current_book_value, 0, ',', '.') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Umur Manfaat (Tahun)</label>
+                                        <div>{{ $fixedAsset->useful_life_years ?? round($fixedAsset->useful_life_months / 12, 1) }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Umur Manfaat (Bulan)</label>
+                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Prosentase Penyusutan</label>
+                                <div>{{ $fixedAsset->depreciation_rate ?? round(100 / ($fixedAsset->useful_life_months / 12), 2) }}%</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-12">
-                        <div class="mb-3">
-                            <label class="form-label">Penyusutan Bulanan</label>
-                            <div>{{ number_format($fixedAsset->monthly_depreciation, 0, ',', '.') }}</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Akumulasi Penyusutan</label>
+                                <div class="text-danger">{{ number_format($fixedAsset->accumulated_depreciation, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nilai Buku</label>
+                                <div class="font-weight-medium text-success">{{ number_format($fixedAsset->current_book_value, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Penyusutan Bulanan</label>
+                                <div>{{ number_format($fixedAsset->monthly_depreciation, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Akun Terkait -->
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Akun Terkait</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Harga Perolehan</label>
+                                <div>{{ $fixedAsset->assetAccount->kode }} - {{ $fixedAsset->assetAccount->keterangan }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Akumulasi Penyusutan</label>
+                                <div>{{ $fixedAsset->accumulatedAccount->kode }} - {{ $fixedAsset->accumulatedAccount->keterangan }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Beban Penyusutan</label>
+                                <div>{{ $fixedAsset->expenseAccount->kode }} - {{ $fixedAsset->expenseAccount->keterangan }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Depreciation Chart -->
-    <div class="col-md-8">
-        <div class="card mb-3">
-            <div class="card-header">
-                <h3 class="card-title">Grafik Penyusutan</h3>
-            </div>
-            <div class="card-body">
-                <canvas id="depreciationChart" height="300"></canvas>
-            </div>
-        </div>
-        
-        <!-- Depreciation Schedule -->
+<!-- Depreciation Schedule -->
+<div class="row mt-3">
+    <div class="col-12">
+
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Simulasi Penyusutan Bulanan</h3>
@@ -194,38 +297,7 @@
     </div>
 </div>
 
-<!-- Account Mapping -->
-<div class="row mt-3">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Mapping Akun</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">Asset Account</label>
-                            <div>{{ $fixedAsset->assetAccount->kode }} - {{ $fixedAsset->assetAccount->keterangan }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">Accumulated Depreciation Account</label>
-                            <div>{{ $fixedAsset->accumulatedAccount->kode }} - {{ $fixedAsset->accumulatedAccount->keterangan }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <label class="form-label">Depreciation Expense Account</label>
-                            <div>{{ $fixedAsset->expenseAccount->kode }} - {{ $fixedAsset->expenseAccount->keterangan }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- Alert Modal -->
 <div class="modal modal-blur fade" id="alertModal" tabindex="-1">
@@ -276,7 +348,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let originalData = {};
 
@@ -393,61 +464,6 @@ function showPostModal(assetId, period, periodFormatted) {
     
     new bootstrap.Modal(document.getElementById('postModal')).show();
 }
-
-// Initialize depreciation chart
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('depreciationChart').getContext('2d');
-    const scheduleData = @json($depreciationSchedule);
-    
-    const labels = scheduleData.map(item => item.period_formatted);
-    const bookValues = scheduleData.map(item => item.book_value);
-    const accumulatedDepreciation = scheduleData.map(item => item.accumulated_depreciation);
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Nilai Buku',
-                data: bookValues,
-                borderColor: 'rgb(34, 197, 94)',
-                backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                tension: 0.1,
-                fill: true
-            }, {
-                label: 'Akumulasi Penyusutan',
-                data: accumulatedDepreciation,
-                borderColor: 'rgb(239, 68, 68)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                tension: 0.1,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return new Intl.NumberFormat('id-ID').format(value);
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.dataset.label + ': ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
-                        }
-                    }
-                }
-            }
-        }
-    });
-});
 
 function showAlert(type, message) {
     const modal = new bootstrap.Modal(document.getElementById('alertModal'));
