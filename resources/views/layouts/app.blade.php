@@ -262,7 +262,7 @@
                                     <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
                                     <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan Laba Rugi</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
-                                    <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
+                                    <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}" href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
                                     <a class="dropdown-item {{ request()->routeIs('trial_balance_report.*') ? 'active' : '' }}"

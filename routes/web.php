@@ -143,6 +143,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/cashflow', [CashflowReportController::class, 'index'])
         ->name('reports.cashflow');
 
+    // Notes to Financial Statements Report
+    Route::get('/notes-to-financial-statements', [\App\Http\Controllers\NotesToFinancialStatementsController::class, 'index'])
+        ->name('notes-to-financial-statements.index');
+
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
     // ->name('trial.balance.report');
@@ -155,6 +159,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
     Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
+
 });
 
 // *** Catch-all route HARUS PALING BAWAH ***
