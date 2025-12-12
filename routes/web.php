@@ -9,6 +9,8 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\TrialBalanceReportController;
 use App\Http\Controllers\CashflowReportController;
+use App\Http\Controllers\FinancialPositionController;
+use App\Http\Controllers\ComprehensiveIncomeController;
 
 // Guest routes (login)
 Route::middleware('guest')->group(function () {
@@ -73,6 +75,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
+        
+        // Fixed Asset API endpoints
+        Route::get('api/fixed-assets/next-number', [\App\Http\Controllers\FixedAssetController::class, 'getNextAssetNumber'])
+            ->name('api.fixed-assets.next-number');
+        Route::get('api/fixed-assets/suggested-accounts', [\App\Http\Controllers\FixedAssetController::class, 'getSuggestedAccounts'])
+            ->name('api.fixed-assets.suggested-accounts');
 
         // Asset Depreciation
         Route::post(
@@ -137,6 +145,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/cashflow', [CashflowReportController::class, 'index'])
         ->name('reports.cashflow');
 
+    // Notes to Financial Statements Report
+    Route::get('/notes-to-financial-statements', [\App\Http\Controllers\NotesToFinancialStatementsController::class, 'index'])
+        ->name('notes-to-financial-statements.index');
+
+    // Financial Position Report
+    Route::get('/financial-position', [FinancialPositionController::class, 'index'])
+        ->name('financial-position.index');
+
+    // Comprehensive Income Report
+    Route::get('/comprehensive-income', [ComprehensiveIncomeController::class, 'index'])
+        ->name('comprehensive-income.index');
+
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
     // ->name('trial.balance.report');
@@ -149,6 +169,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
     Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
+
 });
 
 // *** Catch-all route HARUS PALING BAWAH ***

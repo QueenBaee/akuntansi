@@ -185,24 +185,10 @@ class MemorialController extends Controller
 
     public function destroy($id)
     {
-        try {
-            $journal = Journal::where('source_module', 'memorial')->findOrFail($id);
-
-            if ($journal->attachments) {
-                foreach ($journal->attachments as $attachment) {
-                    if (file_exists(storage_path('app/public/' . $attachment->file_path))) {
-                        unlink(storage_path('app/public/' . $attachment->file_path));
-                    }
-                    $attachment->delete();
-                }
-            }
-
-            $journal->delete();
-
-            return response()->json(['success' => 'Memorial deleted successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to delete memorial: ' . $e->getMessage()], 500);
-        }
+        $journal = Journal::findOrFail($id);
+        $journal->delete();
+        
+        return response()->json(['success' => true]);
     }
 
     public function getAttachments($id)
@@ -232,7 +218,7 @@ class MemorialController extends Controller
     private function getMemorialsHistory($year = null)
     {
         $query = Journal::with(['debitAccount', 'creditAccount', 'attachments'])
-            ->whereIn('source_module', ['memorial', 'maklon']);
+            ->whereIn('source_module', ['memorial', 'maklon', 'asset_depreciation']);
             
         if ($year) {
             $query->whereYear('date', $year);

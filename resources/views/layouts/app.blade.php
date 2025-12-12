@@ -66,6 +66,36 @@
         table th {
             text-transform: none !important;
         }
+        
+        /* Consistent Financial Report Styling */
+        .financial-report-header {
+            background-color: #e9ecef !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+        }
+        
+        .financial-report-subheader {
+            background-color: #f8f9fa !important;
+            font-weight: bold !important;
+            font-style: italic !important;
+        }
+        
+        .financial-report-total {
+            background-color: #f8f9fa !important;
+            font-weight: bold !important;
+        }
+        
+        .financial-report-major-total {
+            background-color: #dee2e6 !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+        }
+        
+        .financial-report-final-total {
+            background-color: #ced4da !important;
+            font-weight: bold !important;
+            font-size: 17px !important;
+        }
     </style>
 </head>
 
@@ -259,15 +289,15 @@
                                         href="{{ route('reports.cashflow') }}">Cashflow Report</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
-                                    <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
-                                    <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan Laba Rugi</a>
+                                    <a class="dropdown-item {{ request()->routeIs('financial-position.*') ? 'active' : '' }}" href="{{ route('financial-position.index') }}">Laporan Posisi Keuangan</a>
+                                    <a class="dropdown-item {{ request()->routeIs('comprehensive-income.*') ? 'active' : '' }}" href="{{ route('comprehensive-income.index') }}">Laporan Penghasilan Komprehensif & Laporan Laba Rugi</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
-                                    <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
+                                    <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}" href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
                                     <a class="dropdown-item {{ request()->routeIs('trial_balance_report.*') ? 'active' : '' }}"
                                         href="{{ route('trial_balance_report.index') }}">Trial Balance</a>
-                                    <a class="dropdown-item" href="#">Aset Tetap</a>
+                                    <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}" href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
                                     <a class="dropdown-item" href="#">Buku Besar</a>
                                 </div>
                             </li>
