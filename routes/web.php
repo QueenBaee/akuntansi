@@ -9,6 +9,8 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\TrialBalanceReportController;
 use App\Http\Controllers\CashflowReportController;
+use App\Http\Controllers\FinancialPositionController;
+use App\Http\Controllers\ComprehensiveIncomeController;
 
 // Guest routes (login)
 Route::middleware('guest')->group(function () {
@@ -146,6 +148,14 @@ Route::middleware('auth')->group(function () {
     // Notes to Financial Statements Report
     Route::get('/notes-to-financial-statements', [\App\Http\Controllers\NotesToFinancialStatementsController::class, 'index'])
         ->name('notes-to-financial-statements.index');
+
+    // Financial Position Report
+    Route::get('/financial-position', [FinancialPositionController::class, 'index'])
+        ->name('financial-position.index');
+
+    // Comprehensive Income Report
+    Route::get('/comprehensive-income', [ComprehensiveIncomeController::class, 'index'])
+        ->name('comprehensive-income.index');
 
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])

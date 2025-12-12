@@ -4,7 +4,7 @@
 
 @section('page-header')
     <div class="page-pretitle">Laporan</div>
-    <h2 class="page-title">Notes to Financial Statements Tahun {{ $year }}</h2>
+    <h2 class="page-title">Catatan Atas Laporan Keuangan {{ $year }}</h2>
 @endsection
 
 @section('page-actions')
@@ -74,7 +74,7 @@
                                 <th>Kode</th>
                                 <th>Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
+                                    <th>{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
                                 @endfor
                                 <th>{{ $year }}</th>
                                 <th>{{ $year - 1 }}</th>
