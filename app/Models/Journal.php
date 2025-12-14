@@ -107,6 +107,11 @@ class Journal extends Model
         return $this->belongsTo(Ledger::class);
     }
 
+    public function fixedAsset()
+    {
+        return $this->belongsTo(FixedAsset::class);
+    }
+
     public function scopePosted($query)
     {
         return $query->where('is_posted', true);

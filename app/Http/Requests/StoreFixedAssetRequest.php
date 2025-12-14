@@ -99,26 +99,32 @@ class StoreFixedAssetRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'code' => 'required|string|max:50|unique:fixed_assets,code',
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
             'location' => 'nullable|string|max:255',
-            'group' => 'required|in:Permanent,Non-permanent,Group 1,Group 2',
+            'group' => 'required|in:Aset Dalam Penyelesaian,Tanah,Permanent,Non-permanent,Group 1,Group 2',
             'condition' => 'required|in:Baik,Rusak',
             'status' => 'required|in:active,inactive',
             'acquisition_date' => 'required|date',
             'acquisition_price' => 'required|numeric|min:0.01',
             'residual_value' => 'nullable|numeric|min:0',
-            'depreciation_method' => 'required|in:garis lurus,saldo menurun',
-            'useful_life_years' => 'nullable|integer|min:1|max:50',
-            'useful_life_months' => 'nullable|integer|min:1|max:600',
-            'depreciation_rate' => 'nullable|string|max:10',
-            'depreciation_start_date' => 'required|date',
             'asset_account_id' => 'required|exists:trial_balances,id',
             'accumulated_account_id' => 'nullable|exists:trial_balances,id',
             'expense_account_id' => 'nullable|exists:trial_balances,id',
         ];
+        
+        // Add depreciation rules only for depreciable assets
+        if (!in_array($this->group, ['Aset Dalam Penyelesaian', 'Tanah'])) {
+            $rules['depreciation_method'] = 'required|in:garis lurus,saldo menurun';
+            $rules['useful_life_years'] = 'nullable|integer|min:1|max:50';
+            $rules['useful_life_months'] = 'nullable|integer|min:1|max:600';
+            $rules['depreciation_rate'] = 'nullable|string|max:10';
+            $rules['depreciation_start_date'] = 'required|date';
+        }
+        
+        return $rules;
     }
 
     public function messages(): array
@@ -135,10 +141,9 @@ class StoreFixedAssetRequest extends FormRequest
             'condition.in' => 'Kondisi aset tidak valid.',
             'status.required' => 'Status aset wajib dipilih.',
             'status.in' => 'Status aset tidak valid.',
-            'depreciation_method.required' => 'Metode penyusutan wajib dipilih.',
             'depreciation_method.in' => 'Metode penyusutan tidak valid.',
             'acquisition_price.min' => 'Harga perolehan harus lebih dari 0.',
-            'depreciation_start_date.required' => 'Tanggal mulai penyusutan wajib diisi.',
+
             'asset_account_id.required' => 'Akun harga perolehan wajib dipilih.',
         ];
     }

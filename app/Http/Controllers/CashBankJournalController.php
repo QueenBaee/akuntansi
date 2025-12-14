@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\Ledger;
 use App\Models\Cashflow;
 use App\Models\TrialBalance;
+use App\Services\AssetFromTransactionService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,12 @@ use Illuminate\Support\Facades\Validator;
 
 class CashBankJournalController extends Controller
 {
+    protected $assetFromTransactionService;
+
+    public function __construct(AssetFromTransactionService $assetFromTransactionService)
+    {
+        $this->assetFromTransactionService = $assetFromTransactionService;
+    }
     public function create(Request $request)
     {
         $selectedLedger = null;
@@ -241,6 +248,7 @@ class CashBankJournalController extends Controller
                 'cashflow_desc' => $journal->cashflow ? $journal->cashflow->keterangan : null,
                 'attachments' => $journal->attachments,
                 'balance' => $runningBalance,
+                'can_create_asset' => $this->assetFromTransactionService->canCreateAssetFromTransaction($journal),
             ];
         }
 

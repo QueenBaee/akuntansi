@@ -161,13 +161,13 @@
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Umur Manfaat (Tahun)</label>
-                                        <div>{{ $fixedAsset->useful_life_years ?? round($fixedAsset->useful_life_months / 12, 1) }}</div>
+                                        <div>{{ $fixedAsset->useful_life_years ?? ($fixedAsset->useful_life_months ? round($fixedAsset->useful_life_months / 12, 1) : '-') }}</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Umur Manfaat (Bulan)</label>
-                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months }}</div>
+                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months ?? '-' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -175,7 +175,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Prosentase Penyusutan</label>
-                                <div>{{ $fixedAsset->depreciation_rate ?? round(100 / ($fixedAsset->useful_life_months / 12), 2) }}%</div>
+                                <div>{{ $fixedAsset->depreciation_rate ?? ($fixedAsset->useful_life_months ? round(100 / ($fixedAsset->useful_life_months / 12), 2) : '-') }}{{ $fixedAsset->depreciation_rate || $fixedAsset->useful_life_months ? '%' : '' }}</div>
                             </div>
                         </div>
                     </div>
@@ -216,7 +216,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Akumulasi Penyusutan</label>
-                                <div>{{ $fixedAsset->accumulatedAccount->kode }} - {{ $fixedAsset->accumulatedAccount->keterangan }}</div>
+                                <div>{{ $fixedAsset->accumulatedAccount ? $fixedAsset->accumulatedAccount->kode . ' - ' . $fixedAsset->accumulatedAccount->keterangan : '-' }}</div>
                             </div>
                         </div>
                     </div>
@@ -224,7 +224,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Beban Penyusutan</label>
-                                <div>{{ $fixedAsset->expenseAccount->kode }} - {{ $fixedAsset->expenseAccount->keterangan }}</div>
+                                <div>{{ $fixedAsset->expenseAccount ? $fixedAsset->expenseAccount->kode . ' - ' . $fixedAsset->expenseAccount->keterangan : '-' }}</div>
                             </div>
                         </div>
                     </div>

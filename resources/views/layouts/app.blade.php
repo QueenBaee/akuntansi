@@ -337,6 +337,30 @@
 
 
                         </ul>
+                        
+                        <!-- Asset Notification Dropdown -->
+                        <div class="nav-item dropdown d-none" id="asset-notification-nav">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
+                                <span class="nav-link-icon position-relative">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                        <path d="M12 9v2m0 4v.01"/>
+                                        <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"/>
+                                    </svg>
+                                    <span class="badge bg-red badge-notification badge-pill" id="asset-badge">0</span>
+                                </span>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end" style="min-width: 400px;">
+                                <div class="dropdown-header">Transaksi Aset Belum Dikonversi</div>
+                                <div id="asset-transactions-list" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Transactions will be loaded here -->
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-item text-center">
+                                    <small class="text-muted">Klik transaksi untuk membuat aset tetap</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -401,6 +425,8 @@
                         </div>
                     @endif
 
+
+
                     @yield('content')
                 </div>
             </div>
@@ -411,6 +437,46 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // Check for unconverted asset transactions
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAssetTransactions();
+        });
+
+        function checkAssetTransactions() {
+            fetch('/api/unconverted-asset-transactions')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.count > 0) {
+                        const navNotification = document.getElementById('asset-notification-nav');
+                        const badge = document.getElementById('asset-badge');
+                        const transactionsList = document.getElementById('asset-transactions-list');
+                        
+                        if (navNotification && badge && transactionsList) {
+                            badge.textContent = data.count;
+                            navNotification.classList.remove('d-none');
+                            
+                            // Populate dropdown list
+                            transactionsList.innerHTML = data.transactions.map(t => `
+                                <a href="/fixed-assets/create-from-transaction?journal_id=${t.journal_id}" class="dropdown-item">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <strong>${t.description}</strong><br>
+                                            <small class="text-muted">${t.date} • ${t.asset_account}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <small>Rp ${new Intl.NumberFormat('id-ID').format(t.amount)}</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            `).join('');
+                        }
+                    }
+                })
+                .catch(error => console.log('Asset notification check failed:', error));
+        }
+
+
+
         // Initialize Select2 for all select elements
         function initSelect2() {
             // Regular selects (non-AJAX)

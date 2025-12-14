@@ -4,12 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use App\Models\TrialBalance;
+use App\Services\AssetFromTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class MemorialController extends Controller
 {
+    protected $assetFromTransactionService;
+
+    public function __construct(AssetFromTransactionService $assetFromTransactionService)
+    {
+        $this->assetFromTransactionService = $assetFromTransactionService;
+    }
     public function create(Request $request)
     {
         $accounts = TrialBalance::with('parent')
@@ -242,6 +249,7 @@ class MemorialController extends Controller
                 'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
                 'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
                 'attachments' => $journal->attachments,
+                'can_create_asset' => $this->assetFromTransactionService->canCreateAssetFromTransaction($journal),
             ];
         }
 

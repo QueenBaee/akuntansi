@@ -125,6 +125,9 @@
                                         <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['credit_amount'] > 0 ? number_format($history['credit_amount'], 0, ',', '.') : '' }}</td>
                                         <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
                                             <button type="button" class="btn btn-sm btn-warning me-1" onclick="editTransaction(this, {{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">✎</button>
+                                            @if($history['can_create_asset'] ?? false)
+                                                <button type="button" class="btn btn-sm btn-success me-1" onclick="createAssetFromTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;" title="Buat Aset Tetap">+</button>
+                                            @endif
                                             <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">×</button>
                                         </td>
                                     </tr>
@@ -692,6 +695,10 @@
                             });
                     }
                 );
+            }
+
+            function createAssetFromTransaction(journalId) {
+                window.location.href = `/fixed-assets/create-from-transaction?journal_id=${journalId}`;
             }
 
             function showConfirmModal(title, message, onConfirm) {

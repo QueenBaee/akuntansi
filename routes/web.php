@@ -69,7 +69,9 @@ Route::middleware('auth')->group(function () {
         // Fixed Assets
         Route::get('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'index'])->name('fixed-assets.index');
         Route::get('fixed-assets/create', [\App\Http\Controllers\FixedAssetController::class, 'create'])->name('fixed-assets.create');
+        Route::get('fixed-assets/create-from-transaction', [\App\Http\Controllers\FixedAssetController::class, 'createFromTransaction'])->name('fixed-assets.create-from-transaction');
         Route::post('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'store'])->name('fixed-assets.store');
+        Route::post('fixed-assets/from-transaction', [\App\Http\Controllers\FixedAssetController::class, 'storeFromTransaction'])->name('fixed-assets.store-from-transaction');
         Route::get('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'show'])->name('fixed-assets.show');
         Route::put('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'update'])->name('fixed-assets.update');
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
@@ -169,7 +171,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
     Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
-
+    Route::get('unconverted-asset-transactions', [\App\Http\Controllers\FixedAssetController::class, 'getUnconvertedTransactions'])->name('api.unconverted-asset-transactions');
 });
 
 // *** Catch-all route HARUS PALING BAWAH ***

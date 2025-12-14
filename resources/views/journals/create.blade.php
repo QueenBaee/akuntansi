@@ -200,6 +200,9 @@
                                                     <button type="button" class="btn btn-sm btn-warning me-1"
                                                         onclick="editTransaction(this, {{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">✎</button>
+                                                    @if($history['can_create_asset'] ?? false)
+                                                        <button type="button" class="btn btn-sm btn-success me-1" onclick="createAssetFromTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;" title="Buat Aset Tetap">+</button>
+                                                    @endif
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="deleteTransaction({{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">×</button>
@@ -1120,6 +1123,10 @@
                         document.body.removeChild(modal);
                         if (onClose) onClose();
                     });
+                }
+
+                function createAssetFromTransaction(journalId) {
+                    window.location.href = `/fixed-assets/create-from-transaction?journal_id=${journalId}`;
                 }
 
                 function showErrorModal(title, message) {

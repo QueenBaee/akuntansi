@@ -100,6 +100,16 @@ class FixedAsset extends Model
         return $this->belongsTo(AssetCategory::class, 'category_kode', 'kode');
     }
 
+    public function journals()
+    {
+        return $this->hasMany(Journal::class);
+    }
+
+    public function sourceJournals()
+    {
+        return $this->journals()->whereIn('source_module', ['manual', 'memorial']);
+    }
+
     // Accessors & Helpers
     public function getBaseValueAttribute()
     {

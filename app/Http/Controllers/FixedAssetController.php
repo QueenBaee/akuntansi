@@ -3,20 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Models\FixedAsset;
+use App\Models\Journal;
 use App\Models\TrialBalance;
 use App\Http\Requests\StoreFixedAssetRequest;
 use App\Http\Requests\UpdateFixedAssetRequest;
 use App\Services\FixedAssetService;
+use App\Services\AssetFromTransactionService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class FixedAssetController extends Controller
 {
     protected $assetService;
+    protected $assetFromTransactionService;
 
-    public function __construct(FixedAssetService $assetService)
+    public function __construct(FixedAssetService $assetService, AssetFromTransactionService $assetFromTransactionService)
     {
         $this->assetService = $assetService;
+        $this->assetFromTransactionService = $assetFromTransactionService;
         $this->middleware('auth');
     }
 
@@ -182,5 +186,96 @@ class FixedAssetController extends Controller
 
         return redirect()->route('fixed-assets.index')
             ->with('success', 'Aset tetap berhasil dihapus');
+    }
+
+    public function createFromTransaction(Request $request)
+    {
+        $journalId = $request->get('journal_id');
+        $journal = Journal::with(['debitAccount', 'creditAccount'])->findOrFail($journalId);
+        
+        if (!$this->assetFromTransactionService->canCreateAssetFromTransaction($journal)) {
+            return redirect()->back()->with('error', 'Transaksi ini tidak dapat dikonversi menjadi aset tetap');
+        }
+        
+        $assetAccount = $this->assetFromTransactionService->getAssetAccountFromTransaction($journal);
+        $acquisitionValue = $journal->debitAccount && $journal->debitAccount->parent && $journal->debitAccount->parent->is_aset 
+            ? $journal->total_debit 
+            : $journal->total_credit;
+        
+        // Get asset accounts for dropdown
+        $assetAccounts = TrialBalance::where('level', 4)
+            ->whereHas('parent', function($query) {
+                $query->where('is_aset', 1);
+            })
+            ->orderBy('kode')
+            ->get();
+            
+        $allAccounts = TrialBalance::orderBy('kode')->get();
+        
+        // Pre-fill data
+        $prefillData = [
+            'asset_account_id' => $assetAccount->id,
+            'acquisition_date' => $journal->date->format('Y-m-d'),
+            'acquisition_price' => $acquisitionValue,
+            'description' => $journal->description,
+            'reference_number' => $journal->number
+        ];
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'journal' => $journal,
+                    'assetAccounts' => $assetAccounts,
+                    'allAccounts' => $allAccounts,
+                    'prefillData' => $prefillData
+                ]
+            ]);
+        }
+        
+        return view('fixed-assets.create-from-transaction', compact('journal', 'assetAccounts', 'allAccounts', 'prefillData'));
+    }
+    
+    public function storeFromTransaction(StoreFixedAssetRequest $request)
+    {
+        $journalId = $request->input('journal_id');
+        $journal = Journal::findOrFail($journalId);
+        
+        $validated = $request->validated();
+        $validated['residual_value'] = 1;
+        $validated['is_active'] = $validated['status'] === 'active';
+        
+        // Set null for non-depreciable assets
+        if (in_array($validated['group'], ['Aset Dalam Penyelesaian', 'Tanah'])) {
+            $validated['useful_life_years'] = null;
+            $validated['useful_life_months'] = null;
+            $validated['depreciation_rate'] = null;
+            $validated['depreciation_method'] = null;
+            $validated['depreciation_start_date'] = null;
+        }
+        
+        $asset = $this->assetFromTransactionService->createAssetFromTransaction($journal, $validated);
+        
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fixed asset created from transaction successfully',
+                'data' => $asset->load(['assetAccount', 'accumulatedAccount', 'expenseAccount'])
+            ], 201);
+        }
+        
+        return redirect()->route('fixed-assets.show', $asset)
+            ->with('success', 'Aset tetap berhasil dibuat dari transaksi');
+    }
+
+    public function getUnconvertedTransactions()
+    {
+        $transactions = $this->assetFromTransactionService->getUnconvertedAssetTransactions();
+        
+        return response()->json([
+            'success' => true,
+            'count' => count($transactions),
+            'transactions' => $transactions
+        ]);
     }
 }
