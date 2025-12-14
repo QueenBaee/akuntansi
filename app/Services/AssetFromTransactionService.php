@@ -12,6 +12,11 @@ class AssetFromTransactionService
 {
     public function canCreateAssetFromTransaction(Journal $journal): bool
     {
+        // Check if asset already created from this transaction
+        if ($journal->fixed_asset_id) {
+            return false;
+        }
+        
         // Check if debit account is asset account
         if ($journal->debitAccount && $journal->debitAccount->parent && $journal->debitAccount->parent->is_aset) {
             return true;
@@ -161,11 +166,13 @@ class AssetFromTransactionService
         $journals = Journal::with(['debitAccount.parent', 'creditAccount.parent'])
             ->whereNull('fixed_asset_id')
             ->where('is_posted', true)
-            ->whereHas('debitAccount.parent', function($query) {
-                $query->where('is_aset', true);
-            })
-            ->orWhereHas('creditAccount.parent', function($query) {
-                $query->where('is_aset', true);
+            ->where(function($query) {
+                $query->whereHas('debitAccount.parent', function($subQuery) {
+                    $subQuery->where('is_aset', true);
+                })
+                ->orWhereHas('creditAccount.parent', function($subQuery) {
+                    $subQuery->where('is_aset', true);
+                });
             })
             ->orderBy('date', 'desc')
             ->get();

@@ -8,6 +8,7 @@ use App\Models\Ledger;
 use App\Models\Cashflow;
 use App\Models\TrialBalance;
 use App\Services\AssetFromTransactionService;
+use App\Services\JournalNumberService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -143,7 +144,7 @@ class CashBankJournalController extends Controller
 
                 $journal = Journal::create([
                     'date' => $entry['date'],
-                    'number' => $this->generateJournalNumber(),
+                    'number' => JournalNumberService::generate($entry['date']),
                     'description' => $entry['description'] ?? null,
                     'pic' => $entry['pic'] ?? null,
                     'proof_number' => $entry['proof_number'], // sudah aman
@@ -255,23 +256,7 @@ class CashBankJournalController extends Controller
         return $history;
     }
 
-    private function generateJournalNumber()
-    {
-        $date = now();
-        $prefix = 'JRN-' . $date->format('Ym') . '-';
-        $lastJournal = Journal::where('number', 'like', $prefix . '%')
-            ->orderBy('number', 'desc')
-            ->first();
 
-        if ($lastJournal) {
-            $lastNumber = intval(substr($lastJournal->number, -4));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-    }
 
     public function getAttachments($id)
     {

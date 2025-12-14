@@ -25,6 +25,7 @@ class Journal extends Model
         'balance',
         'source_module',
         'source_id',
+        'fixed_asset_id',
         'total_debit',
         'total_credit',
         'total_amount',

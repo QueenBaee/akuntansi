@@ -175,14 +175,7 @@
                                     <small class="text-muted">Otomatis diisi 1</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Referensi Transaksi</label>
-                                    <input type="text" class="form-control" 
-                                           value="{{ $prefillData['reference_number'] }}" readonly>
-                                    <small class="text-muted">Nomor transaksi sumber</small>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
 

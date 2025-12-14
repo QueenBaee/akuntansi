@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Maklon;
 use App\Models\Journal;
 use App\Models\TrialBalance;
+use App\Services\JournalNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -200,7 +201,7 @@ class MaklonController extends Controller
                 // Journal 1: AM vs R11-01 Jasa Maklon (DPP)
                 Journal::create([
                     'date' => $maklon->date,
-                    'number' => $this->generateJournalNumber(),
+                    'number' => JournalNumberService::generate($maklon->date),
                     'description' => $maklon->description,
                     'pic' => $maklon->pic,
                     'proof_number' => $maklon->proof_number,
@@ -222,7 +223,7 @@ class MaklonController extends Controller
                 // Journal 2: AM vs L14-12 Utang Pajak PPN (PPN Amount)
                 Journal::create([
                     'date' => $maklon->date,
-                    'number' => $this->generateJournalNumber(),
+                    'number' => JournalNumberService::generate($maklon->date),
                     'description' => $maklon->description,
                     'pic' => $maklon->pic,
                     'proof_number' => $maklon->proof_number,
@@ -241,7 +242,7 @@ class MaklonController extends Controller
                 $netAmount = ($maklon->dpp + $ppnAmount) - $pph23Amount;
                 Journal::create([
                     'date' => $maklon->date,
-                    'number' => $this->generateJournalNumber(),
+                    'number' => JournalNumberService::generate($maklon->date),
                     'description' => $maklon->description,
                     'pic' => $maklon->pic,
                     'proof_number' => $maklon->proof_number,
@@ -259,7 +260,7 @@ class MaklonController extends Controller
                 // Journal 4: L14-03 Utang Pajak PPh vs AM (PPh23 Amount)
                 Journal::create([
                     'date' => $maklon->date,
-                    'number' => $this->generateJournalNumber(),
+                    'number' => JournalNumberService::generate($maklon->date),
                     'description' => $maklon->description,
                     'pic' => $maklon->pic,
                     'proof_number' => $maklon->proof_number,
@@ -301,21 +302,5 @@ class MaklonController extends Controller
         }
     }
 
-    private function generateJournalNumber()
-    {
-        $date = now();
-        $prefix = 'MAK-' . $date->format('Ym') . '-';
-        $lastJournal = Journal::where('number', 'like', $prefix . '%')
-            ->orderBy('number', 'desc')
-            ->first();
 
-        if ($lastJournal) {
-            $lastNumber = intval(substr($lastJournal->number, -4));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-    }
 }

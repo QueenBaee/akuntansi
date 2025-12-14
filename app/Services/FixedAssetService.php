@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\FixedAsset;
 use App\Models\AssetDepreciation;
 use App\Models\Journal;
+use App\Services\JournalNumberService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -131,7 +132,7 @@ class FixedAssetService
 
     private function createDepreciationJournal(FixedAsset $asset, Carbon $period, float $amount, int $userId): Journal
     {
-        $journalNumber = $this->generateJournalNumber($period);
+        $journalNumber = JournalNumberService::generate($period->format('Y-m-01'));
 
         $journal = Journal::create([
             'date' => $period->format('Y-m-01'),
@@ -153,14 +154,5 @@ class FixedAssetService
         return $journal;
     }
 
-    private function generateJournalNumber(Carbon $date): string
-    {
-        $prefix = 'DEP/' . $date->format('Ym') . '/';
-        
-        $lastNumber = Journal::where('number', 'like', $prefix . '%')
-            ->whereDate('date', $date->format('Y-m-01'))
-            ->count();
-            
-        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-    }
+
 }
