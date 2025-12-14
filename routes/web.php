@@ -70,11 +70,17 @@ Route::middleware('auth')->group(function () {
         Route::get('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'index'])->name('fixed-assets.index');
         Route::get('fixed-assets/create', [\App\Http\Controllers\FixedAssetController::class, 'create'])->name('fixed-assets.create');
         Route::get('fixed-assets/create-from-transaction', [\App\Http\Controllers\FixedAssetController::class, 'createFromTransaction'])->name('fixed-assets.create-from-transaction');
+        Route::get('fixed-assets/merge-convert', [\App\Http\Controllers\FixedAssetController::class, 'showMergeConvert'])
+            ->name('fixed-assets.show-merge-convert');
         Route::post('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'store'])->name('fixed-assets.store');
         Route::post('fixed-assets/from-transaction', [\App\Http\Controllers\FixedAssetController::class, 'storeFromTransaction'])->name('fixed-assets.store-from-transaction');
+        Route::post('fixed-assets/merge-convert', [\App\Http\Controllers\FixedAssetController::class, 'mergeConvert'])
+            ->name('fixed-assets.merge-convert');
         Route::get('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'show'])->name('fixed-assets.show');
         Route::put('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'update'])->name('fixed-assets.update');
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
+        Route::post('fixed-assets/{fixedAsset}/convert-to-regular', [\App\Http\Controllers\FixedAssetController::class, 'convertToRegular'])
+            ->name('fixed-assets.convert-to-regular');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
         

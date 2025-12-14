@@ -39,6 +39,8 @@ class FixedAsset extends Model
         'accumulated_depreciation',
         'is_active',
         'created_by',
+        'merged_from',
+        'is_merged',
     ];
 
     protected $casts = [
@@ -49,6 +51,8 @@ class FixedAsset extends Model
         'depreciation_rate' => 'decimal:2',
         'accumulated_depreciation' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_merged' => 'boolean',
+        'merged_from' => 'array',
         'quantity' => 'integer',
         'useful_life_years' => 'integer',
         'useful_life_months' => 'integer',
@@ -158,7 +162,7 @@ class FixedAsset extends Model
     public static function generateAssetNumber()
     {
         $lastAsset = self::orderBy('id', 'desc')->first();
-        $nextNumber = $lastAsset ? (int)substr($lastAsset->asset_number, -4) + 1 : 1;
+        $nextNumber = $lastAsset ? $lastAsset->id + 1 : 1;
         return 'AST-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 

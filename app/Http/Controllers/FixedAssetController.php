@@ -7,6 +7,7 @@ use App\Models\Journal;
 use App\Models\TrialBalance;
 use App\Http\Requests\StoreFixedAssetRequest;
 use App\Http\Requests\UpdateFixedAssetRequest;
+use Illuminate\Support\Facades\DB;
 use App\Services\FixedAssetService;
 use App\Services\AssetFromTransactionService;
 use Illuminate\Http\Request;
@@ -50,7 +51,11 @@ class FixedAssetController extends Controller
             ]);
         }
 
-        return view('fixed-assets.index', compact('assets'));
+        // Get accounts for modal dropdowns
+        $accumulatedAccounts = TrialBalance::where('kode', 'like', 'A24%')->orderBy('kode')->get();
+        $expenseAccounts = TrialBalance::where('kode', 'like', 'E22%')->orderBy('kode')->get();
+
+        return view('fixed-assets.index', compact('assets', 'accumulatedAccounts', 'expenseAccounts'));
     }
 
     public function create()
@@ -277,5 +282,168 @@ class FixedAssetController extends Controller
             'count' => count($transactions),
             'transactions' => $transactions
         ]);
+    }
+
+    public function convertToRegular(FixedAsset $fixedAsset, Request $request)
+    {
+        if ($fixedAsset->group !== 'Aset Dalam Penyelesaian') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset is not under construction'
+                ], 422);
+            }
+            return back()->with('error', 'Aset bukan dalam penyelesaian');
+        }
+
+        $request->validate([
+            'group' => 'required|in:Permanent,Non-permanent,Group 1,Group 2',
+            'useful_life_years' => 'required|integer|min:1|max:50',
+            'depreciation_method' => 'required|in:Straight Line,Declining Balance',
+            'depreciation_start_date' => 'required|date',
+            'accumulated_account_id' => 'required|exists:trial_balances,id',
+            'expense_account_id' => 'required|exists:trial_balances,id'
+        ]);
+
+        $fixedAsset->update([
+            'group' => $request->group,
+            'useful_life_years' => $request->useful_life_years,
+            'useful_life_months' => $request->useful_life_years * 12,
+            'depreciation_method' => $request->depreciation_method,
+            'depreciation_start_date' => $request->depreciation_start_date,
+            'accumulated_account_id' => $request->accumulated_account_id,
+            'expense_account_id' => $request->expense_account_id,
+            'depreciation_rate' => $request->depreciation_method === 'Straight Line' 
+                ? round(100 / $request->useful_life_years, 2)
+                : round((2 / $request->useful_life_years) * 100, 2)
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Asset converted to regular successfully',
+                'data' => $fixedAsset->fresh()
+            ]);
+        }
+
+        return redirect()->route('fixed-assets.show', $fixedAsset)
+            ->with('success', 'Aset berhasil dikonversi menjadi aset regular');
+    }
+
+    public function showMergeConvert(Request $request)
+    {
+        $assetIds = explode(',', $request->get('assets', ''));
+        $selectedAssets = FixedAsset::whereIn('id', $assetIds)
+            ->where('group', 'Aset Dalam Penyelesaian')
+            ->get();
+
+        if ($selectedAssets->isEmpty()) {
+            return redirect()->route('fixed-assets.index')
+                ->with('error', 'No valid assets selected for conversion');
+        }
+
+        // Calculate totals and suggestions
+        $totalPrice = $selectedAssets->sum('acquisition_price');
+        $suggestedName = $selectedAssets->pluck('name')->join(' + ');
+        $suggestedCode = FixedAsset::generateAssetNumber();
+        $earliestDate = $selectedAssets->min('acquisition_date')->format('Y-m-d');
+        $firstAssetAccountId = $selectedAssets->first()->asset_account_id;
+
+        // Get accounts for dropdowns
+        $assetAccounts = TrialBalance::where('level', 4)
+            ->whereHas('parent', function($query) {
+                $query->where('is_aset', 1);
+            })
+            ->orderBy('kode')
+            ->get();
+        $accumulatedAccounts = TrialBalance::where('kode', 'like', 'A24%')->orderBy('kode')->get();
+        $expenseAccounts = TrialBalance::where('kode', 'like', 'E22%')->orderBy('kode')->get();
+        $allAccounts = TrialBalance::orderBy('kode')->get();
+
+        return view('fixed-assets.merge-convert', compact(
+            'selectedAssets', 'totalPrice', 'suggestedName', 'suggestedCode', 
+            'earliestDate', 'firstAssetAccountId', 'assetAccounts', 
+            'accumulatedAccounts', 'expenseAccounts', 'allAccounts'
+        ));
+    }
+
+    public function mergeConvert(Request $request)
+    {
+        $request->validate([
+            'asset_ids' => 'required|string',
+            'code' => 'required|string|max:50|unique:fixed_assets,code',
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'location' => 'nullable|string|max:255',
+            'group' => 'required|in:Permanent,Non-permanent,Group 1,Group 2',
+            'condition' => 'required|in:Baik,Rusak',
+            'status' => 'required|in:active,inactive',
+            'acquisition_date' => 'required|date',
+            'acquisition_price' => 'required|numeric|min:0',
+            'depreciation_method' => 'required|in:garis lurus,saldo menurun',
+            'depreciation_start_date' => 'required|date',
+            'useful_life_years' => 'required|integer|min:1|max:50',
+            'asset_account_id' => 'required|exists:trial_balances,id',
+            'accumulated_account_id' => 'required|exists:trial_balances,id',
+            'expense_account_id' => 'required|exists:trial_balances,id'
+        ]);
+
+        $assetIds = explode(',', $request->asset_ids);
+        $assetsToMerge = FixedAsset::whereIn('id', $assetIds)
+            ->where('group', 'Aset Dalam Penyelesaian')
+            ->get();
+
+        if ($assetsToMerge->count() !== count($assetIds)) {
+            return back()->with('error', 'Some assets are not under construction or not found');
+        }
+
+        $newAsset = DB::transaction(function () use ($request, $assetsToMerge) {
+            // Prepare merge history
+            $mergeHistory = $assetsToMerge->map(function ($asset) {
+                return [
+                    'id' => $asset->id,
+                    'code' => $asset->code,
+                    'name' => $asset->name,
+                    'acquisition_price' => $asset->acquisition_price,
+                    'acquisition_date' => $asset->acquisition_date->format('Y-m-d')
+                ];
+            })->toArray();
+
+            // Create new merged asset
+            $newAsset = FixedAsset::create([
+                'code' => $request->code,
+                'name' => $request->name,
+                'quantity' => $request->quantity,
+                'location' => $request->location,
+                'group' => $request->group,
+                'condition' => $request->condition,
+                'status' => $request->status,
+                'acquisition_date' => $request->acquisition_date,
+                'acquisition_price' => $request->acquisition_price,
+                'residual_value' => 1,
+                'depreciation_method' => $request->depreciation_method,
+                'depreciation_start_date' => $request->depreciation_start_date,
+                'useful_life_years' => $request->useful_life_years,
+                'useful_life_months' => $request->useful_life_years * 12,
+                'asset_account_id' => $request->asset_account_id,
+                'accumulated_account_id' => $request->accumulated_account_id,
+                'expense_account_id' => $request->expense_account_id,
+                'depreciation_rate' => $request->depreciation_method === 'garis lurus' 
+                    ? round(100 / $request->useful_life_years, 2)
+                    : round((2 / $request->useful_life_years) * 100, 2),
+                'is_active' => $request->status === 'active',
+                'is_merged' => true,
+                'merged_from' => json_encode($mergeHistory),
+                'created_by' => auth()->id()
+            ]);
+
+            // Delete old assets
+            $assetsToMerge->each->delete();
+
+            return $newAsset;
+        });
+
+        return redirect()->route('fixed-assets.show', $newAsset)
+            ->with('success', 'Assets successfully merged and converted to regular asset');
     }
 }
