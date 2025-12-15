@@ -29,7 +29,7 @@
     <div class="col-12">
         <div class="card">
 
-            <div class="card-body">
+            <div class="card-body" style="padding: 0;">
                 <div class="table-responsive">
                     <table class="table table-bordered table-striped">
                         <thead class="table-light">

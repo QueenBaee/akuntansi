@@ -88,7 +88,7 @@
 
             <div class="card">
 
-                <div class="card-body">
+                <div class="card-body" style="padding: 0;">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
                             <thead class="table-light">
