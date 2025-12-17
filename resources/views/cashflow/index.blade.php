@@ -33,42 +33,53 @@
 
 @section('content')
 <style>
-.table td, .table th {
-    white-space: nowrap !important;
+body {
+    overflow-x: hidden;
+}
+.card {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 .table {
-    width: max-content !important;
-    min-width: 100% !important;
+    width: 100%;
+    table-layout: fixed;
+}
+.table td, .table th {
+    vertical-align: middle;
+    word-wrap: break-word;
+}
+.card {
+    overflow: hidden;
+}
+.btn-list {
+    justify-content: center;
+    gap: 0.25rem;
 }
 </style>
 <div class="row">
     <div class="col-12">
-
         <div class="card">
-            <div style="overflow-x: auto;">
-                <table class="table table-vcenter card-table mb-0" style="width: auto; table-layout: auto;">
-                    <thead>
-                        <tr>
-                            <th>Kode</th>
-                            <th>Keterangan</th>
-                            <th>Akun TB</th>
-                            <th style="text-align: center;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cashflow-tbody">
-                        <tr id="loading-row">
-                            <td colspan="4" class="text-center py-4">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <div class="mt-2">Loading...</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table class="table table-vcenter card-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Kode</th>
+                        <th>Keterangan</th>
+                        <th>Akun TB</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="cashflow-tbody">
+                    <tr id="loading-row">
+                        <td colspan="4" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="mt-2">Loading...</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-
     </div>
 </div>
 
@@ -138,8 +149,8 @@ function renderCashflowRow(item) {
         html += '<td>-</td>';
     }
     
-    html += `<td class="text-end">
-        <div class="btn-list flex-nowrap">
+    html += `<td class="text-center">
+        <div class="btn-list">
             <a href="/cashflow/${item.id}/edit" class="btn btn-sm btn-outline-primary">Edit</a>
             <form action="/cashflow/${item.id}" method="POST" class="d-inline">
                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
