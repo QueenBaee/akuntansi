@@ -93,16 +93,16 @@
                         <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
                             <thead class="table-light">
                                 <tr style="border: 1px solid #dee2e6;">
-                                    <th style="border: 1px solid #dee2e6;">Tanggal</th>
-                                    <th style="border: 1px solid #dee2e6;">Keterangan</th>
-                                    <th style="border: 1px solid #dee2e6;">PIC</th>
-                                    <th style="border: 1px solid #dee2e6;">No Bukti</th>
-                                    <th style="border: 1px solid #dee2e6;">Dokumen</th>
-                                    <th style="border: 1px solid #dee2e6;">Debit</th>
-                                    <th style="border: 1px solid #dee2e6;">Rp</th>
-                                    <th style="border: 1px solid #dee2e6;">Kredit</th>
-                                    <th style="border: 1px solid #dee2e6;">Rp</th>
-                                    <th style="border: 1px solid #dee2e6;">Aksi</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Tanggal</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Keterangan</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">PIC</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">No Bukti</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Dokumen</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Debit</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Rp</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Kredit</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Rp</th>
+                                    <th style="border: 1px solid #dee2e6; text-align:center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="memorialLines">

@@ -51,16 +51,16 @@
             <table class="table table-vcenter card-table">
                 <thead>
                     <tr>
-                        <th>Nomor Aset</th>
-                        <th>Nama Aset</th>
-                        <th>Qty</th>
-                        <th>Kelompok</th>
-                        <th>Kondisi</th>
-                        <th>Tgl Perolehan</th>
-                        <th>Harga Perolehan</th>
-                        <th>Akum. Penyusutan</th>
-                        <th>Nilai Buku</th>
-                        <th class="w-1">Aksi</th>
+                        <th style="text-align:center">Nomor Aset</th>
+                        <th style="text-align:center">Nama Aset</th>
+                        <th style="text-align:center">Qty</th>
+                        <th style="text-align:center">Kelompok</th>
+                        <th style="text-align:center">Kondisi</th>
+                        <th style="text-align:center">Tgl Perolehan</th>
+                        <th style="text-align:center">Harga Perolehan</th>
+                        <th style="text-align:center">Akum. Penyusutan</th>
+                        <th style="text-align:center">Nilai Buku</th>
+                        <th class="w-1" style="text-align:center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

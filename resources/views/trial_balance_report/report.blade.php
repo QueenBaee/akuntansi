@@ -18,13 +18,13 @@
         <table class="table table-bordered table-sm">
             <thead class="table-light">
                 <tr>
-                    <th>KODE</th>
-                    <th>KETERANGAN</th>
+                    <th style="text-align:center">KODE</th>
+                    <th style="text-align:center">KETERANGAN</th>
                     @foreach(range(1,12) as $m)
-                        <th>{{ strtoupper(date('M', mktime(0,0,0,$m,1))) }}</th>
+                        <th style="text-align:center">{{ strtoupper(date('M', mktime(0,0,0,$m,1))) }}</th>
                     @endforeach
-                    <th>TOTAL {{ $year }}</th>
-                    <th>TOTAL 2024</th>
+                    <th style="text-align:center">TOTAL {{ $year }}</th>
+                    <th style="text-align:center">TOTAL 2024</th>
                 </tr>
             </thead>
             <tbody>

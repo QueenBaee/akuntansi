@@ -163,6 +163,11 @@ body {
     color: #374151;
 }
 
+/* Center all table headers */
+thead th {
+    text-align: center;
+}
+
 .table tr:hover {
     background: #f9fafb;
 }

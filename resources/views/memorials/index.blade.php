@@ -25,23 +25,22 @@
 @endpush
 
 @section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-
-            <div class="card-body">
+<div class="row m-0">
+    <div class="col-12 p-0">
+        <div class="card m-0">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped m-0">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center">Tanggal</th>
-                                <th class="text-center">Keterangan</th>
-                                <th class="text-center">PIC</th>
-                                <th class="text-center">No Bukti</th>
-                                <th class="text-center">Dokumen</th>
-                                <th class="text-center">Debit (Rp)</th>
-                                <th class="text-center">Kredit (Rp)</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center" style="text-align:center">Tanggal</th>
+                                <th class="text-center" style="text-align:center">Keterangan</th>
+                                <th class="text-center" style="text-align:center">PIC</th>
+                                <th class="text-center" style="text-align:center">No Bukti</th>
+                                <th class="text-center" style="text-align:center">Dokumen</th>
+                                <th class="text-center" style="text-align:center">Debit (Rp)</th>
+                                <th class="text-center" style="text-align:center">Kredit (Rp)</th>
+                                <th class="text-center" style="text-align:center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

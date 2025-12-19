@@ -34,17 +34,17 @@
                     <table class="table table-bordered table-striped">
                         <thead class="table-light">
                             <tr>
-                                <th class="text-center">Tanggal</th>
-                                <th class="text-center">Keterangan</th>
-                                <th class="text-center">PIC</th>
-                                <th class="text-center">No Bukti</th>
-                                <th class="text-center">Dokumen</th>
-                                <th class="text-center">Batang</th>
-                                <th class="text-center">DPP (Rp)</th>
-                                <th class="text-center">PPN (%)</th>
-                                <th class="text-center">PPh23 (%)</th>
-                                <th class="text-center">Post</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="text-center" style="text-align:center">Tanggal</th>
+                                <th class="text-center" style="text-align:center">Keterangan</th>
+                                <th class="text-center" style="text-align:center">PIC</th>
+                                <th class="text-center" style="text-align:center">No Bukti</th>
+                                <th class="text-center" style="text-align:center">Dokumen</th>
+                                <th class="text-center" style="text-align:center">Batang</th>
+                                <th class="text-center" style="text-align:center">DPP (Rp)</th>
+                                <th class="text-center" style="text-align:center">PPN (%)</th>
+                                <th class="text-center" style="text-align:center">PPh23 (%)</th>
+                                <th class="text-center" style="text-align:center">Post</th>
+                                <th class="text-center" style="text-align:center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="maklonTableBody">

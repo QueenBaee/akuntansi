@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
         Route::get('fixed-assets/create', [\App\Http\Controllers\FixedAssetController::class, 'create'])->name('fixed-assets.create');
         Route::post('fixed-assets', [\App\Http\Controllers\FixedAssetController::class, 'store'])->name('fixed-assets.store');
         Route::get('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'show'])->name('fixed-assets.show');
+        Route::get('fixed-assets/{fixedAsset}/edit', [\App\Http\Controllers\FixedAssetController::class, 'edit'])->name('fixed-assets.edit');
         Route::put('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'update'])->name('fixed-assets.update');
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])

@@ -114,10 +114,10 @@
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
                             <span class="avatar avatar-sm"
-                                style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=206bc4&color=fff)"></span>
+                                style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode(auth()->user()?->name ?? 'User') }}&background=206bc4&color=fff)"></span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ auth()->user()->name }}</div>
-                                <div class="mt-1 small text-muted">{{ auth()->user()->email }}</div>
+                                <div>{{ auth()->user()?->name ?? 'User' }}</div>
+                                <div class="mt-1 small text-muted">{{ auth()->user()?->email ?? '-' }}</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">

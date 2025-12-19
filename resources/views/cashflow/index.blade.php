@@ -59,27 +59,30 @@ body {
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <table class="table table-vcenter card-table mb-0">
-                <thead>
-                    <tr>
-                        <th>Kode</th>
-                        <th>Keterangan</th>
-                        <th>Akun TB</th>
-                        <th class="text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody id="cashflow-tbody">
-                    <tr id="loading-row">
-                        <td colspan="4" class="text-center py-4">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <div class="mt-2">Loading...</div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div style="overflow-x: auto;">
+                <table class="table table-vcenter card-table mb-0" style="width: auto; table-layout: auto;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center">Kode</th>
+                            <th style="text-align:center">Keterangan</th>
+                            <th style="text-align:center">Akun TB</th>
+                            <th style="text-align:center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cashflow-tbody">
+                        <tr id="loading-row">
+                            <td colspan="4" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="mt-2">Loading...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 </div>
 

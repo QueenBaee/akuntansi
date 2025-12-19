@@ -141,18 +141,18 @@
                                 <table class="table table-bordered" id="journalTable" style="border: 1px solid #dee2e6;">
                                     <thead class="table-light">
                                         <tr style="border: 1px solid #dee2e6;">
-                                            <th style="border: 1px solid #dee2e6; width: 80px;">Tanggal</th>
-                                            <th style="border: 1px solid #dee2e6; width: 200px;">Keterangan</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px;">PIC</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px;">Bukti</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px;">No. Bukti</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Masuk</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Keluar</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
-                                            <th style="border: 1px solid #dee2e6; width: 230px;">Kode & Akun CF</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Debit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px;">Kredit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
+                                            <th style="border: 1px solid #dee2e6; width: 80px; text-align:center">Tanggal</th>
+                                            <th style="border: 1px solid #dee2e6; width: 200px; text-align:center">Keterangan</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">PIC</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">Bukti</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">No. Bukti</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Masuk</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Keluar</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Saldo</th>
+                                            <th style="border: 1px solid #dee2e6; width: 230px; text-align:center">Kode & Akun CF</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px; text-align:center">Debit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px; text-align:center">Kredit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 50px; text-align:center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="journalLines">

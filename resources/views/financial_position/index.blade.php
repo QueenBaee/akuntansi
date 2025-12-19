@@ -26,7 +26,7 @@
                             font-size: 14px;
                         }
 
-                        .no-equal-width th {
+                        .no-equal-width thead th {
                             text-align: center !important;
                             vertical-align: middle !important;
                             font-weight: 600 !important;
@@ -34,24 +34,21 @@
                             width: auto !important;
                         }
 
-                        .no-equal-width td:nth-child(1),
-                        .no-equal-width th:nth-child(1) {
+                        .no-equal-width tbody td:nth-child(1) {
                             min-width: 80px !important;
                             width: 80px !important;
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
-                        .no-equal-width td:nth-child(2),
-                        .no-equal-width th:nth-child(2) {
+                        .no-equal-width tbody td:nth-child(2) {
                             min-width: 200px !important;
                             width: auto !important;
                             text-align: left !important;
                             white-space: nowrap !important;
                         }
 
-                        .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
-                        .no-equal-width th:not(:nth-child(1)):not(:nth-child(2)) {
+                        .no-equal-width tbody td:not(:nth-child(1)):not(:nth-child(2)) {
                             text-align: right !important;
                             min-width: 80px !important;
                             width: 80px !important;
@@ -69,13 +66,13 @@
                     <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th>Kode</th>
-                                <th>Keterangan</th>
+                                <th style="text-align:center">Kode</th>
+                                <th style="text-align:center">Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
+                                    <th style="text-align:center">{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
                                 @endfor
-                                <th>{{ $year }}</th>
-                                <th>{{ $year - 1 }}</th>
+                                <th style="text-align:center">{{ $year }}</th>
+                                <th style="text-align:center">{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -190,7 +187,7 @@
                             <!-- Total Aset Lancar -->
                             <tr style="background-color: #f8f9fa; font-weight: bold;">
                                 <td></td>
-                                <td>TOTAL ASET LANCAR</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentAssetTotals["month_$m"]) }}</td>
                                 @endfor
@@ -264,7 +261,7 @@
                             <!-- Total Aset Tidak Lancar -->
                             <tr style="background-color: #f8f9fa; font-weight: bold;">
                                 <td></td>
-                                <td>TOTAL ASET TIDAK LANCAR</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($nonCurrentAssetTotals["month_$m"]) }}</td>
                                 @endfor
@@ -275,7 +272,7 @@
                             <!-- TOTAL ASET -->
                             <tr style="background-color: #dee2e6; font-weight: bold; font-size: 16px;">
                                 <td></td>
-                                <td>TOTAL ASET</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentAssetTotals["month_$m"] + $nonCurrentAssetTotals["month_$m"]) }}</td>
                                 @endfor
@@ -335,7 +332,7 @@
                             <!-- Total Kewajiban Jangka Pendek -->
                             <tr style="background-color: #f8f9fa; font-weight: bold;">
                                 <td></td>
-                                <td>TOTAL KEWAJIBAN JANGKA PENDEK</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentLiabilityTotals["month_$m"]) }}</td>
                                 @endfor
@@ -388,7 +385,7 @@
                             <!-- Total Kewajiban Jangka Panjang -->
                             <tr style="background-color: #f8f9fa; font-weight: bold;">
                                 <td></td>
-                                <td>TOTAL KEWAJIBAN JANGKA PANJANG</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($longTermLiabilityTotals["month_$m"]) }}</td>
                                 @endfor
@@ -399,7 +396,7 @@
                             <!-- TOTAL KEWAJIBAN -->
                             <tr style="background-color: #dee2e6; font-weight: bold; font-size: 16px;">
                                 <td></td>
-                                <td>TOTAL KEWAJIBAN</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentLiabilityTotals["month_$m"] + $longTermLiabilityTotals["month_$m"]) }}</td>
                                 @endfor
@@ -445,7 +442,7 @@
                             <!-- TOTAL EKUITAS -->
                             <tr style="background-color: #dee2e6; font-weight: bold; font-size: 16px;">
                                 <td></td>
-                                <td>TOTAL EKUITAS</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($equityTotals["month_$m"]) }}</td>
                                 @endfor
@@ -456,7 +453,7 @@
                             <!-- TOTAL KEWAJIBAN & EKUITAS -->
                             <tr style="background-color: #ced4da; font-weight: bold; font-size: 17px;">
                                 <td></td>
-                                <td>TOTAL KEWAJIBAN & EKUITAS</td>
+                                <td>&nbsp;</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentLiabilityTotals["month_$m"] + $longTermLiabilityTotals["month_$m"] + $equityTotals["month_$m"]) }}</td>
                                 @endfor

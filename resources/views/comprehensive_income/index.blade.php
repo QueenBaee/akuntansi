@@ -26,7 +26,7 @@
                             font-size: 14px;
                         }
 
-                        .no-equal-width th {
+                        .no-equal-width thead th {
                             text-align: center !important;
                             vertical-align: middle !important;
                             font-weight: 600 !important;
@@ -34,23 +34,20 @@
                             width: auto !important;
                         }
 
-                        .no-equal-width td:nth-child(1),
-                        .no-equal-width th:nth-child(1) {
+                        .no-equal-width tbody td:nth-child(1) {
                             min-width: 200px !important;
                             width: auto !important;
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
-                        .no-equal-width td:nth-child(2),
-                        .no-equal-width th:nth-child(2) {
+                        .no-equal-width tbody td:nth-child(2) {
                             min-width: 80px !important;
                             width: 80px !important;
                             text-align: center !important;
                         }
 
-                        .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
-                        .no-equal-width th:not(:nth-child(1)):not(:nth-child(2)) {
+                        .no-equal-width tbody td:not(:nth-child(1)):not(:nth-child(2)) {
                             text-align: right !important;
                             min-width: 80px !important;
                             width: 80px !important;
@@ -68,13 +65,13 @@
                     <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th>Keterangan</th>
-                                <th>Note</th>
+                                <th style="text-align:center">Keterangan</th>
+                                <th style="text-align:center">Note</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
+                                    <th style="text-align:center">{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
                                 @endfor
-                                <th>{{ $year }}</th>
-                                <th>{{ $year - 1 }}</th>
+                                <th style="text-align:center">{{ $year }}</th>
+                                <th style="text-align:center">{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>

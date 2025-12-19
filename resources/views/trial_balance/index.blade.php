@@ -120,12 +120,12 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Kode</th>
-                            <th>Keterangan</th>
-                            <th class="text-center">Kas/Bank</th>
-                            <th class="text-center">Aset</th>
-                            <th>2024 (Rp)</th>
-                            <th class="w-1">Aksi</th>
+                            <th style="text-align:center">Kode</th>
+                            <th style="text-align:center">Keterangan</th>
+                            <th class="text-center" style="text-align:center">Kas/Bank</th>
+                            <th class="text-center" style="text-align:center">Aset</th>
+                            <th style="text-align:center">2024 (Rp)</th>
+                            <th class="w-1" style="text-align:center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="trial-balance-tbody">

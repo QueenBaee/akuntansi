@@ -50,10 +50,10 @@
                         <div class="mb-3">
                             <label class="form-label">User</label>
                             <div class="d-flex align-items-center">
-                                <span class="avatar me-2" style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode($userAccount->user->name) }}&background=206bc4&color=fff)"></span>
+                                <span class="avatar me-2" style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode($userAccount->user?->name ?? 'User') }}&background=206bc4&color=fff)"></span>
                                 <div>
-                                    <div class="font-weight-medium">{{ $userAccount->user->name }}</div>
-                                    <div class="text-muted">{{ $userAccount->user->email }}</div>
+                                    <div class="font-weight-medium">{{ $userAccount->user?->name ?? '-' }}</div>
+                                    <div class="text-muted">{{ $userAccount->user?->email ?? '-' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -62,8 +62,8 @@
                         <div class="mb-3">
                             <label class="form-label">Account</label>
                             <div>
-                                <div class="font-weight-medium">{{ $userAccount->account->name }}</div>
-                                <div class="text-muted">{{ $userAccount->account->code }} - {{ ucfirst($userAccount->account->type) }}</div>
+                                <div class="font-weight-medium">{{ $userAccount->account?->name ?? '-' }}</div>
+                                <div class="text-muted">{{ $userAccount->account?->code ?? '-' }} - {{ ucfirst($userAccount->account?->type ?? '-') }}</div>
                             </div>
                         </div>
                     </div>
