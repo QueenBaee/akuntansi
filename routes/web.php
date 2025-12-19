@@ -146,6 +146,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/cashflow', [CashflowReportController::class, 'index'])
         ->name('reports.cashflow');
 
+    // General Ledger Report
+    Route::get('/ledger', [LedgerController::class, 'index'])
+        ->name('ledger.index');
+
     // Notes to Financial Statements Report
     Route::get('/notes-to-financial-statements', [\App\Http\Controllers\NotesToFinancialStatementsController::class, 'index'])
         ->name('notes-to-financial-statements.index');
