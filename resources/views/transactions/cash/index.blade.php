@@ -32,13 +32,13 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th>Tanggal</th>
-                            <th>Tipe</th>
-                            <th>Akun Kas</th>
-                            <th>Akun Lawan</th>
-                            <th>Jumlah</th>
-                            <th>Deskripsi</th>
-                            <th class="w-1">Aksi</th>
+                            <th style="text-align:center">Tanggal</th>
+                            <th style="text-align:center">Tipe</th>
+                            <th style="text-align:center">Akun Kas</th>
+                            <th style="text-align:center">Akun Lawan</th>
+                            <th style="text-align:center">Jumlah</th>
+                            <th style="text-align:center">Deskripsi</th>
+                            <th class="w-1" style="text-align:center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

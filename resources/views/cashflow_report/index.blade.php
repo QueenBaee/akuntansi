@@ -146,14 +146,14 @@
                     <table class="table table-bordered table-striped no-equal-width" style="table-layout: auto; width: max-content; min-width: 100%;">
                         <thead>
                             <tr>
-                                <th>Kode</th>
-                                <th>Keterangan</th>
+                                <th style="text-align:center">Kode</th>
+                                <th style="text-align:center">Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
+                                    <th style="text-align:center">{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
-                                <th>{{ $year }}</th>
-                                <th>Kode TB</th>
-                                <th>Akun Laporan Keuangan</th>
+                                <th style="text-align:center">{{ $year }}</th>
+                                <th style="text-align:center">Kode TB</th>
+                                <th style="text-align:center">Akun Laporan Keuangan</th>
                             </tr>
                         </thead>
                         <tbody>

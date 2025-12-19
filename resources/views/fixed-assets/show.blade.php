@@ -9,7 +9,7 @@
 
 @section('page-actions')
 <div class="btn-list">
-    <button class="btn btn-primary edit-btn" onclick="editAsset()">
+    <a href="{{ route('fixed-assets.edit', $fixedAsset) }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -17,22 +17,7 @@
             <path d="M16 5l3 3"/>
         </svg>
         Edit
-    </button>
-    <button class="btn btn-success save-btn" onclick="saveAsset()" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-            <path d="M5 12l5 5l10 -10"/>
-        </svg>
-        Simpan
-    </button>
-    <button class="btn btn-secondary cancel-btn" onclick="cancelEdit()" style="display: none;">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-            <path d="M18 6l-12 12"/>
-            <path d="M6 6l12 12"/>
-        </svg>
-        Batal
-    </button>
+    </a>
     <a href="{{ route('fixed-assets.index') }}" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
@@ -246,12 +231,12 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th>Periode</th>
-                            <th class="text-end">Beban Penyusutan</th>
-                            <th class="text-end">Akumulasi Penyusutan</th>
-                            <th class="text-end">Nilai Buku</th>
-                            <th>Status</th>
-                            <th class="w-1">Aksi</th>
+                            <th style="text-align:center">Periode</th>
+                            <th class="text-end" style="text-align:center">Beban Penyusutan</th>
+                            <th class="text-end" style="text-align:center">Akumulasi Penyusutan</th>
+                            <th class="text-end" style="text-align:center">Nilai Buku</th>
+                            <th style="text-align:center">Status</th>
+                            <th class="w-1" style="text-align:center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -349,100 +334,6 @@
 
 @push('scripts')
 <script>
-let originalData = {};
-
-function editAsset() {
-    const editables = document.querySelectorAll('.editable');
-    
-    editables.forEach(element => {
-        const field = element.dataset.field;
-        const currentValue = element.textContent.trim();
-        originalData[field] = currentValue;
-        
-        if (field === 'acquisition_date') {
-            const dateValue = new Date(currentValue.split(' ').reverse().join('-')).toISOString().split('T')[0];
-            element.innerHTML = `<input type="date" class="form-control" value="${dateValue}">`;
-        } else if (field === 'acquisition_price' || field === 'residual_value') {
-            const numericValue = currentValue.replace(/\./g, '');
-            element.innerHTML = `<input type="number" class="form-control" value="${numericValue}" step="0.01">`;
-        } else if (field === 'useful_life_months') {
-            const numericValue = currentValue.replace(' bulan', '');
-            element.innerHTML = `<input type="number" class="form-control" value="${numericValue}" min="1">`;
-        } else if (field === 'residual_value') {
-            const percentValue = parseFloat(currentValue.replace('%', ''));
-            element.innerHTML = `<input type="number" class="form-control" value="${percentValue}" min="0" max="100" step="0.01">`;
-        } else {
-            element.innerHTML = `<input type="text" class="form-control" value="${currentValue}">`;
-        }
-    });
-    
-    document.querySelector('.edit-btn').style.display = 'none';
-    document.querySelector('.save-btn').style.display = 'inline-block';
-    document.querySelector('.cancel-btn').style.display = 'inline-block';
-}
-
-function saveAsset() {
-    const editables = document.querySelectorAll('.editable');
-    const formData = {};
-    
-    editables.forEach(element => {
-        const field = element.dataset.field;
-        const input = element.querySelector('input');
-        if (input) {
-            if (field === 'residual_value') {
-                formData[field] = parseFloat(input.value) / 100 || 0;
-            } else {
-                formData[field] = input.value;
-            }
-        }
-    });
-    
-    fetch(`/fixed-assets/{{ $fixedAsset->id }}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(formData)
-    })
-    .then(async response => {
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showAlert('success', data.message || 'Data berhasil diupdate');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showAlert('error', data.message || 'Gagal mengupdate data');
-            cancelEdit();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('error', error.message || 'Terjadi kesalahan saat mengupdate data');
-        cancelEdit();
-    });
-}
-
-function cancelEdit() {
-    const editables = document.querySelectorAll('.editable');
-    
-    editables.forEach(element => {
-        const field = element.dataset.field;
-        element.textContent = originalData[field];
-    });
-    
-    document.querySelector('.edit-btn').style.display = 'inline-block';
-    document.querySelector('.save-btn').style.display = 'none';
-    document.querySelector('.cancel-btn').style.display = 'none';
-}
-
 function showPostModal(assetId, period, periodFormatted) {
     document.getElementById('postMessage').textContent = `Posting penyusutan untuk ${periodFormatted}?`;
     

@@ -80,12 +80,12 @@
         <table class="table table-vcenter card-table">
             <thead>
                 <tr>
-                    <th>Kode</th>
-                    <th>Nama</th>
-                    <th>Tipe Akun</th>
-                    <th>Grup</th>
-                    <th>Saldo Normal</th>
-                    <th class="w-1">Aksi</th>
+                    <th style="text-align:center">Kode</th>
+                    <th style="text-align:center">Nama</th>
+                    <th style="text-align:center">Tipe Akun</th>
+                    <th style="text-align:center">Grup</th>
+                    <th style="text-align:center">Saldo Normal</th>
+                    <th class="w-1" style="text-align:center">Aksi</th>
                 </tr>
             </thead>
             <tbody id="ledger-table">

@@ -74,12 +74,12 @@
             <table class="table table-vcenter card-table">
                 <thead>
                     <tr>
-                        <th>User</th>
-                        <th>Ledger</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Dibuat</th>
-                        <th class="w-1">Aksi</th>
+                        <th style="text-align:center">User</th>
+                        <th style="text-align:center">Ledger</th>
+                        <th style="text-align:center">Role</th>
+                        <th style="text-align:center">Status</th>
+                        <th style="text-align:center">Dibuat</th>
+                        <th class="w-1" style="text-align:center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="userLedgerTableBody">

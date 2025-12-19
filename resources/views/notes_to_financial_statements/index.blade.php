@@ -71,13 +71,13 @@
                     <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th>Kode</th>
-                                <th>Keterangan</th>
+                                <th style="text-align:center">Kode</th>
+                                <th style="text-align:center">Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th>{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
+                                    <th style="text-align:center">{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
                                 @endfor
-                                <th>{{ $year }}</th>
-                                <th>{{ $year - 1 }}</th>
+                                <th style="text-align:center">{{ $year }}</th>
+                                <th style="text-align:center">{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +137,7 @@
                                         // Subtotal for acquisition cost
                                         echo '<tr class="group-total">';
                                         echo '<td></td>';
-                                        echo '<td><strong>Total Harga Perolehan</strong></td>';
+                                        echo '<td>&nbsp;</td>';
                                         for ($m = 1; $m <= 12; $m++) {
                                             echo '<td><strong>' . formatAccounting($groupTotals["month_$m"]) . '</strong></td>';
                                         }
@@ -171,7 +171,7 @@
                                         // Subtotal for accumulated depreciation
                                         echo '<tr class="group-total">';
                                         echo '<td></td>';
-                                        echo '<td><strong>Total Akumulasi Penyusutan</strong></td>';
+                                        echo '<td>&nbsp;</td>';
                                         for ($m = 1; $m <= 12; $m++) {
                                             echo '<td><strong>(' . formatAccounting($groupTotals["month_$m"]) . ')</strong></td>';
                                         }
@@ -206,7 +206,7 @@
                                         // Group total
                                         echo '<tr class="group-total">';
                                         echo '<td></td>';
-                                        echo '<td><strong>Total ' . $groupName . '</strong></td>';
+                                        echo '<td>&nbsp;</td>';
                                         for ($m = 1; $m <= 12; $m++) {
                                             echo '<td><strong>' . formatAccounting($groupTotals["month_$m"]) . '</strong></td>';
                                         }

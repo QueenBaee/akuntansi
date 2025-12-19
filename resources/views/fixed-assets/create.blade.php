@@ -67,10 +67,10 @@
                                     <label class="form-label">Kelompok <span class="text-danger">*</span></label>
                                     <select name="group" id="assetGroup" class="form-select @error('group') is-invalid @enderror" required>
                                         <option value="">Pilih Kelompok</option>
-                                        <option value="Permanent" {{ old('group') == 'Permanent' ? 'selected' : '' }}>Permanent</option>
-                                        <option value="Non-permanent" {{ old('group') == 'Non-permanent' ? 'selected' : '' }}>Non-permanent</option>
-                                        <option value="Group 1" {{ old('group') == 'Group 1' ? 'selected' : '' }}>Group 1</option>
-                                        <option value="Group 2" {{ old('group') == 'Group 2' ? 'selected' : '' }}>Group 2</option>
+                                        <option value="Permanent" {{ old('group') == 'Permanent' ? 'selected' : '' }}>Aset Permanen</option>
+                                        <option value="Non-permanent" {{ old('group') == 'Non-permanent' ? 'selected' : '' }}>Aset Tidak Permanen</option>
+                                        <option value="Group 1" {{ old('group') == 'Group 1' ? 'selected' : '' }}>Kelompok 1</option>
+                                        <option value="Group 2" {{ old('group') == 'Group 2' ? 'selected' : '' }}>Kelompok 2</option>
                                     </select>
                                     @error('group')
                                         <div class="invalid-feedback">{{ $message }}</div>

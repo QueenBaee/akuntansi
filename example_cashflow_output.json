@@ -1,0 +1,79 @@
+{
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "kode": "R1",
+        "keterangan": "Operating Activities",
+        "level": 1,
+        "parent_id": null,
+        "trial_balance_id": null,
+        "transaction_count": 0,
+        "children": [
+          {
+            "id": 2,
+            "kode": "R1-1",
+            "keterangan": "Cash Receipts from Customers",
+            "level": 2,
+            "parent_id": 1,
+            "trial_balance_id": null,
+            "transaction_count": 0,
+            "children": [
+              {
+                "id": 3,
+                "kode": "R1-1-1",
+                "keterangan": "Sales Revenue",
+                "level": 3,
+                "parent_id": 2,
+                "trial_balance_id": 101,
+                "transaction_count": 15,
+                "trial_balance": {
+                  "id": 101,
+                  "kode": "1101",
+                  "keterangan": "Cash Account"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "kode": "E1",
+        "keterangan": "Operating Expenses",
+        "level": 1,
+        "parent_id": null,
+        "trial_balance_id": null,
+        "transaction_count": 0,
+        "children": [
+          {
+            "id": 5,
+            "kode": "E1-1",
+            "keterangan": "Cash Payments to Suppliers",
+            "level": 2,
+            "parent_id": 4,
+            "trial_balance_id": null,
+            "transaction_count": 0,
+            "children": [
+              {
+                "id": 6,
+                "kode": "E1-1-1",
+                "keterangan": "Inventory Purchases",
+                "level": 3,
+                "parent_id": 5,
+                "trial_balance_id": 201,
+                "transaction_count": 8,
+                "trial_balance": {
+                  "id": 201,
+                  "kode": "2101",
+                  "keterangan": "Accounts Payable"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

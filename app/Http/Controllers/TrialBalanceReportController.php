@@ -10,6 +10,9 @@ class TrialBalanceReportController extends Controller
 {
     public function index(Request $request)
     {
+        set_time_limit(300); // 5 minutes
+        ini_set('memory_limit', '512M');
+        
         $year = $request->year ?? date('Y');
         $previousYear = $year - 1;
 

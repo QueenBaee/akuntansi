@@ -1,0 +1,60 @@
+# Nginx Configuration for 504 Timeout Fix
+# Add these lines to your nginx configuration file (usually in /etc/nginx/nginx.conf or site config)
+
+# Inside http block:
+fastcgi_read_timeout 300;
+fastcgi_send_timeout 300;
+fastcgi_connect_timeout 300;
+
+# Inside server or location block:
+proxy_read_timeout 300;
+proxy_connect_timeout 300;
+proxy_send_timeout 300;
+
+# For PHP-FPM (in location ~ \.php$ block):
+location ~ \.php$ {
+    fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;  # Adjust PHP version as needed
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    include fastcgi_params;
+    
+    fastcgi_read_timeout 300;
+    fastcgi_send_timeout 300;
+    fastcgi_connect_timeout 300;
+}
+
+# Complete example for Laravel:
+server {
+    listen 80;
+    server_name your-domain.com;
+    root /path/to/akuntansi/public;
+
+    index index.php index.html;
+
+    # Timeout settings
+    fastcgi_read_timeout 300;
+    fastcgi_send_timeout 300;
+    fastcgi_connect_timeout 300;
+    proxy_read_timeout 300;
+    proxy_connect_timeout 300;
+    proxy_send_timeout 300;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        
+        fastcgi_read_timeout 300;
+        fastcgi_send_timeout 300;
+        fastcgi_connect_timeout 300;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}

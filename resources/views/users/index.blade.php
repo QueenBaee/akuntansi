@@ -53,11 +53,11 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th class="w-1">Actions</th>
+                            <th style="text-align:center">Name</th>
+                            <th style="text-align:center">Email</th>
+                            <th style="text-align:center">Role</th>
+                            <th style="text-align:center">Status</th>
+                            <th class="w-1" style="text-align:center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

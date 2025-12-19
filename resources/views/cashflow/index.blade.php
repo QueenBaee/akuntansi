@@ -49,10 +49,10 @@
                 <table class="table table-vcenter card-table mb-0" style="width: auto; table-layout: auto;">
                     <thead>
                         <tr>
-                            <th>Kode</th>
-                            <th>Keterangan</th>
-                            <th>Akun TB</th>
-                            <th style="text-align: center;">Aksi</th>
+                            <th style="text-align:center">Kode</th>
+                            <th style="text-align:center">Keterangan</th>
+                            <th style="text-align:center">Akun TB</th>
+                            <th style="text-align:center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="cashflow-tbody">
