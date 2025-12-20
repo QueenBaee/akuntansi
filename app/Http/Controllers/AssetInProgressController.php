@@ -20,12 +20,22 @@ class AssetInProgressController extends Controller
 
     public function index()
     {
-        $assetsInProgress = FixedAsset::inProgress()
+        $assets = FixedAsset::inProgress()
             ->with(['assetAccount', 'creator'])
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->get();
 
-        return view('assets-in-progress.index', compact('assetsInProgress'));
+        // Group assets by acquisition account, then by group
+        $groupedAssets = $assets->groupBy(function($asset) {
+            if ($asset->assetAccount) {
+                return $asset->assetAccount->keterangan ?: $asset->assetAccount->nama;
+            }
+            return 'ADP - ' . ($asset->group ?: 'Tidak Dikelompokkan');
+        })->map(function($accountAssets) {
+            return $accountAssets->groupBy('group');
+        });
+
+        return view('assets-in-progress.index', compact('groupedAssets'));
     }
 
     public function show(FixedAsset $asset)

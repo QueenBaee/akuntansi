@@ -2,76 +2,130 @@
 
 @section('title', 'Aset Dalam Penyelesaian')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
+@section('page-header')
+    <div class="page-pretitle">Master Data</div>
+    <h2 class="page-title">Aset Dalam Penyelesaian</h2>
+@endsection
+
+@section('page-actions')
+    <div class="btn-list">
+        <button type="button" class="btn btn-primary" onclick="showReclassifyModal()" id="reclassifyBtn" disabled>
+            Reklasifikasi Terpilih
+        </button>
+    </div>
+@endsection
+
+@push('styles')
+<style>
+.table-vcenter {
+    width: 100%;
+}
+
+.table-vcenter td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table-vcenter td:nth-child(3) {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.group-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.account-header {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+</style>
+@endpush
+
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3 class="card-title">Aset Dalam Penyelesaian</h3>
-                    <div>
-                        <button type="button" class="btn btn-primary" onclick="showReclassifyModal()" id="reclassifyBtn" disabled>
-                            Reklasifikasi Terpilih
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    @if($assetsInProgress->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th width="30">
-                                            <input type="checkbox" id="selectAll">
-                                        </th>
-                                        <th>Kode</th>
-                                        <th>Nama Aset</th>
-                                        <th>Tanggal Perolehan</th>
-                                        <th>Harga Perolehan</th>
-                                        <th>Akun Aset</th>
-                                        <th>Status</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($assetsInProgress as $asset)
-                                    <tr>
-                                        <td>
-                                            <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}">
-                                        </td>
-                                        <td>{{ $asset->code }}</td>
-                                        <td>{{ $asset->name }}</td>
-                                        <td>{{ $asset->acquisition_date->format('d/m/Y') }}</td>
-                                        <td>{{ number_format($asset->acquisition_price, 0, ',', '.') }}</td>
-                                        <td>{{ $asset->assetAccount->kode ?? '-' }} - {{ $asset->assetAccount->nama ?? '-' }}</td>
-                                        <td>
-                                            <span class="badge badge-{{ $asset->is_active ? 'success' : 'secondary' }}">
-                                                {{ $asset->is_active ? 'Aktif' : 'Tidak Aktif' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('assets-in-progress.show', $asset) }}" class="btn btn-sm btn-info">
-                                                Detail
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        {{ $assetsInProgress->links() }}
-                    @else
-                        <div class="text-center py-4">
-                            <p class="text-muted">Tidak ada aset dalam penyelesaian</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:center">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        <th style="text-align:center">No</th>
+                        <th style="text-align:center">Jenis Aset</th>
+                        <th style="text-align:center">Jumlah</th>
+                        <th style="text-align:center">Tanggal Perolehan</th>
+                        <th style="text-align:center">Tarif (%)</th>
+                        <th style="text-align:center">Harga Perolehan</th>
+                        <th class="w-1" style="text-align:center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php $counter = 1; @endphp
+                    @forelse($groupedAssets ?? [] as $accountName => $accountGroups)
+                        <tr class="account-header">
+                            <td class="text-center">-</td>
+                            <td class="text-center">-</td>
+                            <td><strong>{{ $accountName }}</strong></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                        </tr>
+                        @foreach($accountGroups as $groupName => $assets)
+                            <tr class="group-header">
+                                <td class="text-center">-</td>
+                                <td class="text-center">-</td>
+                                <td style="padding-left: 20px;"><strong>{{ AssetGroupHelper::translateGroup($groupName) }}</strong></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            @foreach($assets as $asset)
+                                <tr>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}">
+                                    </td>
+                                    <td class="text-center">{{ $counter++ }}</td>
+                                    <td style="padding-left: 40px;">{{ $asset->name }}</td>
+                                    <td class="text-center">{{ $asset->quantity ?? 1 }}</td>
+                                    <td class="text-center">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('d/m/Y') : '-' }}</td>
+                                    <td class="text-center">{{ $asset->depreciation_rate ? number_format($asset->depreciation_rate, 2) : '-' }}</td>
+                                    <td class="text-end">{{ $asset->acquisition_price ? number_format($asset->acquisition_price, 0, ',', '.') : '-' }}</td>
+                                    <td>
+                                        <a href="/assets-in-progress/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endforeach
+                    @empty
+                        <tr>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">Tidak ada aset dalam penyelesaian</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
+@endsection
 
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const selectAllCheckbox = document.getElementById('selectAll');
@@ -112,7 +166,7 @@ function showReclassifyModal() {
     }
 
     const assetIds = Array.from(checkedBoxes).map(cb => cb.value).join(',');
-    window.location.href = `{{ route('assets-in-progress.reclassify') }}?assets=${assetIds}`;
+    window.location.href = `/assets-in-progress/reclassify?assets=${assetIds}`;
 }
 </script>
-@endsection
+@endpush

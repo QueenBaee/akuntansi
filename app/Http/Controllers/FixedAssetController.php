@@ -43,12 +43,22 @@ class FixedAssetController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        $assets = $query->paginate(15);
+        $assets = $query->get();
+
+        // Group assets by acquisition account, then by group
+        $groupedAssets = $assets->groupBy(function($asset) {
+            if ($asset->assetAccount) {
+                return $asset->assetAccount->keterangan ?: $asset->assetAccount->nama;
+            }
+            return 'HP - ' . ($asset->group ?: 'Tidak Dikelompokkan');
+        })->map(function($accountAssets) {
+            return $accountAssets->groupBy('group');
+        });
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $assets
+                'data' => $groupedAssets
             ]);
         }
 
@@ -56,7 +66,7 @@ class FixedAssetController extends Controller
         $accumulatedAccounts = TrialBalance::where('kode', 'like', 'A24%')->orderBy('kode')->get();
         $expenseAccounts = TrialBalance::where('kode', 'like', 'E22%')->orderBy('kode')->get();
 
-        return view('fixed-assets.index', compact('assets', 'accumulatedAccounts', 'expenseAccounts'));
+        return view('fixed-assets.index', compact('groupedAssets', 'accumulatedAccounts', 'expenseAccounts'));
     }
 
     public function create()

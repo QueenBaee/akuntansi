@@ -27,20 +27,8 @@ use App\Helpers\AssetGroupHelper;
 @push('styles')
 <style>
 .table-vcenter {
-    table-layout: fixed;
     width: 100%;
 }
-
-.table-vcenter th:nth-child(1) { width: 100px; }
-.table-vcenter th:nth-child(2) { width: auto; min-width: 180px; }
-.table-vcenter th:nth-child(3) { width: 80px; }
-.table-vcenter th:nth-child(4) { width: 100px; }
-.table-vcenter th:nth-child(5) { width: 80px; }
-.table-vcenter th:nth-child(6) { width: 100px; }
-.table-vcenter th:nth-child(7) { width: 120px; }
-.table-vcenter th:nth-child(8) { width: 120px; }
-.table-vcenter th:nth-child(9) { width: 120px; }
-.table-vcenter th:nth-child(10) { width: 80px; }
 
 .table-vcenter td {
     white-space: nowrap;
@@ -52,6 +40,16 @@ use App\Helpers\AssetGroupHelper;
     white-space: normal;
     word-wrap: break-word;
 }
+
+.group-header {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.account-header {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
 </style>
 @endpush
 
@@ -61,52 +59,67 @@ use App\Helpers\AssetGroupHelper;
             <table class="table table-vcenter card-table">
                 <thead>
                     <tr>
-                        <th style="text-align:center">Nomor Aset</th>
-                        <th style="text-align:center">Nama Aset</th>
-                        <th style="text-align:center">Qty</th>
-                        <th style="text-align:center">Kelompok</th>
-                        <th style="text-align:center">Kondisi</th>
-                        <th style="text-align:center">Tgl Perolehan</th>
+                        <th style="text-align:center">No</th>
+                        <th style="text-align:center">Jenis Aset</th>
+                        <th style="text-align:center">Jumlah</th>
+                        <th style="text-align:center">Tanggal Perolehan</th>
+                        <th style="text-align:center">Tarif (%)</th>
                         <th style="text-align:center">Harga Perolehan</th>
-                        <th style="text-align:center">Akum. Penyusutan</th>
-                        <th style="text-align:center">Nilai Buku</th>
                         <th class="w-1" style="text-align:center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($assets ?? [] as $asset)
-                        <tr>
-                            <td>{{ $asset->code ?? '-' }}</td>
-                            <td>{{ $asset->name }}</td>
-                            <td>{{ $asset->quantity ?? 1 }}</td>
-                            <td>{{ $asset->group ? AssetGroupHelper::translateGroup($asset->group) : '-' }}</td>
-                            <td>
-                                @if($asset->condition === 'Baik')
-                                    <span class="badge bg-success">Baik</span>
-                                @elseif($asset->condition === 'Rusak')
-                                    <span class="badge bg-danger">Rusak</span>
-                                @else
-                                    <span class="badge bg-secondary">-</span>
-                                @endif
-                            </td>
-                            <td>{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('d/m/Y') : '-' }}</td>
-                            <td class="text-end">{{ $asset->acquisition_price ? number_format($asset->acquisition_price, 0, ',', '.') : '-' }}</td>
-                            <td class="text-end text-danger">{{ number_format($asset->accumulated_depreciation ?? 0, 0, ',', '.') }}</td>
-                            <td class="text-end text-success">{{ number_format($asset->current_book_value ?? $asset->acquisition_price, 0, ',', '.') }}</td>
-                            <td>
-                                <div class="btn-list flex-nowrap">
-                                    <a href="/fixed-assets/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
-                                    <form method="POST" action="/fixed-assets/{{ $asset->id }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                    </form>
-                                </div>
-                            </td>
+                    @php $counter = 1; @endphp
+                    @forelse($groupedAssets ?? [] as $accountName => $accountGroups)
+                        <tr class="account-header">
+                            <td class="text-center">-</td>
+                            <td><strong>{{ $accountName }}</strong></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
                         </tr>
+                        @foreach($accountGroups as $groupName => $assets)
+                            <tr class="group-header">
+                                <td class="text-center">-</td>
+                                <td style="padding-left: 20px;"><strong>{{ AssetGroupHelper::translateGroup($groupName) }}</strong></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>-</td>
+                            </tr>
+                            @foreach($assets as $asset)
+                                <tr>
+                                    <td class="text-center">{{ $counter++ }}</td>
+                                    <td style="padding-left: 40px;">{{ $asset->name }}</td>
+                                    <td class="text-center">{{ $asset->quantity ?? 1 }}</td>
+                                    <td class="text-center">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('d/m/Y') : '-' }}</td>
+                                    <td class="text-center">{{ $asset->depreciation_rate ? number_format($asset->depreciation_rate, 2) : '-' }}</td>
+                                    <td class="text-end">{{ $asset->acquisition_price ? number_format($asset->acquisition_price, 0, ',', '.') : '-' }}</td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a href="/fixed-assets/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
+                                            <form method="POST" action="/fixed-assets/{{ $asset->id }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @endforeach
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center text-muted">Tidak ada data aset tetap</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">Tidak ada data aset tetap</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
+                            <td class="text-center text-muted">-</td>
                         </tr>
                     @endforelse
                 </tbody>
