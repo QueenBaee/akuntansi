@@ -5,8 +5,8 @@
 
     <div class="filter-section">
         <form method="GET" action="{{ route('ledger.index') }}">
-            <div class="row">
-                <div class="col-md-6">
+            <div class="row align-items-end">
+                <div class="col-md-5">
                     <label>Pilih Akun</label>
                     <select name="account_id" class="form-control" required>
                         <option value="">-- Pilih Akun --</option>
@@ -17,13 +17,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label>Tahun</label>
                     <input type="number" name="year" class="form-control" value="{{ $year }}" min="2020" max="2099">
                 </div>
-                <div class="col-md-3">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn btn-primary btn-block">Tampilkan</button>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
                 </div>
             </div>
         </form>
