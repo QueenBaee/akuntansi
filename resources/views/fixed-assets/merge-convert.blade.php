@@ -2,6 +2,10 @@
 
 @section('title', 'Merge & Convert Assets')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
 @section('page-header')
 <div class="page-pretitle">Aset Tetap</div>
 <h2 class="page-title">Merge & Convert Assets to Regular</h2>
@@ -92,11 +96,10 @@
                                 <div class="mb-3">
                                     <label class="form-label">Group <span class="text-danger">*</span></label>
                                     <select name="group" id="assetGroup" class="form-select @error('group') is-invalid @enderror" required>
-                                        <option value="">Select Group</option>
-                                        <option value="Permanent" {{ old('group') == 'Permanent' ? 'selected' : '' }}>Permanent</option>
-                                        <option value="Non-permanent" {{ old('group') == 'Non-permanent' ? 'selected' : '' }}>Non-permanent</option>
-                                        <option value="Group 1" {{ old('group') == 'Group 1' ? 'selected' : '' }}>Group 1</option>
-                                        <option value="Group 2" {{ old('group') == 'Group 2' ? 'selected' : '' }}>Group 2</option>
+                                        <option value="">Pilih Kelompok</option>
+                                        @foreach(AssetGroupHelper::getAllGroups() as $value => $label)
+                                            <option value="{{ $value }}" {{ old('group') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
                                     </select>
                                     @error('group')
                                         <div class="invalid-feedback">{{ $message }}</div>

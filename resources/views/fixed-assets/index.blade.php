@@ -2,6 +2,10 @@
 
 @section('title', 'Kelola Aset Tetap')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
     <h2 class="page-title">Kelola Aset Tetap</h2>
@@ -83,7 +87,7 @@
                             <td>{{ $asset->code ?? '-' }}</td>
                             <td>{{ $asset->name }}</td>
                             <td>{{ $asset->quantity ?? 1 }}</td>
-                            <td>{{ $asset->group ?? '-' }}</td>
+                            <td>{{ $asset->group ? AssetGroupHelper::translateGroup($asset->group) : '-' }}</td>
                             <td>
                                 @if($asset->condition === 'Baik')
                                     <span class="badge bg-success">Baik</span>

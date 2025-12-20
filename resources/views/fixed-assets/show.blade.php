@@ -2,6 +2,10 @@
 
 @section('title', 'Detail Aset Tetap')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
 @section('page-header')
 <div class="page-pretitle">Aset Tetap</div>
 <h2 class="page-title">{{ $fixedAsset->name }}</h2>
@@ -68,7 +72,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Kelompok</label>
-                                <div class="editable" data-field="group">{{ $fixedAsset->group ?? '-' }}</div>
+                                <div class="editable" data-field="group">{{ $fixedAsset->group ? AssetGroupHelper::translateGroup($fixedAsset->group) : '-' }}</div>
                             </div>
                         </div>
                         <div class="col-md-6">

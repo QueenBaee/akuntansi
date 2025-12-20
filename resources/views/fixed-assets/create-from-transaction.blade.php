@@ -2,6 +2,10 @@
 
 @section('title', 'Buat Aset Tetap dari Transaksi')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
 @section('page-header')
 <div class="page-pretitle">Aset Tetap</div>
 <h2 class="page-title">Buat Aset Tetap dari Transaksi</h2>
@@ -98,10 +102,9 @@
                                         <option value="">Pilih Kelompok</option>
                                         <option value="Aset Dalam Penyelesaian" {{ old('group') == 'Aset Dalam Penyelesaian' ? 'selected' : '' }}>Aset Dalam Penyelesaian</option>
                                         <option value="Tanah" {{ old('group') == 'Tanah' ? 'selected' : '' }}>Tanah</option>
-                                        <option value="Permanent" {{ old('group') == 'Permanent' ? 'selected' : '' }}>Permanent</option>
-                                        <option value="Non-permanent" {{ old('group') == 'Non-permanent' ? 'selected' : '' }}>Non-permanent</option>
-                                        <option value="Group 1" {{ old('group') == 'Group 1' ? 'selected' : '' }}>Group 1</option>
-                                        <option value="Group 2" {{ old('group') == 'Group 2' ? 'selected' : '' }}>Group 2</option>
+                                        @foreach(AssetGroupHelper::getAllGroups() as $value => $label)
+                                            <option value="{{ $value }}" {{ old('group') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
                                     </select>
                                     @error('group')
                                         <div class="invalid-feedback">{{ $message }}</div>

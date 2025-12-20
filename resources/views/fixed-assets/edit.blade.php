@@ -2,6 +2,10 @@
 
 @section('title', 'Edit Aset Tetap')
 
+@php
+use App\Helpers\AssetGroupHelper;
+@endphp
+
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
     <h2 class="page-title">Edit Aset Tetap</h2>
@@ -48,10 +52,9 @@
                         <label class="form-label">Kelompok</label>
                         <select class="form-select no-select2" name="group" required>
                             <option value="">Pilih Kelompok</option>
-                            <option value="Permanent" {{ ($fixedAsset->group ?? 'Permanent') == 'Permanent' ? 'selected' : '' }}>Aset Permanen</option>
-                            <option value="Non-permanent" {{ ($fixedAsset->group ?? '') == 'Non-permanent' ? 'selected' : '' }}>Aset Tidak Permanen</option>
-                            <option value="Group 1" {{ ($fixedAsset->group ?? '') == 'Group 1' ? 'selected' : '' }}>Kelompok 1</option>
-                            <option value="Group 2" {{ ($fixedAsset->group ?? '') == 'Group 2' ? 'selected' : '' }}>Kelompok 2</option>
+                            @foreach(AssetGroupHelper::getAllGroups() as $value => $label)
+                                <option value="{{ $value }}" {{ ($fixedAsset->group ?? 'Permanent') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
