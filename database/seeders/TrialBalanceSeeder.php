@@ -87,13 +87,20 @@ class TrialBalanceSeeder extends Seeder
             ['A24-03', 'AP - Mesin & Peralatan', '(2,400,329,723)'],
             ['A24-04', 'AP - Inventaris', '-'],
 
-            ['A25', 'Aset Tidak Berwujud', '-'],
-            ['A25-01', 'Merk', '-'],
-            ['A25-02', 'Software', '-'],
+            ['A25', 'Aset dalam Penyelesaian', '-'],
+            ['A25-01', 'ADP - Tanah', '-'],
+            ['A25-02', 'ADP - Bangunan', '-'],
+            ['A25-03', 'ADP - Kendaraaan', '-'],
+            ['A25-04', 'ADP - Mesin & Peralatan', '-'],
+            ['A25-05', 'ADP - Inventaris', '-'],
 
-            ['A26', 'Aset Tidak Lancar Lainnya', '-'],
-            ['A26-01', 'BNI - Tab - 1753560912', '5,000,806,795'],
-            ['A26-02', '…………….', '-'],
+            ['A26', 'Aset Tidak Berwujud', '-'],
+            ['A26-01', 'Merk', '-'],
+            ['A26-02', 'Software', '-'],
+
+            ['A27', 'Aset Tidak Lancar Lainnya', '-'],
+            ['A27-01', 'BNI - Tab - 1753560912', '5,000,806,795'],
+            ['A27-02', '…………….', '-'],
 
             // =============================
             // KEWAJIBAN

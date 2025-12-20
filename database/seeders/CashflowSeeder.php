@@ -177,8 +177,8 @@ class CashflowSeeder extends Seeder
                         'children' => [
                             ['kode' => 'F1-01', 'keterangan' => 'Pengadaan Tanah'],
                             ['kode' => 'F1-02', 'keterangan' => 'Pengadaan Bangunan'],
-                            ['kode' => 'F1-03', 'keterangan' => 'Pengadaan Mesin & Peralatan'],
-                            ['kode' => 'F1-04', 'keterangan' => 'Pengadaan Kendaraaan'],
+                            ['kode' => 'F1-03', 'keterangan' => 'Pengadaan Kendaraaan'],
+                            ['kode' => 'F1-04', 'keterangan' => 'Pengadaan Mesin & Peralatan'],
                             ['kode' => 'F1-05', 'keterangan' => 'Pengadaan Inventaris'],
                             ['kode' => 'F1-06', 'keterangan' => 'Investasi A'],
                             ['kode' => 'F1-07', 'keterangan' => 'Investasi B'],
