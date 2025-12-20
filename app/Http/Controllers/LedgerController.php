@@ -100,15 +100,12 @@ class LedgerController extends Controller
             }
         }
 
-        // Summary variables for reconciliation
+        // Summary variables for display
         // Trial Balance = opening balance from trial_balances table
         $trialBalanceTotal = $selectedAccount ? ($selectedAccount->{"tahun_$year"} ?? 0) : 0;
         
-        // Buku Besar = opening balance + total debit - total credit
-        $ledgerTotal = $openingBalance + $totalDebit - $totalCredit;
-        
-        // Selisih = difference between trial balance and ledger
-        $selisih = $trialBalanceTotal - $ledgerTotal;
+        // Buku Besar = ending balance after all transactions
+        $ledgerTotal = $endingBalance;
 
         return view('ledger.index', compact(
             'accounts',
@@ -122,8 +119,7 @@ class LedgerController extends Controller
             'totalCredit',
             'endingBalance',
             'trialBalanceTotal',
-            'ledgerTotal',
-            'selisih'
+            'ledgerTotal'
         ));
     }
 }
