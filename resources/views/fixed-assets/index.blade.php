@@ -8,10 +8,16 @@
 @endsection
 
 @section('page-actions')
-    <a href="/fixed-assets/create" class="btn btn-primary">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Tambah Aset Tetap
-    </a>
+    <div class="btn-list">
+        <button type="button" class="btn btn-success" id="convertSelectedBtn" style="display: none;" onclick="showMergeConvertModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M16 4l4 4l-4 4" /><path d="M20 8H4" /></svg>
+            Convert Selected (<span id="selectedCount">0</span>)
+        </button>
+        {{-- <a href="/fixed-assets/create" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Aset Tetap
+        </a> --}}
+    </div>
 @endsection
 
 @push('styles')
@@ -66,6 +72,14 @@
                 <tbody>
                     @forelse($assets ?? [] as $asset)
                         <tr>
+                            {{-- <td>
+                                @if($asset->group === 'Aset Dalam Penyelesaian')
+                                    <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}" 
+                                           data-name="{{ $asset->name }}" 
+                                           data-price="{{ $asset->acquisition_price }}" 
+                                           onchange="updateSelectedAssets()">
+                                @endif
+                            </td> --}}
                             <td>{{ $asset->code ?? '-' }}</td>
                             <td>{{ $asset->name }}</td>
                             <td>{{ $asset->quantity ?? 1 }}</td>
@@ -96,13 +110,15 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Tidak ada data aset tetap</td>
+                            <td colspan="11" class="text-center text-muted">Tidak ada data aset tetap</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+
+
 
     <!-- Alert Modal -->
     <div class="modal modal-blur fade" id="alertModal" tabindex="-1">
@@ -123,3 +139,71 @@
     </div>
 @endsection
 
+@push('scripts')
+<script>
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.asset-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateSelectedAssets();
+}
+
+function updateSelectedAssets() {
+    const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
+    const count = checkboxes.length;
+    
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('convertSelectedBtn').style.display = count > 0 ? 'inline-block' : 'none';
+    
+    // Update select all checkbox
+    const allCheckboxes = document.querySelectorAll('.asset-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+}
+
+function showMergeConvertModal() {
+    const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        showAlert('error', 'Error', 'Please select at least one asset');
+        return;
+    }
+    
+    const assetIds = [];
+    checkboxes.forEach(checkbox => {
+        assetIds.push(checkbox.value);
+    });
+    
+    // Redirect to merge-convert page with selected asset IDs
+    window.location.href = `/fixed-assets/merge-convert?assets=${assetIds.join(',')}`;
+}
+
+
+
+function showAlert(type, title, message) {
+    const alertModal = document.getElementById('alertModal');
+    const alertIcon = document.getElementById('alertIcon');
+    const alertTitle = document.getElementById('alertTitle');
+    const alertMessage = document.getElementById('alertMessage');
+    const alertButton = document.getElementById('alertButton');
+    
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+    
+    if (type === 'success') {
+        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check text-success" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="m5 12l5 5l10 -10" /></svg>';
+        alertButton.className = 'btn btn-success w-100';
+    } else {
+        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="m12 9v2m0 4v.01" /><path d="m5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" /></svg>';
+        alertButton.className = 'btn btn-danger w-100';
+    }
+    
+    const modal = new bootstrap.Modal(alertModal);
+    modal.show();
+}
+</script>
+@endpush

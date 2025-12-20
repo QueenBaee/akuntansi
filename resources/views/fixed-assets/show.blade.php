@@ -146,13 +146,13 @@
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Umur Manfaat (Tahun)</label>
-                                        <div>{{ $fixedAsset->useful_life_years ?? round($fixedAsset->useful_life_months / 12, 1) }}</div>
+                                        <div>{{ $fixedAsset->useful_life_years ?? ($fixedAsset->useful_life_months ? round($fixedAsset->useful_life_months / 12, 1) : '-') }}</div>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="mb-3">
                                         <label class="form-label">Umur Manfaat (Bulan)</label>
-                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months }}</div>
+                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months ?? '-' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Prosentase Penyusutan</label>
-                                <div>{{ $fixedAsset->depreciation_rate ?? round(100 / ($fixedAsset->useful_life_months / 12), 2) }}%</div>
+                                <div>{{ $fixedAsset->depreciation_rate ?? ($fixedAsset->useful_life_months ? round(100 / ($fixedAsset->useful_life_months / 12), 2) : '-') }}{{ $fixedAsset->depreciation_rate || $fixedAsset->useful_life_months ? '%' : '' }}</div>
                             </div>
                         </div>
                     </div>
@@ -201,7 +201,7 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Akumulasi Penyusutan</label>
-                                <div>{{ $fixedAsset->accumulatedAccount->kode }} - {{ $fixedAsset->accumulatedAccount->keterangan }}</div>
+                                <div>{{ $fixedAsset->accumulatedAccount ? $fixedAsset->accumulatedAccount->kode . ' - ' . $fixedAsset->accumulatedAccount->keterangan : '-' }}</div>
                             </div>
                         </div>
                     </div>
@@ -209,11 +209,140 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Beban Penyusutan</label>
-                                <div>{{ $fixedAsset->expenseAccount->kode }} - {{ $fixedAsset->expenseAccount->keterangan }}</div>
+                                <div>{{ $fixedAsset->expenseAccount ? $fixedAsset->expenseAccount->kode . ' - ' . $fixedAsset->expenseAccount->keterangan : '-' }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Journal Link for Non-Reclassified Assets -->
+                @if($fixedAsset->convertedAssets->count() == 0)
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Jurnal Terkait</h4>
+                    @php
+                        $sourceJournal = $fixedAsset->sourceJournals()->with(['debitAccount', 'creditAccount'])->first();
+                    @endphp
+                    @if($sourceJournal)
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Nomor Jurnal</label>
+                                <div>{{ $sourceJournal->number }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Tanggal</label>
+                                <div>{{ $sourceJournal->date->format('d/m/Y') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Total Amount</label>
+                                <div>{{ number_format($sourceJournal->total_debit, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Deskripsi</label>
+                                <div>{{ $sourceJournal->description }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">Detail Jurnal</label>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" style="border: 1px solid #dee2e6;">
+                                        <thead class="table-light">
+                                            <tr style="border: 1px solid #dee2e6;">
+                                                <th style="border: 1px solid #dee2e6; width: 12%;">Tanggal</th>
+                                                <th style="border: 1px solid #dee2e6; width: 25%;">Keterangan</th>
+                                                <th style="border: 1px solid #dee2e6; width: 10%;">PIC</th>
+                                                <th style="border: 1px solid #dee2e6; width: 10%;">No Bukti</th>
+                                                <th style="border: 1px solid #dee2e6; width: 18%;">Akun Debit</th>
+                                                <th style="border: 1px solid #dee2e6; width: 10%;">Debit</th>
+                                                <th style="border: 1px solid #dee2e6; width: 18%;">Akun Kredit</th>
+                                                <th style="border: 1px solid #dee2e6; width: 10%;">Kredit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style="border: 1px solid #dee2e6;">
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->date->format('d/m/Y') }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->description }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->pic ?? '-' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->proof_number ?? '-' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->debitAccount ? $sourceJournal->debitAccount->kode . ' - ' . $sourceJournal->debitAccount->keterangan : '-' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ number_format($sourceJournal->total_debit, 0, ',', '.') }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->creditAccount ? $sourceJournal->creditAccount->kode . ' - ' . $sourceJournal->creditAccount->keterangan : '-' }}</td>
+                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ number_format($sourceJournal->total_credit, 0, ',', '.') }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <div class="alert alert-secondary">
+                        <div class="text-muted">Tidak ada jurnal terkait yang ditemukan</div>
+                    </div>
+                    @endif
+                </div>
+                @endif
+
+                <!-- Converted Assets History -->
+                @if($fixedAsset->convertedAssets->count() > 0)
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Riwayat Reklasifikasi</h4>
+                    <div class="alert alert-info">
+                        <strong>Aset ini dibuat dari reklasifikasi {{ $fixedAsset->convertedAssets->count() }} Aset Dalam Penyelesaian:</strong>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Kode Aset Asal</th>
+                                    <th>Nama Aset Asal</th>
+                                    <th>Harga Perolehan</th>
+                                    <th>Tanggal Reklasifikasi</th>
+                                    <th>Direklasifikasi Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($fixedAsset->convertedAssets as $convertedAsset)
+                                <tr>
+                                    <td>{{ $convertedAsset->code }}</td>
+                                    <td>{{ $convertedAsset->name }}</td>
+                                    <td>{{ number_format($convertedAsset->acquisition_price, 0, ',', '.') }}</td>
+                                    <td>{{ $convertedAsset->converted_at ? $convertedAsset->converted_at->format('d/m/Y H:i') : '-' }}</td>
+                                    <td>{{ $convertedAsset->converter->name ?? '-' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @php
+                        $reclassJournal = $fixedAsset->journals()->where('source_module', 'memorial')->where('reference', 'like', 'REKLAS-%')->first();
+                    @endphp
+                    @if($reclassJournal)
+                    <div class="mt-3">
+                        <a href="{{ route('memorials.index') }}" class="btn btn-sm btn-outline-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
+                                <rect x="9" y="3" width="6" height="4" rx="2"/>
+                            </svg>
+                            Lihat Jurnal Reklasifikasi ({{ $reclassJournal->number }})
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @endif
             </div>
         </div>
     </div>

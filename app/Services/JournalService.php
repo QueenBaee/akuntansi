@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Journal;
 use App\Models\Account;
+use App\Services\JournalNumberService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -21,7 +22,7 @@ class JournalService
             }
             
             // Generate journal number
-            $journalNumber = $this->generateJournalNumber($data['date'], $data['source_module'] ?? 'GENERAL');
+            $journalNumber = JournalNumberService::generate($data['date']);
             
             // Create journal header
             $journal = Journal::create([
@@ -65,17 +66,7 @@ class JournalService
         });
     }
     
-    private function generateJournalNumber(string $date, string $module): string
-    {
-        $date = Carbon::parse($date);
-        $prefix = strtoupper($module) . '/' . $date->format('Ymd') . '/';
-        
-        $lastNumber = Journal::where('number', 'like', $prefix . '%')
-            ->whereDate('date', $date->toDateString())
-            ->count();
-            
-        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-    }
+
     
     public function getAccountBalance(int $accountId, string $endDate = null): float
     {

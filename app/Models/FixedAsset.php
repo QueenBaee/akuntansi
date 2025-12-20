@@ -39,6 +39,12 @@ class FixedAsset extends Model
         'accumulated_depreciation',
         'is_active',
         'created_by',
+        'merged_from',
+        'is_merged',
+        'is_converted',
+        'parent_asset_id',
+        'converted_at',
+        'converted_by',
     ];
 
     protected $casts = [
@@ -49,9 +55,13 @@ class FixedAsset extends Model
         'depreciation_rate' => 'decimal:2',
         'accumulated_depreciation' => 'decimal:2',
         'is_active' => 'boolean',
+        'is_merged' => 'boolean',
+        'merged_from' => 'array',
         'quantity' => 'integer',
         'useful_life_years' => 'integer',
         'useful_life_months' => 'integer',
+        'is_converted' => 'boolean',
+        'converted_at' => 'datetime',
     ];
 
     // Relationships
@@ -95,9 +105,34 @@ class FixedAsset extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function parentAsset()
+    {
+        return $this->belongsTo(FixedAsset::class, 'parent_asset_id');
+    }
+
+    public function convertedAssets()
+    {
+        return $this->hasMany(FixedAsset::class, 'parent_asset_id');
+    }
+
+    public function converter()
+    {
+        return $this->belongsTo(User::class, 'converted_by');
+    }
+
     public function category()
     {
         return $this->belongsTo(AssetCategory::class, 'category_kode', 'kode');
+    }
+
+    public function journals()
+    {
+        return $this->hasMany(Journal::class);
+    }
+
+    public function sourceJournals()
+    {
+        return $this->journals()->whereIn('source_module', ['manual', 'memorial']);
     }
 
     // Accessors & Helpers
@@ -144,11 +179,27 @@ class FixedAsset extends Model
         return $query->where('group', $group);
     }
 
+    public function scopeInProgress($query)
+    {
+        return $query->where('group', 'Aset Dalam Penyelesaian')
+                    ->where('is_converted', false);
+    }
+
+    public function scopeRegularAssets($query)
+    {
+        return $query->where('group', '!=', 'Aset Dalam Penyelesaian');
+    }
+
+    public function scopeConverted($query)
+    {
+        return $query->where('is_converted', true);
+    }
+
     // Auto-generate asset number
     public static function generateAssetNumber()
     {
         $lastAsset = self::orderBy('id', 'desc')->first();
-        $nextNumber = $lastAsset ? (int)substr($lastAsset->asset_number, -4) + 1 : 1;
+        $nextNumber = $lastAsset ? $lastAsset->id + 1 : 1;
         return 'AST-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 

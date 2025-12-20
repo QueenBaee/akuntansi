@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use App\Models\TrialBalance;
+use App\Services\AssetFromTransactionService;
+use App\Services\JournalNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class MemorialController extends Controller
 {
+    protected $assetFromTransactionService;
+
+    public function __construct(AssetFromTransactionService $assetFromTransactionService)
+    {
+        $this->assetFromTransactionService = $assetFromTransactionService;
+    }
     public function create(Request $request)
     {
         $accounts = TrialBalance::with('parent')
@@ -91,7 +99,7 @@ class MemorialController extends Controller
 
                 $journal = Journal::create([
                     'date' => $entry['date'],
-                    'number' => $this->generateMemorialNumber(),
+                    'number' => JournalNumberService::generate($entry['date']),
                     'description' => $entry['description'] ?? null,
                     'pic' => $entry['pic'] ?? null,
                     'proof_number' => $entry['proof_number'],
@@ -242,27 +250,12 @@ class MemorialController extends Controller
                 'debit_account' => $journal->debitAccount ? $journal->debitAccount->kode . ' - ' . $journal->debitAccount->keterangan : '-',
                 'credit_account' => $journal->creditAccount ? $journal->creditAccount->kode . ' - ' . $journal->creditAccount->keterangan : '-',
                 'attachments' => $journal->attachments,
+                'can_create_asset' => $this->assetFromTransactionService->canCreateAssetFromTransaction($journal),
             ];
         }
 
         return $history;
     }
 
-    private function generateMemorialNumber()
-    {
-        $date = now();
-        $prefix = 'MEM-' . $date->format('Ym') . '-';
-        $lastJournal = Journal::where('number', 'like', $prefix . '%')
-            ->orderBy('number', 'desc')
-            ->first();
 
-        if ($lastJournal) {
-            $lastNumber = intval(substr($lastJournal->number, -4));
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-    }
 }

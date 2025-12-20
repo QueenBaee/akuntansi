@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Journal;
 use App\Models\TrialBalance;
+use App\Services\JournalNumberService;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -19,7 +20,7 @@ class MemorialService
                 throw new \Exception('Total debit harus sama dengan total kredit');
             }
             
-            $memorialNumber = $this->generateMemorialNumber($data['date']);
+            $memorialNumber = JournalNumberService::generate($data['date']);
             
             $journal = Journal::create([
                 'date' => $data['date'],
@@ -60,18 +61,7 @@ class MemorialService
         });
     }
     
-    private function generateMemorialNumber(string $date): string
-    {
-        $date = Carbon::parse($date);
-        $prefix = 'MEMORIAL/' . $date->format('Ymd') . '/';
-        
-        $lastNumber = Journal::where('number', 'like', $prefix . '%')
-            ->where('source_module', 'memorial')
-            ->whereDate('date', $date->toDateString())
-            ->count();
-            
-        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-    }
+
     
     public function getAccountBalance(int $accountId, string $endDate = null): float
     {
