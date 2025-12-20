@@ -13,10 +13,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M16 4l4 4l-4 4" /><path d="M20 8H4" /></svg>
             Convert Selected (<span id="selectedCount">0</span>)
         </button>
-        <a href="/fixed-assets/create" class="btn btn-primary">
+        {{-- <a href="/fixed-assets/create" class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Tambah Aset Tetap
-        </a>
+        </a> --}}
     </div>
 @endsection
 
@@ -57,9 +57,9 @@
             <table class="table table-vcenter card-table">
                 <thead>
                     <tr>
-                        <th class="w-1">
+                        {{-- <th class="w-1">
                             <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        </th>
+                        </th> --}}
                         <th>Nomor Aset</th>
                         <th>Nama Aset</th>
                         <th>Qty</th>
@@ -75,14 +75,14 @@
                 <tbody>
                     @forelse($assets ?? [] as $asset)
                         <tr>
-                            <td>
+                            {{-- <td>
                                 @if($asset->group === 'Aset Dalam Penyelesaian')
                                     <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}" 
                                            data-name="{{ $asset->name }}" 
                                            data-price="{{ $asset->acquisition_price }}" 
                                            onchange="updateSelectedAssets()">
                                 @endif
-                            </td>
+                            </td> --}}
                             <td>{{ $asset->code ?? '-' }}</td>
                             <td>{{ $asset->name }}</td>
                             <td>{{ $asset->quantity ?? 1 }}</td>

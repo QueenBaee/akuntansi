@@ -41,6 +41,10 @@ class FixedAsset extends Model
         'created_by',
         'merged_from',
         'is_merged',
+        'is_converted',
+        'parent_asset_id',
+        'converted_at',
+        'converted_by',
     ];
 
     protected $casts = [
@@ -56,6 +60,8 @@ class FixedAsset extends Model
         'quantity' => 'integer',
         'useful_life_years' => 'integer',
         'useful_life_months' => 'integer',
+        'is_converted' => 'boolean',
+        'converted_at' => 'datetime',
     ];
 
     // Relationships
@@ -97,6 +103,21 @@ class FixedAsset extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function parentAsset()
+    {
+        return $this->belongsTo(FixedAsset::class, 'parent_asset_id');
+    }
+
+    public function convertedAssets()
+    {
+        return $this->hasMany(FixedAsset::class, 'parent_asset_id');
+    }
+
+    public function converter()
+    {
+        return $this->belongsTo(User::class, 'converted_by');
     }
 
     public function category()
@@ -156,6 +177,22 @@ class FixedAsset extends Model
     public function scopeByGroup($query, $group)
     {
         return $query->where('group', $group);
+    }
+
+    public function scopeInProgress($query)
+    {
+        return $query->where('group', 'Aset Dalam Penyelesaian')
+                    ->where('is_converted', false);
+    }
+
+    public function scopeRegularAssets($query)
+    {
+        return $query->where('group', '!=', 'Aset Dalam Penyelesaian');
+    }
+
+    public function scopeConverted($query)
+    {
+        return $query->where('is_converted', true);
     }
 
     // Auto-generate asset number

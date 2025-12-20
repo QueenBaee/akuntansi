@@ -298,6 +298,7 @@
                                     <a class="dropdown-item {{ request()->routeIs('trial_balance_report.*') ? 'active' : '' }}"
                                         href="{{ route('trial_balance_report.index') }}">Trial Balance</a>
                                     <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}" href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
+                                    <a class="dropdown-item {{ request()->routeIs('assets-in-progress.*') ? 'active' : '' }}" href="{{ route('assets-in-progress.index') }}">Aset Dalam Penyelesaian</a>
                                     <a class="dropdown-item" href="#">Buku Besar</a>
                                 </div>
                             </li>

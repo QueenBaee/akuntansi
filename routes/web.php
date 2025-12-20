@@ -84,6 +84,14 @@ Route::middleware('auth')->group(function () {
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
         
+        // Assets in Progress
+        Route::get('assets-in-progress', [\App\Http\Controllers\AssetInProgressController::class, 'index'])->name('assets-in-progress.index');
+        Route::get('assets-in-progress/{asset}', [\App\Http\Controllers\AssetInProgressController::class, 'show'])->name('assets-in-progress.show');
+        Route::get('assets-in-progress/reclassify/form', [\App\Http\Controllers\AssetInProgressController::class, 'showReclassify'])
+            ->name('assets-in-progress.reclassify');
+        Route::post('assets-in-progress/reclassify', [\App\Http\Controllers\AssetInProgressController::class, 'reclassify'])
+            ->name('assets-in-progress.reclassify.store');
+        
         // Fixed Asset API endpoints
         Route::get('api/fixed-assets/next-number', [\App\Http\Controllers\FixedAssetController::class, 'getNextAssetNumber'])
             ->name('api.fixed-assets.next-number');

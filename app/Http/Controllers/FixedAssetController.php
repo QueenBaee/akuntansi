@@ -27,7 +27,8 @@ class FixedAssetController extends Controller
 
     public function index(Request $request)
     {
-        $query = FixedAsset::with(['assetAccount', 'accumulatedAccount', 'expenseAccount', 'creator'])
+        $query = FixedAsset::regularAssets()
+            ->with(['assetAccount', 'accumulatedAccount', 'expenseAccount', 'creator'])
             ->orderBy('created_at', 'desc');
 
         if ($request->has('search')) {
@@ -60,56 +61,16 @@ class FixedAssetController extends Controller
 
     public function create()
     {
-        // Get asset accounts level 4 where parent has is_aset = 1
-        $assetAccounts = TrialBalance::where('level', 4)
-            ->whereHas('parent', function($query) {
-                $query->where('is_aset', 1);
-            })
-            ->orderBy('kode')
-            ->get();
-            
-        // Get all accounts for mapping
-        $allAccounts = TrialBalance::orderBy('kode')->get();
-        
-        if (request()->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'assetAccounts' => $assetAccounts,
-                    'allAccounts' => $allAccounts
-                ]
-            ]);
-        }
-
-        return view('fixed-assets.create', compact('assetAccounts', 'allAccounts'));
+        // Redirect to create from transaction - no manual asset creation
+        return redirect()->route('fixed-assets.create-from-transaction')
+            ->with('info', 'Assets must be created from journal transactions');
     }
 
     public function store(StoreFixedAssetRequest $request)
     {
-        $validated = $request->validated();
-        
-        // Set default values
-        $validated['residual_value'] = 1;
-        $validated['is_active'] = $validated['status'] === 'active';
-        $validated['created_by'] = auth()->id();
-        
-        // Convert percentage string to decimal
-        if (isset($validated['depreciation_rate'])) {
-            $validated['depreciation_rate'] = (float) str_replace('%', '', $validated['depreciation_rate']);
-        }
-        
-        $asset = FixedAsset::create($validated);
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Fixed asset created successfully',
-                'data' => $asset->load(['assetAccount', 'accumulatedAccount', 'expenseAccount'])
-            ], 201);
-        }
-
-        return redirect()->route('fixed-assets.show', $asset)
-            ->with('success', 'Aset tetap berhasil dibuat');
+        // Redirect to create from transaction - no manual asset creation
+        return redirect()->route('fixed-assets.create-from-transaction')
+            ->with('info', 'Assets must be created from journal transactions');
     }
 
     public function show(FixedAsset $fixedAsset)
@@ -120,7 +81,10 @@ class FixedAssetController extends Controller
             'expenseAccount', 
             'creator',
             'mutations',
-            'depreciations.journal'
+            'depreciations.journal',
+            'convertedAssets' => function($query) {
+                $query->with(['assetAccount', 'creator']);
+            }
         ]);
 
         $depreciationSchedule = $this->assetService->generateDepreciationSchedule($fixedAsset);
@@ -332,118 +296,13 @@ class FixedAssetController extends Controller
 
     public function showMergeConvert(Request $request)
     {
-        $assetIds = explode(',', $request->get('assets', ''));
-        $selectedAssets = FixedAsset::whereIn('id', $assetIds)
-            ->where('group', 'Aset Dalam Penyelesaian')
-            ->get();
-
-        if ($selectedAssets->isEmpty()) {
-            return redirect()->route('fixed-assets.index')
-                ->with('error', 'No valid assets selected for conversion');
-        }
-
-        // Calculate totals and suggestions
-        $totalPrice = $selectedAssets->sum('acquisition_price');
-        $suggestedName = $selectedAssets->pluck('name')->join(' + ');
-        $suggestedCode = FixedAsset::generateAssetNumber();
-        $earliestDate = $selectedAssets->min('acquisition_date')->format('Y-m-d');
-        $firstAssetAccountId = $selectedAssets->first()->asset_account_id;
-
-        // Get accounts for dropdowns
-        $assetAccounts = TrialBalance::where('level', 4)
-            ->whereHas('parent', function($query) {
-                $query->where('is_aset', 1);
-            })
-            ->orderBy('kode')
-            ->get();
-        $accumulatedAccounts = TrialBalance::where('kode', 'like', 'A24%')->orderBy('kode')->get();
-        $expenseAccounts = TrialBalance::where('kode', 'like', 'E22%')->orderBy('kode')->get();
-        $allAccounts = TrialBalance::orderBy('kode')->get();
-
-        return view('fixed-assets.merge-convert', compact(
-            'selectedAssets', 'totalPrice', 'suggestedName', 'suggestedCode', 
-            'earliestDate', 'firstAssetAccountId', 'assetAccounts', 
-            'accumulatedAccounts', 'expenseAccounts', 'allAccounts'
-        ));
+        return redirect()->route('assets-in-progress.reclassify', $request->all())
+            ->with('info', 'Reclassification moved to Assets in Progress section');
     }
 
     public function mergeConvert(Request $request)
     {
-        $request->validate([
-            'asset_ids' => 'required|string',
-            'code' => 'required|string|max:50|unique:fixed_assets,code',
-            'name' => 'required|string|max:255',
-            'quantity' => 'required|integer|min:1',
-            'location' => 'nullable|string|max:255',
-            'group' => 'required|in:Permanent,Non-permanent,Group 1,Group 2',
-            'condition' => 'required|in:Baik,Rusak',
-            'status' => 'required|in:active,inactive',
-            'acquisition_date' => 'required|date',
-            'acquisition_price' => 'required|numeric|min:0',
-            'depreciation_method' => 'required|in:garis lurus,saldo menurun',
-            'depreciation_start_date' => 'required|date',
-            'useful_life_years' => 'required|integer|min:1|max:50',
-            'asset_account_id' => 'required|exists:trial_balances,id',
-            'accumulated_account_id' => 'required|exists:trial_balances,id',
-            'expense_account_id' => 'required|exists:trial_balances,id'
-        ]);
-
-        $assetIds = explode(',', $request->asset_ids);
-        $assetsToMerge = FixedAsset::whereIn('id', $assetIds)
-            ->where('group', 'Aset Dalam Penyelesaian')
-            ->get();
-
-        if ($assetsToMerge->count() !== count($assetIds)) {
-            return back()->with('error', 'Some assets are not under construction or not found');
-        }
-
-        $newAsset = DB::transaction(function () use ($request, $assetsToMerge) {
-            // Prepare merge history
-            $mergeHistory = $assetsToMerge->map(function ($asset) {
-                return [
-                    'id' => $asset->id,
-                    'code' => $asset->code,
-                    'name' => $asset->name,
-                    'acquisition_price' => $asset->acquisition_price,
-                    'acquisition_date' => $asset->acquisition_date->format('Y-m-d')
-                ];
-            })->toArray();
-
-            // Create new merged asset
-            $newAsset = FixedAsset::create([
-                'code' => $request->code,
-                'name' => $request->name,
-                'quantity' => $request->quantity,
-                'location' => $request->location,
-                'group' => $request->group,
-                'condition' => $request->condition,
-                'status' => $request->status,
-                'acquisition_date' => $request->acquisition_date,
-                'acquisition_price' => $request->acquisition_price,
-                'residual_value' => 1,
-                'depreciation_method' => $request->depreciation_method,
-                'depreciation_start_date' => $request->depreciation_start_date,
-                'useful_life_years' => $request->useful_life_years,
-                'useful_life_months' => $request->useful_life_years * 12,
-                'asset_account_id' => $request->asset_account_id,
-                'accumulated_account_id' => $request->accumulated_account_id,
-                'expense_account_id' => $request->expense_account_id,
-                'depreciation_rate' => $request->depreciation_method === 'garis lurus' 
-                    ? round(100 / $request->useful_life_years, 2)
-                    : round((2 / $request->useful_life_years) * 100, 2),
-                'is_active' => $request->status === 'active',
-                'is_merged' => true,
-                'merged_from' => json_encode($mergeHistory),
-                'created_by' => auth()->id()
-            ]);
-
-            // Delete old assets
-            $assetsToMerge->each->delete();
-
-            return $newAsset;
-        });
-
-        return redirect()->route('fixed-assets.show', $newAsset)
-            ->with('success', 'Assets successfully merged and converted to regular asset');
+        return redirect()->route('assets-in-progress.reclassify', $request->all())
+            ->with('info', 'Reclassification moved to Assets in Progress section');
     }
 }

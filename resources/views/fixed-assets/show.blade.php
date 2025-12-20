@@ -229,6 +229,56 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Converted Assets History -->
+                @if($fixedAsset->convertedAssets->count() > 0)
+                <div class="mb-4">
+                    <h4 class="card-title mb-3">Riwayat Reklasifikasi</h4>
+                    <div class="alert alert-info">
+                        <strong>Aset ini dibuat dari reklasifikasi {{ $fixedAsset->convertedAssets->count() }} Aset Dalam Penyelesaian:</strong>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Kode Aset Asal</th>
+                                    <th>Nama Aset Asal</th>
+                                    <th>Harga Perolehan</th>
+                                    <th>Tanggal Reklasifikasi</th>
+                                    <th>Direklasifikasi Oleh</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($fixedAsset->convertedAssets as $convertedAsset)
+                                <tr>
+                                    <td>{{ $convertedAsset->code }}</td>
+                                    <td>{{ $convertedAsset->name }}</td>
+                                    <td>{{ number_format($convertedAsset->acquisition_price, 0, ',', '.') }}</td>
+                                    <td>{{ $convertedAsset->converted_at ? $convertedAsset->converted_at->format('d/m/Y H:i') : '-' }}</td>
+                                    <td>{{ $convertedAsset->converter->name ?? '-' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    @php
+                        $reclassJournal = $fixedAsset->journals()->where('source_module', 'memorial')->where('reference', 'like', 'REKLAS-%')->first();
+                    @endphp
+                    @if($reclassJournal)
+                    <div class="mt-3">
+                        <a href="{{ route('memorials.index') }}" class="btn btn-sm btn-outline-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                                <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
+                                <rect x="9" y="3" width="6" height="4" rx="2"/>
+                            </svg>
+                            Lihat Jurnal Reklasifikasi ({{ $reclassJournal->number }})
+                        </a>
+                    </div>
+                    @endif
+                </div>
+                @endif
             </div>
         </div>
     </div>
