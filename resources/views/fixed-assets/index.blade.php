@@ -13,14 +13,14 @@ use App\Helpers\AssetGroupHelper;
 
 @section('page-actions')
     <div class="btn-list">
+        <button type="button" class="btn btn-primary" onclick="showBatchDepreciationModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M12 3v18m9-9H3"/></svg>
+            Mass Depreciation
+        </button>
         <button type="button" class="btn btn-success" id="convertSelectedBtn" style="display: none;" onclick="showMergeConvertModal()">
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M16 4l4 4l-4 4" /><path d="M20 8H4" /></svg>
             Convert Selected (<span id="selectedCount">0</span>)
         </button>
-        {{-- <a href="/fixed-assets/create" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Tambah Aset Tetap
-        </a> --}}
     </div>
 @endsection
 
@@ -76,14 +76,6 @@ use App\Helpers\AssetGroupHelper;
                 <tbody>
                     @forelse($assets ?? [] as $asset)
                         <tr>
-                            {{-- <td>
-                                @if($asset->group === 'Aset Dalam Penyelesaian')
-                                    <input type="checkbox" class="asset-checkbox" value="{{ $asset->id }}" 
-                                           data-name="{{ $asset->name }}" 
-                                           data-price="{{ $asset->acquisition_price }}" 
-                                           onchange="updateSelectedAssets()">
-                                @endif
-                            </td> --}}
                             <td>{{ $asset->code ?? '-' }}</td>
                             <td>{{ $asset->name }}</td>
                             <td>{{ $asset->quantity ?? 1 }}</td>
@@ -122,7 +114,44 @@ use App\Helpers\AssetGroupHelper;
         </div>
     </div>
 
-
+    <!-- Batch Depreciation Modal -->
+    <div class="modal modal-blur fade" id="batchDepreciationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mass Depreciation Processing</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="step1" class="depreciation-step">
+                        <h6>Select Depreciation Period</h6>
+                        <div class="mb-3">
+                            <label class="form-label">Period Month</label>
+                            <input type="month" class="form-control" id="depreciationPeriod" required>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="previewDepreciation()">Preview Eligible Assets</button>
+                    </div>
+                    
+                    <div id="step2" class="depreciation-step" style="display: none;">
+                        <h6>Eligible Assets Preview</h6>
+                        <div id="previewResults"></div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back</button>
+                            <button type="button" class="btn btn-success" onclick="processDepreciation()" id="processBtn">Process Depreciation</button>
+                        </div>
+                    </div>
+                    
+                    <div id="step3" class="depreciation-step" style="display: none;">
+                        <h6>Processing Results</h6>
+                        <div id="processResults"></div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-primary" onclick="closeModal()">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Alert Modal -->
     <div class="modal modal-blur fade" id="alertModal" tabindex="-1">
@@ -145,48 +174,200 @@ use App\Helpers\AssetGroupHelper;
 
 @push('scripts')
 <script>
-function toggleSelectAll() {
-    const selectAll = document.getElementById('selectAll');
-    const checkboxes = document.querySelectorAll('.asset-checkbox');
+function showBatchDepreciationModal() {
+    document.getElementById('step1').style.display = 'block';
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step3').style.display = 'none';
     
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-    });
+    const now = new Date();
+    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    document.getElementById('depreciationPeriod').value = currentMonth;
     
-    updateSelectedAssets();
+    new bootstrap.Modal(document.getElementById('batchDepreciationModal')).show();
 }
 
-function updateSelectedAssets() {
-    const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
-    const count = checkboxes.length;
-    
-    document.getElementById('selectedCount').textContent = count;
-    document.getElementById('convertSelectedBtn').style.display = count > 0 ? 'inline-block' : 'none';
-    
-    // Update select all checkbox
-    const allCheckboxes = document.querySelectorAll('.asset-checkbox');
-    const selectAll = document.getElementById('selectAll');
-    selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
-}
-
-function showMergeConvertModal() {
-    const checkboxes = document.querySelectorAll('.asset-checkbox:checked');
-    
-    if (checkboxes.length === 0) {
-        showAlert('error', 'Error', 'Please select at least one asset');
+function previewDepreciation() {
+    const period = document.getElementById('depreciationPeriod').value;
+    if (!period) {
+        showAlert('error', 'Error', 'Please select a period');
         return;
     }
     
-    const assetIds = [];
-    checkboxes.forEach(checkbox => {
-        assetIds.push(checkbox.value);
+    fetch('/api/batch-depreciation/preview', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ period_month: period })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayPreview(data.data);
+            document.getElementById('step1').style.display = 'none';
+            document.getElementById('step2').style.display = 'block';
+        } else {
+            showAlert('error', 'Error', data.message || 'Failed to preview assets');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Error', 'Network error occurred');
     });
-    
-    // Redirect to merge-convert page with selected asset IDs
-    window.location.href = `/fixed-assets/merge-convert?assets=${assetIds.join(',')}`;
 }
 
+function displayPreview(data) {
+    const container = document.getElementById('previewResults');
+    
+    if (data.eligible_count === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <h6>No Eligible Assets</h6>
+                <p>No assets found for depreciation in ${data.period}</p>
+            </div>
+        `;
+        document.getElementById('processBtn').disabled = true;
+        return;
+    }
+    
+    let html = `
+        <div class="alert alert-success">
+            <h6>Found ${data.eligible_count} eligible assets for ${data.period}</h6>
+            <p><strong>Total Depreciation Amount:</strong> ${formatCurrency(data.total_depreciation)}</p>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Asset Name</th>
+                        <th>Group</th>
+                        <th>Monthly Depreciation</th>
+                        <th>Book Value After</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    data.assets.forEach(asset => {
+        html += `
+            <tr>
+                <td>${asset.code || '-'}</td>
+                <td>${asset.name}</td>
+                <td>${asset.group}</td>
+                <td class="text-end">${formatCurrency(asset.monthly_depreciation)}</td>
+                <td class="text-end">${formatCurrency(asset.book_value_after)}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    document.getElementById('processBtn').disabled = false;
+}
 
+function processDepreciation() {
+    const period = document.getElementById('depreciationPeriod').value;
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('processBtn').textContent = 'Processing...';
+    
+    fetch('/api/batch-depreciation/process', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({ period_month: period })
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayResults(data);
+        document.getElementById('step2').style.display = 'none';
+        document.getElementById('step3').style.display = 'block';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Error', 'Processing failed');
+        document.getElementById('processBtn').disabled = false;
+        document.getElementById('processBtn').textContent = 'Process Depreciation';
+    });
+}
+
+function displayResults(data) {
+    const container = document.getElementById('processResults');
+    
+    let html = `
+        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'}">
+            <h6>${data.message}</h6>
+            <p><strong>Processed:</strong> ${data.processed_count} / ${data.total_eligible} assets</p>
+        </div>
+    `;
+    
+    if (data.results && data.results.length > 0) {
+        html += `
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Asset Code</th>
+                            <th>Asset Name</th>
+                            <th>Status</th>
+                            <th>Depreciation Amount</th>
+                            <th>Journal Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        data.results.forEach(result => {
+            const statusBadge = result.status === 'success' 
+                ? '<span class="badge bg-success">Success</span>'
+                : '<span class="badge bg-danger">Error</span>';
+                
+            html += `
+                <tr>
+                    <td>${result.asset_code || '-'}</td>
+                    <td>${result.asset_name}</td>
+                    <td>${statusBadge}</td>
+                    <td class="text-end">${result.depreciation_amount ? formatCurrency(result.depreciation_amount) : '-'}</td>
+                    <td>${result.journal_number || (result.error_message || '-')}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function backToStep1() {
+    document.getElementById('step2').style.display = 'none';
+    document.getElementById('step1').style.display = 'block';
+}
+
+function closeModal() {
+    bootstrap.Modal.getInstance(document.getElementById('batchDepreciationModal')).hide();
+    window.location.reload();
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(amount);
+}
 
 function showAlert(type, title, message) {
     const alertModal = document.getElementById('alertModal');
@@ -199,15 +380,14 @@ function showAlert(type, title, message) {
     alertMessage.textContent = message;
     
     if (type === 'success') {
-        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check text-success" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="m5 12l5 5l10 -10" /></svg>';
+        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check text-success" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>';
         alertButton.className = 'btn btn-success w-100';
     } else {
-        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="m12 9v2m0 4v.01" /><path d="m5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" /></svg>';
+        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M12 9v2m0 4v.01M5 19h14a2 2 0 0 0 1.84 -2.75L13.74 4a2 2 0 0 0 -3.5 0L3.16 16.25A2 2 0 0 0 5 19"/></svg>';
         alertButton.className = 'btn btn-danger w-100';
     }
     
-    const modal = new bootstrap.Modal(alertModal);
-    modal.show();
+    new bootstrap.Modal(alertModal).show();
 }
 </script>
 @endpush

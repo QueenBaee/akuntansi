@@ -288,20 +288,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Group asset data
     const groupData = {
+        'Aset Dalam Penyelesaian': { years: 0, months: 0, rate: 0 },
+        'Tanah': { years: 0, months: 0, rate: 0 },
         'Permanent': { years: 20, months: 240, rate: 5 },
         'Non-permanent': { years: 10, months: 120, rate: 10 },
         'Group 1': { years: 4, months: 48, rate: 25 },
         'Group 2': { years: 8, months: 96, rate: 12.5 }
     };
 
-    // Account mapping
+    // Account mapping - only accounts with actual mappings
     const accountMapping = {
-        'A23-01': { accumulated: null, expense: null },
         'A23-02': { accumulated: 'A24-01', expense: 'E22-96' },
         'A23-03': { accumulated: 'A24-02', expense: 'E22-97' },
         'A23-04': { accumulated: 'A24-03', expense: 'E22-98' },
-        'A23-05': { accumulated: 'A24-04', expense: 'E22-99' },
-        'A23-06': { accumulated: null, expense: null }
+        'A23-05': { accumulated: 'A24-04', expense: 'E22-99' }
     };
 
     // All accounts data from backend
