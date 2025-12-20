@@ -335,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (group && groupData[group]) {
             const data = groupData[group];
-            
             if (usefulLifeYears) usefulLifeYears.value = data.years;
             if (usefulLifeMonths) usefulLifeMonths.value = data.months;
             if (depreciationRate) depreciationRate.value = data.rate;
@@ -344,10 +343,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (usefulLifeMonths) usefulLifeMonths.value = '';
             if (depreciationRate) depreciationRate.value = '';
         }
-    }
-
-    if (assetGroupSelect) {
-        assetGroupSelect.addEventListener('change', updateGroupData);
     }
 
     // Update related accounts based on asset account
@@ -360,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (mapping.accumulated) {
                 const accAccount = allAccounts.find(acc => acc.kode === mapping.accumulated);
-                
                 if (accAccount && accumulatedAccount) {
                     accumulatedAccount.value = accAccount.kode + ' - ' + accAccount.keterangan;
                     if (accumulatedAccountId) accumulatedAccountId.value = accAccount.id;
@@ -375,7 +369,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (mapping.expense) {
                 const expAccount = allAccounts.find(acc => acc.kode === mapping.expense);
-                
                 if (expAccount && expenseAccount) {
                     expenseAccount.value = expAccount.kode + ' - ' + expAccount.keterangan;
                     if (expenseAccountId) expenseAccountId.value = expAccount.id;
@@ -395,11 +388,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    if (assetAccountSelect) {
-        assetAccountSelect.addEventListener('change', updateAccountData);
+    // Add event listeners
+    if (assetGroupSelect) {
+        assetGroupSelect.addEventListener('change', updateGroupData);
+        assetGroupSelect.addEventListener('input', updateGroupData);
+        assetGroupSelect.onchange = updateGroupData;
     }
 
-    // Initialize on page load
+    if (assetAccountSelect) {
+        assetAccountSelect.addEventListener('change', updateAccountData);
+        assetAccountSelect.addEventListener('input', updateAccountData);
+        assetAccountSelect.onchange = updateAccountData;
+    }
+
+    // Initialize autofill on page load
     setTimeout(function() {
         if (assetGroupSelect && assetGroupSelect.value) {
             assetGroupSelect.dispatchEvent(new Event('change'));
