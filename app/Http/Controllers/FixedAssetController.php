@@ -315,4 +315,50 @@ class FixedAssetController extends Controller
         return redirect()->route('assets-in-progress.reclassify', $request->all())
             ->with('info', 'Reclassification moved to Assets in Progress section');
     }
+
+    public function dispose(FixedAsset $fixedAsset, Request $request)
+    {
+        $request->validate([
+            'disposal_date' => 'required|date'
+        ]);
+
+        if (!$fixedAsset->is_active) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset is already inactive'
+                ], 422);
+            }
+            return back()->with('error', 'Aset sudah tidak aktif');
+        }
+
+        try {
+            $result = $this->assetService->disposeAsset(
+                $fixedAsset, 
+                $request->disposal_date, 
+                auth()->id()
+            );
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Asset disposed successfully',
+                    'data' => $result
+                ]);
+            }
+
+            return redirect()->route('fixed-assets.index')
+                ->with('success', 'Aset berhasil di-dispose dengan Memorial Account');
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
 }

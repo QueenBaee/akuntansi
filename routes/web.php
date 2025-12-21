@@ -82,16 +82,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('fixed-assets/{fixedAsset}', [\App\Http\Controllers\FixedAssetController::class, 'destroy'])->name('fixed-assets.destroy');
         Route::post('fixed-assets/{fixedAsset}/convert-to-regular', [\App\Http\Controllers\FixedAssetController::class, 'convertToRegular'])
             ->name('fixed-assets.convert-to-regular');
+        Route::post('fixed-assets/{fixedAsset}/dispose', [\App\Http\Controllers\FixedAssetController::class, 'dispose'])
+            ->name('fixed-assets.dispose');
         Route::post('fixed-assets/{fixedAsset}/mutations', [\App\Http\Controllers\FixedAssetController::class, 'storeMutation'])
             ->name('fixed-assets.mutations.store');
         
         // Assets in Progress
         Route::get('assets-in-progress', [\App\Http\Controllers\AssetInProgressController::class, 'index'])->name('assets-in-progress.index');
-        Route::get('assets-in-progress/{asset}', [\App\Http\Controllers\AssetInProgressController::class, 'show'])->name('assets-in-progress.show');
-        Route::get('assets-in-progress/reclassify/form', [\App\Http\Controllers\AssetInProgressController::class, 'showReclassify'])
+        Route::get('assets-in-progress/reclassify', [\App\Http\Controllers\AssetInProgressController::class, 'showReclassify'])
             ->name('assets-in-progress.reclassify');
         Route::post('assets-in-progress/reclassify', [\App\Http\Controllers\AssetInProgressController::class, 'reclassify'])
             ->name('assets-in-progress.reclassify.store');
+        Route::get('assets-in-progress/{asset}', [\App\Http\Controllers\AssetInProgressController::class, 'show'])->name('assets-in-progress.show');
         
         // Fixed Asset API endpoints
         Route::get('api/fixed-assets/next-number', [\App\Http\Controllers\FixedAssetController::class, 'getNextAssetNumber'])

@@ -101,6 +101,9 @@ use App\Helpers\AssetGroupHelper;
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a href="/fixed-assets/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
+                                            @if($asset->is_active)
+                                            <button type="button" class="btn btn-sm btn-warning" onclick="showDisposeModal({{ $asset->id }}, '{{ $asset->name }}', {{ $asset->acquisition_price }}, {{ $asset->accumulated_depreciation }})">Dispose</button>
+                                            @endif
                                             <form method="POST" action="/fixed-assets/{{ $asset->id }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus?')">
                                                 @csrf
                                                 @method('DELETE')
@@ -180,6 +183,66 @@ use App\Helpers\AssetGroupHelper;
                         <button type="button" class="btn w-100" id="alertButton" data-bs-dismiss="modal">OK</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Disposal Modal -->
+    <div class="modal modal-blur fade" id="disposeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Asset Disposal (Memorial Account)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="disposeForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <strong>Warning:</strong> This action will permanently dispose the asset using Memorial Account method. This cannot be undone.
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Asset Name</label>
+                                <input type="text" class="form-control" id="disposeAssetName" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Disposal Date</label>
+                                <input type="date" class="form-control" name="disposal_date" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Acquisition Cost</label>
+                                <input type="text" class="form-control" id="disposeAcquisitionCost" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Accumulated Depreciation</label>
+                                <input type="text" class="form-control" id="disposeAccumulatedDepreciation" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Book Value (Loss)</label>
+                                <input type="text" class="form-control" id="disposeBookValue" readonly>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6>Journal Entries to be Created:</h6>
+                            <ol>
+                                <li><strong>Remove Acquisition Cost:</strong> Debit AM, Credit A23-xx</li>
+                                <li><strong>Remove Accumulated Depreciation:</strong> Debit A24-xx, Credit AM</li>
+                                <li><strong>Recognize Loss:</strong> Debit E31-03, Credit AM</li>
+                            </ol>
+                            <p class="mb-0"><small>Memorial Account (AM) balance will be zero after all entries.</small></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Dispose Asset</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -402,5 +465,82 @@ function showAlert(type, title, message) {
     
     new bootstrap.Modal(alertModal).show();
 }
+
+function showDisposeModal(assetId, assetName, acquisitionCost, accumulatedDepreciation) {
+    const modal = document.getElementById('disposeModal');
+    const form = document.getElementById('disposeForm');
+    
+    // Set form action
+    form.action = `/fixed-assets/${assetId}/dispose`;
+    
+    // Fill form fields
+    document.getElementById('disposeAssetName').value = assetName;
+    document.getElementById('disposeAcquisitionCost').value = formatCurrency(acquisitionCost);
+    document.getElementById('disposeAccumulatedDepreciation').value = formatCurrency(accumulatedDepreciation);
+    
+    // Calculate book value
+    const bookValue = acquisitionCost - accumulatedDepreciation;
+    document.getElementById('disposeBookValue').value = formatCurrency(bookValue);
+    
+    // Set default disposal date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="disposal_date"]').value = today;
+    
+    // Show modal
+    new bootstrap.Modal(modal).show();
+}
+
+// Handle disposal form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const disposeForm = document.getElementById('disposeForm');
+    if (disposeForm) {
+        disposeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processing...';
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(data => {
+                // Check if response is JSON
+                try {
+                    const jsonData = JSON.parse(data);
+                    if (jsonData.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('disposeModal')).hide();
+                        showAlert('success', 'Success', 'Asset disposed successfully');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showAlert('error', 'Error', jsonData.message || 'Failed to dispose asset');
+                    }
+                } catch (e) {
+                    // Response is HTML (redirect), assume success
+                    bootstrap.Modal.getInstance(document.getElementById('disposeModal')).hide();
+                    showAlert('success', 'Success', 'Asset disposed successfully');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Error', 'Network error occurred');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            });
+        });
+    }
+});
 </script>
 @endpush
