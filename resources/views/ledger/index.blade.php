@@ -37,16 +37,16 @@
         </div>
     </div>
 
-    <table class="ledger-table no-equal-width" style="width: 100% !important; table-layout: fixed !important;">
+    <table class="ledger-table no-equal-width">
         <thead>
             <tr>
-                <th style="width: 40px !important;">No</th>
-                <th style="width: 30% !important;">Keterangan</th>
-                <th style="width: 10% !important;">PIC</th>
-                <th style="width: 12% !important;">No. Bukti</th>
-                <th style="width: 13% !important;">Debit</th>
-                <th style="width: 13% !important;">Kredit</th>
-                <th style="width: 15% !important;">Saldo</th>
+                <th>No</th>
+                <th>Keterangan</th>
+                <th>PIC</th>
+                <th>No. Bukti</th>
+                <th>Debit</th>
+                <th>Kredit</th>
+                <th>Saldo</th>
             </tr>
         </thead>
         <tbody>
@@ -105,90 +105,6 @@
         </button>
     </div>
 @endif
-<style>
-/* PAGE */
-.ledger-page {
-    width: 100%;
-    padding: 10px;
-    overflow: hidden;
-}
-
-/* HEADER */
-.ledger-header {
-    text-align: center;
-    margin-bottom: 8px;
-    line-height: 1.3;
-}
-.ledger-header h4 {
-    margin: 0;
-    font-weight: 700;
-}
-
-/* TABLE */
-.ledger-table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    font-size: 12px;
-}
-
-/* CELL */
-.ledger-table th,
-.ledger-table td {
-    border: 1px solid #dee2e6;
-    padding: 4px 6px;
-    vertical-align: middle;
-}
-
-/* HEADER */
-.ledger-table thead th {
-    background: #f1f3f5;
-    text-align: center;
-    font-weight: 600;
-}
-
-/* ALIGN */
-.ledger-table td:nth-child(1),
-.ledger-table td:nth-child(3),
-.ledger-table td:nth-child(4) {
-    text-align: center;
-}
-
-.ledger-table td:nth-child(5),
-.ledger-table td:nth-child(6),
-.ledger-table td:nth-child(7) {
-    text-align: right;
-    white-space: nowrap;
-}
-
-/* WIDTH TOTAL 100% */
-.ledger-table th:nth-child(1) { width: 4%; }
-.ledger-table th:nth-child(2) { width: 34%; }
-.ledger-table th:nth-child(3) { width: 8%; }
-.ledger-table th:nth-child(4) { width: 12%; }
-.ledger-table th:nth-child(5) { width: 14%; }
-.ledger-table th:nth-child(6) { width: 14%; }
-.ledger-table th:nth-child(7) { width: 14%; }
-
-/* ROW STYLE */
-.row-opening { background: #dbeafe; font-weight: 600; }
-.row-total   { background: #e5e7eb; font-weight: 600; }
-.row-ending  { background: #dcfce7; font-weight: 600; }
-
-/* FOOTER */
-.ledger-footer {
-    margin-top: 8px;
-}
-
-/* PRINT */
-@media print {
-    body { margin: 0; }
-    .btn { display: none; }
-    .ledger-table { font-size: 11px; }
-    .ledger-table th,
-    .ledger-table td { padding: 3px 4px; }
-}
-</style>
 
 </div>
 @endsection
@@ -203,21 +119,22 @@
 .ledger-page { padding: 20px; }
 .ledger-header { text-align: center; margin-bottom: 20px; }
 .ledger-header h4 { margin: 0 0 10px 0; font-weight: bold; }
-.ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.ledger-table { width: 100% !important; border-collapse: collapse; font-size: 13px; table-layout: fixed !important; }
 .ledger-table th, .ledger-table td { border: 1px solid #000; padding: 4px 6px; }
-.ledger-table th { background: #e9ecef; font-weight: bold; text-align: center; }
-.ledger-table th:nth-child(1) { width: 40px; }
-.ledger-table th:nth-child(2) { width: 30%; }
-.ledger-table th:nth-child(3) { width: 10%; }
-.ledger-table th:nth-child(4) { width: 12%; }
-.ledger-table th:nth-child(5) { width: 13%; }
-.ledger-table th:nth-child(6) { width: 13%; }
-.ledger-table th:nth-child(7) { width: 15%; }
+.ledger-table th { background: #e9ecef; font-weight: bold; text-align: center; width: auto !important; }
+.ledger-table th:nth-child(1) { width: 40px !important; }
+.ledger-table th:nth-child(2) { width: 30% !important; }
+.ledger-table th:nth-child(3) { width: 10% !important; }
+.ledger-table th:nth-child(4) { width: 12% !important; }
+.ledger-table th:nth-child(5) { width: 13% !important; }
+.ledger-table th:nth-child(6) { width: 13% !important; }
+.ledger-table th:nth-child(7) { width: 15% !important; }
 .ledger-table td { overflow: hidden; text-overflow: ellipsis; }
 .ledger-table td:nth-child(2) { white-space: normal; word-wrap: break-word; }
 .ledger-table td:nth-child(5), .ledger-table td:nth-child(6), .ledger-table td:nth-child(7) { text-align: right; }
 .row-opening, .row-total, .row-ending { font-weight: bold; background: #f8f9fa; }
 .ledger-footer { margin-top: 20px; text-align: center; }
+.ledger-table.no-equal-width { table-layout: fixed !important; }
 @media print {
     .filter-section, .ledger-footer { display: none; }
 }
