@@ -76,7 +76,7 @@
                         </thead>
                         <tbody>
                             @php
-                                function calculateGroupTotal($accountCodes, $items, $data) {
+                                function calculateGroupTotal($accountCodes, $items, $data, $useAbs = false) {
                                     $groupTotals = [];
                                     for ($m = 1; $m <= 12; $m++) {
                                         $groupTotals["month_$m"] = 0;
@@ -88,10 +88,13 @@
                                         $item = $items->where('kode', $code)->first();
                                         if ($item) {
                                             for ($m = 1; $m <= 12; $m++) {
-                                                $groupTotals["month_$m"] += abs($data[$item->id]["month_$m"] ?? 0);
+                                                $value = $data[$item->id]["month_$m"] ?? 0;
+                                                $groupTotals["month_$m"] += $useAbs ? abs($value) : $value;
                                             }
-                                            $groupTotals['total'] += abs($data[$item->id]['total'] ?? 0);
-                                            $groupTotals['opening'] += abs($data[$item->id]['opening'] ?? 0);
+                                            $totalValue = $data[$item->id]['total'] ?? 0;
+                                            $openingValue = $data[$item->id]['opening'] ?? 0;
+                                            $groupTotals['total'] += $useAbs ? abs($totalValue) : $totalValue;
+                                            $groupTotals['opening'] += $useAbs ? abs($openingValue) : $openingValue;
                                         }
                                     }
                                     return $groupTotals;
@@ -108,16 +111,47 @@
                                     'SALDO LABA AWAL' => ['C21-01'],
                                 ];
                                 
-                                // Calculate totals
-                                $pendapatan = calculateGroupTotal($accountGroups['13. PENDAPATAN'], $items, $data);
-                                $bebanProduksi = calculateGroupTotal($accountGroups['14. BEBAN PRODUKSI'], $items, $data);
-                                $pemasaran = calculateGroupTotal($accountGroups['PEMASARAN'], $items, $data);
-                                $administrasi = calculateGroupTotal($accountGroups['15. ADMINISTRASI & UMUM'], $items, $data);
-                                $pendapatanLain = calculateGroupTotal($accountGroups['16. PENDAPATAN LAIN-LAIN'], $items, $data);
-                                $bebanLain = calculateGroupTotal($accountGroups['17. BEBAN LAIN-LAIN'], $items, $data);
-                                $bebanPajak = calculateGroupTotal($accountGroups['BEBAN PAJAK PENGHASILAN'], $items, $data);
-                                $saldoLabaAwal = calculateGroupTotal($accountGroups['SALDO LABA AWAL'], $items, $data);
+                                // Calculate totals - Revenue should be positive, Expenses should show actual values
+                                $pendapatan = calculateGroupTotal($accountGroups['13. PENDAPATAN'], $items, $data, true);
+                                $bebanProduksi = calculateGroupTotal($accountGroups['14. BEBAN PRODUKSI'], $items, $data, true);
+                                $pemasaran = calculateGroupTotal($accountGroups['PEMASARAN'], $items, $data, true);
+                                $administrasi = calculateGroupTotal($accountGroups['15. ADMINISTRASI & UMUM'], $items, $data, true);
+                                $pendapatanLain = calculateGroupTotal($accountGroups['16. PENDAPATAN LAIN-LAIN'], $items, $data, true);
+                                $bebanLain = calculateGroupTotal($accountGroups['17. BEBAN LAIN-LAIN'], $items, $data, true);
+                                $bebanPajak = calculateGroupTotal($accountGroups['BEBAN PAJAK PENGHASILAN'], $items, $data, true);
+                                $saldoLabaAwal = calculateGroupTotal($accountGroups['SALDO LABA AWAL'], $items, $data, false);
                             @endphp
+                            
+                            <!-- Debug Info -->
+                            @if(isset($debugInfo) && !empty($debugInfo))
+                                <tr style="background-color: #fff3cd;">
+                                    <td colspan="16"><strong>Debug Info:</strong><br>
+                                        Current Year: {{ $debugInfo['journal_counts']['current_year'] ?? 0 }}<br>
+                                        Revenue Journals: {{ $debugInfo['journal_counts']['revenue_journals'] ?? 0 }}, 
+                                        Expense Journals: {{ $debugInfo['journal_counts']['expense_journals'] ?? 0 }}, 
+                                        Total Items: {{ $debugInfo['journal_counts']['total_items'] ?? 0 }}<br>
+                                        Available Years: 
+                                        @if(isset($debugInfo['journal_counts']['available_years']))
+                                            @foreach($debugInfo['journal_counts']['available_years'] as $yr => $count)
+                                                {{ $yr }}({{ $count }}) 
+                                            @endforeach
+                                        @endif
+                                        <br>
+                                        Sample Journals: 
+                                        @if(isset($debugInfo['journal_counts']['sample_journals']))
+                                            @foreach($debugInfo['journal_counts']['sample_journals'] as $j)
+                                                {{ $j['debit'] }} -> {{ $j['credit'] }} ({{ number_format($j['amount']) }}) {{ $j['desc'] }}... | 
+                                            @endforeach
+                                        @endif
+                                        <br>
+                                        @foreach($debugInfo as $code => $info)
+                                            @if($code !== 'journal_counts')
+                                                {{ $code }}: Opening={{ $info['opening'] }}, Jan={{ $info['month_1'] }}, Oct={{ $info['month_10'] ?? 'N/A' }}, Total={{ $info['total'] }} | 
+                                            @endif
+                                        @endforeach
+                                    </td>
+                                </tr>
+                            @endif
                             
                             <!-- PENDAPATAN -->
                             <tr>

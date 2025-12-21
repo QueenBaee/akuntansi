@@ -43,12 +43,22 @@ class FixedAssetController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        $assets = $query->paginate(15);
+        $assets = $query->get();
+
+        // Group assets by acquisition account, then by group
+        $groupedAssets = $assets->groupBy(function($asset) {
+            if ($asset->assetAccount) {
+                return $asset->assetAccount->keterangan ?: $asset->assetAccount->nama;
+            }
+            return 'HP - ' . ($asset->group ?: 'Tidak Dikelompokkan');
+        })->map(function($accountAssets) {
+            return $accountAssets->groupBy('group');
+        });
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'data' => $assets
+                'data' => $groupedAssets
             ]);
         }
 
@@ -56,7 +66,7 @@ class FixedAssetController extends Controller
         $accumulatedAccounts = TrialBalance::where('kode', 'like', 'A24%')->orderBy('kode')->get();
         $expenseAccounts = TrialBalance::where('kode', 'like', 'E22%')->orderBy('kode')->get();
 
-        return view('fixed-assets.index', compact('assets', 'accumulatedAccounts', 'expenseAccounts'));
+        return view('fixed-assets.index', compact('groupedAssets', 'accumulatedAccounts', 'expenseAccounts'));
     }
 
     public function create()
@@ -304,5 +314,51 @@ class FixedAssetController extends Controller
     {
         return redirect()->route('assets-in-progress.reclassify', $request->all())
             ->with('info', 'Reclassification moved to Assets in Progress section');
+    }
+
+    public function dispose(FixedAsset $fixedAsset, Request $request)
+    {
+        $request->validate([
+            'disposal_date' => 'required|date'
+        ]);
+
+        if (!$fixedAsset->is_active) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Asset is already inactive'
+                ], 422);
+            }
+            return back()->with('error', 'Aset sudah tidak aktif');
+        }
+
+        try {
+            $result = $this->assetService->disposeAsset(
+                $fixedAsset, 
+                $request->disposal_date, 
+                auth()->id()
+            );
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Asset disposed successfully',
+                    'data' => $result
+                ]);
+            }
+
+            return redirect()->route('fixed-assets.index')
+                ->with('success', 'Aset berhasil di-dispose dengan Memorial Account');
+
+        } catch (\Exception $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+
+            return back()->with('error', 'Error: ' . $e->getMessage());
+        }
     }
 }

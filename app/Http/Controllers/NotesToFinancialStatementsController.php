@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class NotesToFinancialStatementsController extends Controller
 {
+    private function isBalanceSheetAccount($code) {
+        if ($code === 'C21-02') return false;
+        return in_array(substr($code, 0, 1), ['A', 'L', 'C']);
+    }
+
+    private function isIncomeStatementAccount($code) {
+        return in_array(substr($code, 0, 1), ['R', 'E']);
+    }
+
+    private function isDividendAccount($code) {
+        return $code === 'C21-02';
+    }
+
     private $accountGroups = [
         '1. KAS & SETARA KAS' => ['A11-01', 'A11-21', 'A11-22', 'A11-23'],
         '2. PIUTANG USAHA' => ['A12-01', 'A12-02', 'A12-03'],
@@ -123,19 +136,37 @@ class NotesToFinancialStatementsController extends Controller
 
         $data = [];
         foreach ($items as $item) {
-            $saldo = $openingBalance[$item->id] ?? 0;
             $row = [];
-
-            for ($m = 1; $m <= 12; $m++) {
-                $trx = $journalMonthly[$item->id] ?? collect();
-                $debit = $trx->where('month', $m)->sum('debit_amount');
-                $credit = $trx->where('month', $m)->sum('credit_amount');
-                $saldo = $saldo + $debit - $credit;
-                $row["month_$m"] = $saldo;
+            $isBalanceSheet = $this->isBalanceSheetAccount($item->kode);
+            $isIncomeStatement = $this->isIncomeStatementAccount($item->kode);
+            $isDividend = $this->isDividendAccount($item->kode);
+            
+            if ($isBalanceSheet) {
+                // Balance Sheet: cumulative logic
+                $saldo = $openingBalance[$item->id] ?? 0;
+                for ($m = 1; $m <= 12; $m++) {
+                    $trx = $journalMonthly[$item->id] ?? collect();
+                    $debit = $trx->where('month', $m)->sum('debit_amount');
+                    $credit = $trx->where('month', $m)->sum('credit_amount');
+                    $saldo = $saldo + $debit - $credit;
+                    $row["month_$m"] = $saldo;
+                }
+                $row['opening'] = $openingBalance[$item->id] ?? 0;
+            } else {
+                // Income Statement & Dividend: period movements only
+                for ($m = 1; $m <= 12; $m++) {
+                    $trx = $journalMonthly[$item->id] ?? collect();
+                    $debit = $trx->where('month', $m)->sum('debit_amount');
+                    $credit = $trx->where('month', $m)->sum('credit_amount');
+                    $row["month_$m"] = $debit - $credit;
+                }
+                $row['opening'] = 0;
             }
-
-            $row['total'] = $saldo;
-            $row['opening'] = $openingBalance[$item->id] ?? 0;
+            
+            $row['total'] = array_sum(array_filter($row, function($key) {
+                return strpos($key, 'month_') === 0;
+            }, ARRAY_FILTER_USE_KEY));
+            
             $data[$item->id] = $row;
         }
 
