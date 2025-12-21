@@ -626,10 +626,26 @@
                     document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
                     
                     if (!isVisible) {
-                        // Position dropdown relative to input
+                        // Position dropdown relative to input with viewport awareness
                         const rect = input.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const dropdownHeight = 200; // max-height from CSS
+                        
+                        let top = rect.bottom + window.scrollY;
+                        
+                        // Check if dropdown would go below viewport
+                        if (rect.bottom + dropdownHeight > viewportHeight) {
+                            // Position above input if there's more space
+                            if (rect.top > dropdownHeight) {
+                                top = rect.top + window.scrollY - dropdownHeight;
+                            } else {
+                                // Keep below but adjust to fit viewport
+                                top = window.scrollY + viewportHeight - dropdownHeight - 10;
+                            }
+                        }
+                        
                         dropdown.style.left = rect.left + 'px';
-                        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                        dropdown.style.top = top + 'px';
                         dropdown.style.width = Math.max(rect.width, 200) + 'px';
                         
                         // Make input editable for search
