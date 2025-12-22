@@ -35,8 +35,18 @@ class LedgerController extends Controller
             $selectedAccount = TrialBalance::find($accountId);
 
             if ($selectedAccount) {
-                // Get opening balance from trial_balances
-                $openingBalance = $selectedAccount->{"tahun_$year"} ?? 0;
+                // Get opening balance from trial_balances (authoritative source)
+                // Rule: Use current year if exists, else previous year, else 0
+                $openingBalance = 0;
+                
+                if (isset($selectedAccount->{"tahun_$year"})) {
+                    // Use current year balance if exists
+                    $openingBalance = $selectedAccount->{"tahun_$year"} ?? 0;
+                } else {
+                    // Fallback to previous year balance
+                    $previousYear = $year - 1;
+                    $openingBalance = $selectedAccount->{"tahun_$previousYear"} ?? 0;
+                }
 
                 // Build query for journals
                 $query = Journal::where('is_posted', true)
@@ -101,8 +111,16 @@ class LedgerController extends Controller
         }
 
         // Summary variables for display
-        // Trial Balance = opening balance from trial_balances table
-        $trialBalanceTotal = $selectedAccount ? ($selectedAccount->{"tahun_$year"} ?? 0) : 0;
+        // Trial Balance = opening balance from trial_balances table (authoritative)
+        $trialBalanceTotal = 0;
+        if ($selectedAccount) {
+            if (isset($selectedAccount->{"tahun_$year"})) {
+                $trialBalanceTotal = $selectedAccount->{"tahun_$year"} ?? 0;
+            } else {
+                $previousYear = $year - 1;
+                $trialBalanceTotal = $selectedAccount->{"tahun_$previousYear"} ?? 0;
+            }
+        }
         
         // Buku Besar = ending balance after all transactions
         $ledgerTotal = $endingBalance;
