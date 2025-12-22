@@ -166,6 +166,7 @@ class AssetFromTransactionService
         $journals = Journal::with(['debitAccount.parent', 'creditAccount.parent'])
             ->whereNull('fixed_asset_id')
             ->where('is_posted', true)
+            ->whereNotIn('source_module', ['asset_disposal', 'asset_depreciation'])
             ->where(function($query) {
                 $query->whereHas('debitAccount.parent', function($subQuery) {
                     $subQuery->where('is_aset', true);
