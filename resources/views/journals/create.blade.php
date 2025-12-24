@@ -438,44 +438,33 @@
                 }
 
                 function calculateBalance(input) {
-                    const row = input.closest('tr');
-                    const cashInInput = row.querySelector('.cash-in');
-                    const cashOutInput = row.querySelector('.cash-out');
-                    const balanceDisplay = row.querySelector('.balance-display');
+                    // Recalculate all balances from the beginning
+                    recalculateAllBalances();
+                }
 
-                    let prevBalance = currentBalance;
-                    const prevRow = row.previousElementSibling;
-                    if (prevRow) {
-                        if (prevRow.hasAttribute('data-existing')) {
-                            prevBalance = parseFloat(prevRow.getAttribute('data-balance'));
+                function recalculateAllBalances() {
+                    const tbody = document.getElementById('journalLines');
+                    const rows = tbody.querySelectorAll('tr');
+                    let runningBalance = openingBalance;
+
+                    rows.forEach(row => {
+                        if (row.hasAttribute('data-existing')) {
+                            // For existing rows, use the stored balance
+                            runningBalance = parseFloat(row.getAttribute('data-balance'));
                         } else {
-                            const prevBalanceDisplay = prevRow.querySelector('.balance-display');
-                            if (prevBalanceDisplay) {
-                                prevBalance = parseFloat(prevBalanceDisplay.textContent.replace(/[^0-9.-]/g, ''));
+                            // For new rows, calculate balance
+                            const cashInInput = row.querySelector('.cash-in');
+                            const cashOutInput = row.querySelector('.cash-out');
+                            const balanceDisplay = row.querySelector('.balance-display');
+
+                            if (cashInInput && cashOutInput && balanceDisplay) {
+                                const cashIn = parseFloat(cashInInput.value) || 0;
+                                const cashOut = parseFloat(cashOutInput.value) || 0;
+                                runningBalance = runningBalance + cashIn - cashOut;
+                                balanceDisplay.textContent = formatter.format(runningBalance);
                             }
                         }
-                    }
-
-                    const cashIn = parseFloat(cashInInput.value) || 0;
-                    const cashOut = parseFloat(cashOutInput.value) || 0;
-                    const newBalance = prevBalance + cashIn - cashOut;
-
-                    balanceDisplay.textContent = formatter.format(newBalance);
-
-                    let nextRow = row.nextElementSibling;
-                    let runningBalance = newBalance;
-
-                    while (nextRow && !nextRow.hasAttribute('data-existing')) {
-                        const nextCashIn = parseFloat(nextRow.querySelector('.cash-in').value) || 0;
-                        const nextCashOut = parseFloat(nextRow.querySelector('.cash-out').value) || 0;
-                        runningBalance = runningBalance + nextCashIn - nextCashOut;
-
-                        const nextBalanceDisplay = nextRow.querySelector('.balance-display');
-                        if (nextBalanceDisplay) {
-                            nextBalanceDisplay.textContent = formatter.format(runningBalance);
-                        }
-                        nextRow = nextRow.nextElementSibling;
-                    }
+                    });
                 }
 
                 function generateProofNumber(input, index) {
@@ -626,10 +615,26 @@
                     document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
                     
                     if (!isVisible) {
-                        // Position dropdown relative to input
+                        // Position dropdown relative to input with viewport awareness
                         const rect = input.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        const dropdownHeight = 200; // max-height from CSS
+                        
+                        let top = rect.bottom + window.scrollY;
+                        
+                        // Check if dropdown would go below viewport
+                        if (rect.bottom + dropdownHeight > viewportHeight) {
+                            // Position above input if there's more space
+                            if (rect.top > dropdownHeight) {
+                                top = rect.top + window.scrollY - dropdownHeight;
+                            } else {
+                                // Keep below but adjust to fit viewport
+                                top = window.scrollY + viewportHeight - dropdownHeight - 10;
+                            }
+                        }
+                        
                         dropdown.style.left = rect.left + 'px';
-                        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+                        dropdown.style.top = top + 'px';
                         dropdown.style.width = Math.max(rect.width, 200) + 'px';
                         
                         // Make input editable for search

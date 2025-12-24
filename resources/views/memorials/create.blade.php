@@ -335,22 +335,22 @@
                 document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
                 
                 if (!isVisible) {
-                    // Position dropdown relative to input
+                    // Position dropdown relative to input with viewport awareness
                     const rect = input.getBoundingClientRect();
                     const viewportHeight = window.innerHeight;
-                    const dropdownHeight = 200; // max-height of dropdown
+                    const dropdownHeight = 200; // max-height from CSS
                     
-                    // Check if dropdown should appear above or below
-                    const spaceBelow = viewportHeight - rect.bottom;
-                    const spaceAbove = rect.top;
+                    let top = rect.bottom + window.scrollY;
                     
-                    let top;
-                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
-                        // Show below
-                        top = rect.bottom + window.scrollY;
-                    } else {
-                        // Show above
-                        top = rect.top + window.scrollY - dropdownHeight;
+                    // Check if dropdown would go below viewport
+                    if (rect.bottom + dropdownHeight > viewportHeight) {
+                        // Position above input if there's more space
+                        if (rect.top > dropdownHeight) {
+                            top = rect.top + window.scrollY - dropdownHeight;
+                        } else {
+                            // Keep below but adjust to fit viewport
+                            top = window.scrollY + viewportHeight - dropdownHeight - 10;
+                        }
                     }
                     
                     dropdown.style.left = rect.left + 'px';
