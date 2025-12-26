@@ -111,7 +111,6 @@ class ReportService
             })
             ->whereBetween('date', [$startDate, $endDate])
             ->where('is_posted', true)
-            ->whereNull('deleted_at')
             ->get();
             
         $operating = [];
@@ -170,7 +169,6 @@ class ReportService
             })
             ->whereBetween('date', [$startDate, $endDate])
             ->where('is_posted', true)
-            ->whereNull('deleted_at')
             ->orderBy('date')
             ->get();
             
@@ -226,7 +224,6 @@ class ReportService
             })
             ->where('date', '<=', $endDate)
             ->where('is_posted', true)
-            ->whereNull('deleted_at')
             ->get();
             
         $balance = $account->opening_balance;

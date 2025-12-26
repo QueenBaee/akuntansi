@@ -36,13 +36,13 @@
                             <table class="table table-vcenter card-table">
                                 <thead>
                                     <tr>
-                                        <th style="text-align:center">Nama</th>
-                                        <th style="text-align:center">Bank</th>
-                                        <th style="text-align:center">Nomor Rekening</th>
-                                        <th style="text-align:center">Akun CF</th>
-                                        <th style="text-align:center">Deskripsi</th>
-                                        <th style="text-align:center">Status</th>
-                                        <th class="w-1" style="text-align:center">Aksi</th>
+                                        <th>Nama</th>
+                                        <th>Bank</th>
+                                        <th>Nomor Rekening</th>
+                                        <th>Akun CF</th>
+                                        <th>Deskripsi</th>
+                                        <th>Status</th>
+                                        <th class="w-1">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>

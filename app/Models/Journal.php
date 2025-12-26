@@ -25,7 +25,6 @@ class Journal extends Model
         'balance',
         'source_module',
         'source_id',
-        'fixed_asset_id',
         'total_debit',
         'total_credit',
         'total_amount',
@@ -106,11 +105,6 @@ class Journal extends Model
     public function ledger()
     {
         return $this->belongsTo(Ledger::class);
-    }
-
-    public function fixedAsset()
-    {
-        return $this->belongsTo(FixedAsset::class);
     }
 
     public function scopePosted($query)

@@ -2,10 +2,6 @@
 
 @section('title', 'Detail Aset Tetap')
 
-@php
-use App\Helpers\AssetGroupHelper;
-@endphp
-
 @section('page-header')
 <div class="page-pretitle">Aset Tetap</div>
 <h2 class="page-title">{{ $fixedAsset->name }}</h2>
@@ -13,7 +9,7 @@ use App\Helpers\AssetGroupHelper;
 
 @section('page-actions')
 <div class="btn-list">
-    <a href="{{ route('fixed-assets.edit', $fixedAsset) }}" class="btn btn-primary">
+    <button class="btn btn-primary edit-btn" onclick="editAsset()">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
             <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
@@ -21,7 +17,22 @@ use App\Helpers\AssetGroupHelper;
             <path d="M16 5l3 3"/>
         </svg>
         Edit
-    </a>
+    </button>
+    <button class="btn btn-success save-btn" onclick="saveAsset()" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+            <path d="M5 12l5 5l10 -10"/>
+        </svg>
+        Simpan
+    </button>
+    <button class="btn btn-secondary cancel-btn" onclick="cancelEdit()" style="display: none;">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+            <path d="M18 6l-12 12"/>
+            <path d="M6 6l12 12"/>
+        </svg>
+        Batal
+    </button>
     <a href="{{ route('fixed-assets.index') }}" class="btn btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
@@ -34,328 +45,96 @@ use App\Helpers\AssetGroupHelper;
 
 @section('content')
 <div class="row">
-    <div class="col-12">
+    <!-- Asset Information -->
+    <div class="col-md-4">
         <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Informasi Aset</h3>
+            </div>
             <div class="card-body">
-                <!-- Identitas Aset -->
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Identitas Aset</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nomor Aset</label>
-                                <div class="font-weight-medium editable" data-field="code">{{ $fixedAsset->code }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nama Aset</label>
-                                <div class="font-weight-medium editable" data-field="name">{{ $fixedAsset->name }}</div>
-                            </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Kode Aset</label>
+                            <div class="font-weight-medium editable" data-field="code">{{ $fixedAsset->code }}</div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Jumlah Unit</label>
-                                <div class="editable" data-field="quantity">{{ $fixedAsset->quantity ?? 1 }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Location</label>
-                                <div class="editable" data-field="location">{{ $fixedAsset->location ?? '-' }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Aset</label>
+                            <div class="font-weight-medium editable" data-field="name">{{ $fixedAsset->name }}</div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Kelompok</label>
-                                <div class="editable" data-field="group">{{ $fixedAsset->group ? AssetGroupHelper::translateGroup($fixedAsset->group) : '-' }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Perolehan</label>
+                            <div class="editable" data-field="acquisition_date">{{ $fixedAsset->acquisition_date->format('d M Y') }}</div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Kondisi</label>
-                                        <div class="editable" data-field="condition">{{ $fixedAsset->condition ?? '-' }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Status</label>
-                                        <div>
-                                            @if($fixedAsset->is_active)
-                                                <span class="badge bg-success">Active</span>
-                                            @else
-                                                <span class="badge bg-secondary">Inactive</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Umur Manfaat</label>
+                            <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months }} bulan</div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Detail Perolehan -->
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Detail Perolehan</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal Perolehan</label>
-                                <div class="editable" data-field="acquisition_date">{{ $fixedAsset->acquisition_date->format('d M Y') }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Harga Perolehan</label>
-                                <div class="font-weight-medium text-primary editable" data-field="acquisition_price">{{ number_format($fixedAsset->acquisition_price, 0, ',', '.') }}</div>
-                            </div>
+        <!-- Asset Value Summary -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Ringkasan Nilai</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Harga Perolehan</label>
+                            <div class="font-weight-medium text-primary editable" data-field="acquisition_price">{{ number_format($fixedAsset->acquisition_price, 0, ',', '.') }}</div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nilai Residu</label>
-                                <div class="editable" data-field="residual_value">{{ number_format($fixedAsset->residual_value, 0, ',', '.') }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Nilai Residual</label>
+                            <div class="editable" data-field="residual_value">{{ number_format($fixedAsset->residual_value * 100, 2) }}%</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Penyusutan -->
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Penyusutan</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Metode Penyusutan</label>
-                                <div>{{ $fixedAsset->depreciation_method ?? 'garis lurus' }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal Mulai Penyusutan</label>
-                                <div>{{ $fixedAsset->depreciation_start_date ? $fixedAsset->depreciation_start_date->format('d M Y') : '-' }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Akumulasi Penyusutan</label>
+                            <div class="text-danger">{{ number_format($fixedAsset->accumulated_depreciation, 0, ',', '.') }}</div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Umur Manfaat (Tahun)</label>
-                                        <div>{{ $fixedAsset->useful_life_years ?? ($fixedAsset->useful_life_months ? round($fixedAsset->useful_life_months / 12, 1) : '-') }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Umur Manfaat (Bulan)</label>
-                                        <div class="editable" data-field="useful_life_months">{{ $fixedAsset->useful_life_months ?? '-' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Prosentase Penyusutan</label>
-                                <div>{{ $fixedAsset->depreciation_rate ?? ($fixedAsset->useful_life_months ? round(100 / ($fixedAsset->useful_life_months / 12), 2) : '-') }}{{ $fixedAsset->depreciation_rate || $fixedAsset->useful_life_months ? '%' : '' }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Nilai Buku</label>
+                            <div class="font-weight-medium text-success">{{ number_format($fixedAsset->current_book_value, 0, ',', '.') }}</div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Akumulasi Penyusutan</label>
-                                <div class="text-danger">{{ number_format($fixedAsset->accumulated_depreciation, 0, ',', '.') }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Nilai Buku</label>
-                                <div class="font-weight-medium text-success">{{ number_format($fixedAsset->current_book_value, 0, ',', '.') }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Penyusutan Bulanan</label>
-                                <div>{{ number_format($fixedAsset->monthly_depreciation, 0, ',', '.') }}</div>
-                            </div>
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Penyusutan Bulanan</label>
+                            <div>{{ number_format($fixedAsset->monthly_depreciation, 0, ',', '.') }}</div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Akun Terkait -->
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Akun Terkait</h4>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Harga Perolehan</label>
-                                <div>{{ $fixedAsset->assetAccount->kode }} - {{ $fixedAsset->assetAccount->keterangan }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Akumulasi Penyusutan</label>
-                                <div>{{ $fixedAsset->accumulatedAccount ? $fixedAsset->accumulatedAccount->kode . ' - ' . $fixedAsset->accumulatedAccount->keterangan : '-' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Beban Penyusutan</label>
-                                <div>{{ $fixedAsset->expenseAccount ? $fixedAsset->expenseAccount->kode . ' - ' . $fixedAsset->expenseAccount->keterangan : '-' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Journal Link for Non-Reclassified Assets -->
-                @if($fixedAsset->convertedAssets->count() == 0)
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Jurnal Terkait</h4>
-                    @php
-                        $sourceJournal = $fixedAsset->sourceJournals()->with(['debitAccount', 'creditAccount'])->first();
-                    @endphp
-                    @if($sourceJournal)
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Nomor Jurnal</label>
-                                <div>{{ $sourceJournal->number }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal</label>
-                                <div>{{ $sourceJournal->date->format('d/m/Y') }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label">Total Amount</label>
-                                <div>{{ number_format($sourceJournal->total_debit, 0, ',', '.') }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label">Deskripsi</label>
-                                <div>{{ $sourceJournal->description }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label class="form-label">Detail Jurnal</label>
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" style="border: 1px solid #dee2e6;">
-                                        <thead class="table-light">
-                                            <tr style="border: 1px solid #dee2e6;">
-                                                <th style="border: 1px solid #dee2e6; width: 12%;">Tanggal</th>
-                                                <th style="border: 1px solid #dee2e6; width: 25%;">Keterangan</th>
-                                                <th style="border: 1px solid #dee2e6; width: 10%;">PIC</th>
-                                                <th style="border: 1px solid #dee2e6; width: 10%;">No Bukti</th>
-                                                <th style="border: 1px solid #dee2e6; width: 18%;">Akun Debit</th>
-                                                <th style="border: 1px solid #dee2e6; width: 10%;">Debit</th>
-                                                <th style="border: 1px solid #dee2e6; width: 18%;">Akun Kredit</th>
-                                                <th style="border: 1px solid #dee2e6; width: 10%;">Kredit</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr style="border: 1px solid #dee2e6;">
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->date->format('d/m/Y') }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->description }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->pic ?? '-' }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->proof_number ?? '-' }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->debitAccount ? $sourceJournal->debitAccount->kode . ' - ' . $sourceJournal->debitAccount->keterangan : '-' }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ number_format($sourceJournal->total_debit, 0, ',', '.') }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px;">{{ $sourceJournal->creditAccount ? $sourceJournal->creditAccount->kode . ' - ' . $sourceJournal->creditAccount->keterangan : '-' }}</td>
-                                                <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ number_format($sourceJournal->total_credit, 0, ',', '.') }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @else
-                    <div class="alert alert-secondary">
-                        <div class="text-muted">Tidak ada jurnal terkait yang ditemukan</div>
-                    </div>
-                    @endif
-                </div>
-                @endif
-
-                <!-- Converted Assets History -->
-                @if($fixedAsset->convertedAssets->count() > 0)
-                <div class="mb-4">
-                    <h4 class="card-title mb-3">Riwayat Reklasifikasi</h4>
-                    <div class="alert alert-info">
-                        <strong>Aset ini dibuat dari reklasifikasi {{ $fixedAsset->convertedAssets->count() }} Aset Dalam Penyelesaian:</strong>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Kode Aset Asal</th>
-                                    <th>Nama Aset Asal</th>
-                                    <th>Harga Perolehan</th>
-                                    <th>Tanggal Reklasifikasi</th>
-                                    <th>Direklasifikasi Oleh</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($fixedAsset->convertedAssets as $convertedAsset)
-                                <tr>
-                                    <td>{{ $convertedAsset->code }}</td>
-                                    <td>{{ $convertedAsset->name }}</td>
-                                    <td>{{ number_format($convertedAsset->acquisition_price, 0, ',', '.') }}</td>
-                                    <td>{{ $convertedAsset->converted_at ? $convertedAsset->converted_at->format('d/m/Y H:i') : '-' }}</td>
-                                    <td>{{ $convertedAsset->converter->name ?? '-' }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    @php
-                        $reclassJournal = $fixedAsset->journals()->where('source_module', 'memorial')->where('reference', 'like', 'REKLAS-%')->first();
-                    @endphp
-                    @if($reclassJournal)
-                    <div class="mt-3">
-                        <a href="{{ route('memorials.index') }}" class="btn btn-sm btn-outline-primary">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-                                <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2"/>
-                                <rect x="9" y="3" width="6" height="4" rx="2"/>
-                            </svg>
-                            Lihat Jurnal Reklasifikasi ({{ $reclassJournal->number }})
-                        </a>
-                    </div>
-                    @endif
-                </div>
-                @endif
             </div>
         </div>
     </div>
-</div>
 
-<!-- Depreciation Schedule -->
-<div class="row mt-3">
-    <div class="col-12">
-
+    <!-- Depreciation Chart -->
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3 class="card-title">Grafik Penyusutan</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="depreciationChart" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- Depreciation Schedule -->
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title">Simulasi Penyusutan Bulanan</h3>
@@ -364,12 +143,12 @@ use App\Helpers\AssetGroupHelper;
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th style="text-align:center">Periode</th>
-                            <th class="text-end" style="text-align:center">Beban Penyusutan</th>
-                            <th class="text-end" style="text-align:center">Akumulasi Penyusutan</th>
-                            <th class="text-end" style="text-align:center">Nilai Buku</th>
-                            <th style="text-align:center">Status</th>
-                            <th class="w-1" style="text-align:center">Aksi</th>
+                            <th>Periode</th>
+                            <th class="text-end">Beban Penyusutan</th>
+                            <th class="text-end">Akumulasi Penyusutan</th>
+                            <th class="text-end">Nilai Buku</th>
+                            <th>Status</th>
+                            <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -415,7 +194,38 @@ use App\Helpers\AssetGroupHelper;
     </div>
 </div>
 
-
+<!-- Account Mapping -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Mapping Akun</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Asset Account</label>
+                            <div>{{ $fixedAsset->assetAccount->kode }} - {{ $fixedAsset->assetAccount->keterangan }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Accumulated Depreciation Account</label>
+                            <div>{{ $fixedAsset->accumulatedAccount->kode }} - {{ $fixedAsset->accumulatedAccount->keterangan }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Depreciation Expense Account</label>
+                            <div>{{ $fixedAsset->expenseAccount->kode }} - {{ $fixedAsset->expenseAccount->keterangan }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Alert Modal -->
 <div class="modal modal-blur fade" id="alertModal" tabindex="-1">
@@ -466,7 +276,102 @@ use App\Helpers\AssetGroupHelper;
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+let originalData = {};
+
+function editAsset() {
+    const editables = document.querySelectorAll('.editable');
+    
+    editables.forEach(element => {
+        const field = element.dataset.field;
+        const currentValue = element.textContent.trim();
+        originalData[field] = currentValue;
+        
+        if (field === 'acquisition_date') {
+            const dateValue = new Date(currentValue.split(' ').reverse().join('-')).toISOString().split('T')[0];
+            element.innerHTML = `<input type="date" class="form-control" value="${dateValue}">`;
+        } else if (field === 'acquisition_price' || field === 'residual_value') {
+            const numericValue = currentValue.replace(/\./g, '');
+            element.innerHTML = `<input type="number" class="form-control" value="${numericValue}" step="0.01">`;
+        } else if (field === 'useful_life_months') {
+            const numericValue = currentValue.replace(' bulan', '');
+            element.innerHTML = `<input type="number" class="form-control" value="${numericValue}" min="1">`;
+        } else if (field === 'residual_value') {
+            const percentValue = parseFloat(currentValue.replace('%', ''));
+            element.innerHTML = `<input type="number" class="form-control" value="${percentValue}" min="0" max="100" step="0.01">`;
+        } else {
+            element.innerHTML = `<input type="text" class="form-control" value="${currentValue}">`;
+        }
+    });
+    
+    document.querySelector('.edit-btn').style.display = 'none';
+    document.querySelector('.save-btn').style.display = 'inline-block';
+    document.querySelector('.cancel-btn').style.display = 'inline-block';
+}
+
+function saveAsset() {
+    const editables = document.querySelectorAll('.editable');
+    const formData = {};
+    
+    editables.forEach(element => {
+        const field = element.dataset.field;
+        const input = element.querySelector('input');
+        if (input) {
+            if (field === 'residual_value') {
+                formData[field] = parseFloat(input.value) / 100 || 0;
+            } else {
+                formData[field] = input.value;
+            }
+        }
+    });
+    
+    fetch(`/fixed-assets/{{ $fixedAsset->id }}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(async response => {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message || 'Data berhasil diupdate');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('error', data.message || 'Gagal mengupdate data');
+            cancelEdit();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', error.message || 'Terjadi kesalahan saat mengupdate data');
+        cancelEdit();
+    });
+}
+
+function cancelEdit() {
+    const editables = document.querySelectorAll('.editable');
+    
+    editables.forEach(element => {
+        const field = element.dataset.field;
+        element.textContent = originalData[field];
+    });
+    
+    document.querySelector('.edit-btn').style.display = 'inline-block';
+    document.querySelector('.save-btn').style.display = 'none';
+    document.querySelector('.cancel-btn').style.display = 'none';
+}
+
 function showPostModal(assetId, period, periodFormatted) {
     document.getElementById('postMessage').textContent = `Posting penyusutan untuk ${periodFormatted}?`;
     
@@ -488,6 +393,61 @@ function showPostModal(assetId, period, periodFormatted) {
     
     new bootstrap.Modal(document.getElementById('postModal')).show();
 }
+
+// Initialize depreciation chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('depreciationChart').getContext('2d');
+    const scheduleData = @json($depreciationSchedule);
+    
+    const labels = scheduleData.map(item => item.period_formatted);
+    const bookValues = scheduleData.map(item => item.book_value);
+    const accumulatedDepreciation = scheduleData.map(item => item.accumulated_depreciation);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Nilai Buku',
+                data: bookValues,
+                borderColor: 'rgb(34, 197, 94)',
+                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                tension: 0.1,
+                fill: true
+            }, {
+                label: 'Akumulasi Penyusutan',
+                data: accumulatedDepreciation,
+                borderColor: 'rgb(239, 68, 68)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return new Intl.NumberFormat('id-ID').format(value);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
 
 function showAlert(type, message) {
     const modal = new bootstrap.Modal(document.getElementById('alertModal'));

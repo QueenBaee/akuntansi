@@ -29,7 +29,7 @@
                             font-size: 14px;
                         }
 
-                        .no-equal-width thead th {
+                        .no-equal-width th {
                             text-align: center !important;
                             vertical-align: middle !important;
                             font-weight: 600 !important;
@@ -37,21 +37,24 @@
                             width: auto !important;
                         }
 
-                        .no-equal-width tbody td:nth-child(1) {
+                        .no-equal-width td:nth-child(1),
+                        .no-equal-width th:nth-child(1) {
                             min-width: 80px !important;
                             width: 80px !important;
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
-                        .no-equal-width tbody td:nth-child(2) {
+                        .no-equal-width td:nth-child(2),
+                        .no-equal-width th:nth-child(2) {
                             min-width: 200px !important;
                             width: auto !important;
                             text-align: left !important;
                             white-space: nowrap !important;
                         }
 
-                        .no-equal-width tbody td:not(:nth-child(1)):not(:nth-child(2)) {
+                        .no-equal-width td:not(:nth-child(1)):not(:nth-child(2)),
+                        .no-equal-width th:not(:nth-child(1)):not(:nth-child(2)) {
                             text-align: right !important;
                             min-width: 80px !important;
                             width: 80px !important;
@@ -100,13 +103,13 @@
                     <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th style="text-align:center">Kode</th>
-                                <th style="text-align:center">Keterangan</th>
+                                <th>Kode</th>
+                                <th>Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th style="text-align:center">{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
+                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
-                                <th style="text-align:center">{{ $year }}</th>
-                                <th style="text-align:center">{{ $year - 1 }}</th>
+                                <th>{{ $year }}</th>
+                                <th>{{ $year - 1 }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -187,7 +190,7 @@
                             @php
                                 $totalAssets = [];
                                 foreach ($items as $item) {
-                                    if (str_starts_with($item->kode, 'A') && !str_starts_with($item->kode, 'AM')) {
+                                    if (str_starts_with($item->kode, 'A')) {
                                         for ($m = 1; $m <= 12; $m++) {
                                             $totalAssets["month_$m"] = ($totalAssets["month_$m"] ?? 0) + ($data[$item->id]["month_$m"] ?? 0);
                                         }
@@ -198,7 +201,7 @@
                             @endphp
                             <tr class="total-row">
                                 <td><strong>A</strong></td>
-                                <td>&nbsp;</td>
+                                <td><strong>TOTAL ASSETS (Aktiva)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalAssets["month_$m"] ?? 0; @endphp
                                     <td><strong>{{ formatAccounting($val) }}</strong></td>
@@ -224,7 +227,7 @@
                             @endphp
                             <tr class="total-row">
                                 <td><strong>L</strong></td>
-                                <td>&nbsp;</td>
+                                <td><strong>TOTAL LIABILITIES (Kewajiban)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalLiabilities["month_$m"] ?? 0; @endphp
                                     <td><strong>{{ formatAccounting($val) }}</strong></td>
@@ -239,7 +242,7 @@
                             @php
                                 $totalEquity = [];
                                 foreach ($items as $item) {
-                                    if (str_starts_with($item->kode, 'C') && $item->kode != 'C21-02' && $item->kode != 'C21-99') {
+                                    if (str_starts_with($item->kode, 'C')) {
                                         for ($m = 1; $m <= 12; $m++) {
                                             $totalEquity["month_$m"] = ($totalEquity["month_$m"] ?? 0) + ($data[$item->id]["month_$m"] ?? 0);
                                         }
@@ -250,7 +253,7 @@
                             @endphp
                             <tr class="total-row">
                                 <td><strong>C</strong></td>
-                                <td>&nbsp;</td>
+                                <td><strong>TOTAL EQUITY (Ekuitas)</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalEquity["month_$m"] ?? 0; @endphp
                                     <td><strong>{{ formatAccounting($val) }}</strong></td>
@@ -347,7 +350,7 @@
                             @endphp
                             <tr class="total-row">
                                 <td><strong></strong></td>
-                                <td>&nbsp;</td>
+                                <td><strong>TOTAL REVENUE</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalRevenue["month_$m"] ?? 0; @endphp
                                     <td><strong>{{ formatAccounting($val) }}</strong></td>
@@ -447,7 +450,7 @@
                             @endphp
                             <tr class="total-row">
                                 <td><strong></strong></td>
-                                <td>&nbsp;</td>
+                                <td><strong>TOTAL EXPENSES</strong></td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     @php $val = $totalExpenses["month_$m"] ?? 0; @endphp
                                     <td><strong>{{ formatAccounting($val) }}</strong></td>

@@ -66,12 +66,12 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th style="text-align:center">Kode</th>
-                            <th style="text-align:center">Nama Akun</th>
-                            <th style="text-align:center">Tipe</th>
-                            <th style="text-align:center">Saldo</th>
-                            <th style="text-align:center">Status</th>
-                            <th class="w-1" style="text-align:center">Aksi</th>
+                            <th>Kode</th>
+                            <th>Nama Akun</th>
+                            <th>Tipe</th>
+                            <th>Saldo</th>
+                            <th>Status</th>
+                            <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -2,142 +2,216 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Journal;
+use App\Models\Ledger;
 use App\Models\TrialBalance;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class LedgerController extends Controller
 {
     public function index(Request $request)
     {
-        // Get filter parameters
-        $accountId = $request->get('account_id');
-        $year = $request->get('year', date('Y'));
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
-
-        // Get all accounts for dropdown
-        $accounts = TrialBalance::where('level', 4)
+        $type = null;
+        
+        // Check if this is a type-specific route
+        if ($request->route()->getName() === 'ledgers.cash') {
+            $type = 'kas';
+        } elseif ($request->route()->getName() === 'ledgers.bank') {
+            $type = 'bank';
+        }
+        
+        $query = Ledger::with('trialBalance')->orderBy('trial_balance_id');
+        
+        // Apply access control based on user role
+        if (!auth()->user()->hasRole('admin')) {
+            // Non-admin users only see ledgers they have access to
+            $userLedgerIds = auth()->user()->userLedgers()->where('is_active', true)->pluck('ledger_id');
+            $query->whereIn('id', $userLedgerIds);
+        }
+        
+        if ($type) {
+            $query->where('tipe_ledger', $type);
+        }
+        
+        $ledgers = $query->get();
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
             ->orderBy('kode')
             ->get();
 
-        // Initialize variables
-        $selectedAccount = null;
-        $openingBalance = 0;
-        $ledgerData = [];
-        $totalDebit = 0;
-        $totalCredit = 0;
-        $endingBalance = 0;
+        return view('ledgers.index', compact('ledgers', 'trialBalances', 'type'));
+    }
 
-        // Process if account is selected
-        if ($accountId) {
-            $selectedAccount = TrialBalance::find($accountId);
-
-            if ($selectedAccount) {
-                // Get opening balance from trial_balances (authoritative source)
-                // Rule: Use current year if exists, else previous year, else 0
-                $openingBalance = 0;
-                
-                if (isset($selectedAccount->{"tahun_$year"})) {
-                    // Use current year balance if exists
-                    $openingBalance = $selectedAccount->{"tahun_$year"} ?? 0;
-                } else {
-                    // Fallback to previous year balance
-                    $previousYear = $year - 1;
-                    $openingBalance = $selectedAccount->{"tahun_$previousYear"} ?? 0;
-                }
-
-                // Build query for journals
-                $query = Journal::where('is_posted', true)
-                    ->where(function ($q) use ($accountId) {
-                        $q->where('debit_account_id', $accountId)
-                          ->orWhere('credit_account_id', $accountId);
-                    });
-
-                // Apply date filters
-                if ($startDate) {
-                    $query->where('date', '>=', $startDate);
-                }
-                if ($endDate) {
-                    $query->where('date', '<=', $endDate);
-                } else {
-                    // Default to year filter if no end date
-                    $query->whereYear('date', $year);
-                }
-
-                // Get journals ordered by date
-                $journals = $query->orderBy('date')
-                    ->orderBy('id')
-                    ->with(['debitAccount', 'creditAccount'])
-                    ->get();
-
-                // Calculate running balance
-                $runningBalance = $openingBalance;
-
-                foreach ($journals as $journal) {
-                    $debit = 0;
-                    $credit = 0;
-
-                    // Determine debit/credit for this account
-                    if ($journal->debit_account_id == $accountId) {
-                        $debit = $journal->total_debit;
-                    }
-                    if ($journal->credit_account_id == $accountId) {
-                        $credit = $journal->total_credit;
-                    }
-
-                    // Calculate running balance
-                    $runningBalance += $debit - $credit;
-
-                    // Add to ledger data
-                    $ledgerData[] = [
-                        'date' => $journal->date,
-                        'description' => $journal->description,
-                        'pic' => $journal->pic,
-                        'proof_number' => $journal->proof_number,
-                        'debit' => $debit,
-                        'credit' => $credit,
-                        'balance' => $runningBalance,
-                    ];
-
-                    // Accumulate totals
-                    $totalDebit += $debit;
-                    $totalCredit += $credit;
-                }
-
-                $endingBalance = $runningBalance;
-            }
+    public function create(Request $request)
+    {
+        // Only admin can create ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to create ledgers.');
         }
+        
+        $type = $request->get('type');
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
+            ->orderBy('kode')
+            ->get();
+            
+        return view('ledgers.create', compact('trialBalances', 'type'));
+    }
 
-        // Summary variables for display
-        // Trial Balance = opening balance from trial_balances table (authoritative)
-        $trialBalanceTotal = 0;
-        if ($selectedAccount) {
-            if (isset($selectedAccount->{"tahun_$year"})) {
-                $trialBalanceTotal = $selectedAccount->{"tahun_$year"} ?? 0;
-            } else {
-                $previousYear = $year - 1;
-                $trialBalanceTotal = $selectedAccount->{"tahun_$previousYear"} ?? 0;
+    public function store(Request $request)
+    {
+        // Only admin can store ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to create ledgers.');
+        }
+        
+        $validated = $request->validate([
+            'nama_ledger' => 'required|string|max:255',
+            'kode_ledger' => 'required|string|unique:ledgers',
+            'tipe_ledger' => 'required|in:kas,bank',
+            'deskripsi' => 'nullable|string',
+            'trial_balance_id' => 'nullable|exists:trial_balances,id'
+        ]);
+
+        $ledger = Ledger::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ledger berhasil ditambahkan',
+                'data' => $ledger
+            ], 201);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($validated['tipe_ledger']) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil ditambahkan');
+    }
+
+    public function show(Ledger $ledger)
+    {
+        // Check access for non-admin users
+        if (!auth()->user()->hasRole('admin')) {
+            $hasAccess = auth()->user()->userLedgers()
+                ->where('ledger_id', $ledger->id)
+                ->where('is_active', true)
+                ->exists();
+                
+            if (!$hasAccess) {
+                abort(403, 'You do not have access to this ledger.');
             }
         }
         
-        // Buku Besar = ending balance after all transactions
-        $ledgerTotal = $endingBalance;
+        return request()->expectsJson()
+            ? response()->json([
+                'success' => true,
+                'data' => $ledger
+            ])
+            : view('ledgers.show', compact('ledger'));
+    }
 
-        return view('ledger.index', compact(
-            'accounts',
-            'selectedAccount',
-            'year',
-            'startDate',
-            'endDate',
-            'openingBalance',
-            'ledgerData',
-            'totalDebit',
-            'totalCredit',
-            'endingBalance',
-            'trialBalanceTotal',
-            'ledgerTotal'
-        ));
+    public function edit(Ledger $ledger, Request $request)
+    {
+        // Only admin can edit ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to edit ledgers.');
+        }
+        
+        $type = $request->get('type');
+        
+        // Filter trial balances: only asset accounts with balance > 0 and marked as kas/bank
+        $trialBalances = TrialBalance::where('tahun_2024', '>', 0)
+            ->where('is_aset', true)
+            ->where('is_kas_bank', true)
+            ->orderBy('kode')
+            ->get();
+            
+        return view('ledgers.edit', compact('ledger', 'trialBalances', 'type'));
+    }
+
+    public function update(Request $request, Ledger $ledger)
+    {
+        // Only admin can update ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to update ledgers.');
+        }
+        
+        $validated = $request->validate([
+            'nama_ledger' => 'required|string|max:255',
+            'kode_ledger' => 'required|string|unique:ledgers,kode_ledger,' . $ledger->id,
+            'tipe_ledger' => 'required|in:kas,bank',
+            'deskripsi' => 'nullable|string',
+            'is_active' => 'sometimes|boolean',
+            'trial_balance_id' => 'nullable|exists:trial_balances,id'
+        ]);
+
+        // pastikan unchecked checkbox = false
+        $validated['is_active'] = $request->boolean('is_active');
+
+        $ledger->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ledger berhasil diupdate',
+                'data' => $ledger->fresh('trialBalance')
+            ]);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($validated['tipe_ledger']) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil diupdate');
+    }
+
+    public function destroy(Ledger $ledger)
+    {
+        // Only admin can delete ledgers
+        if (!auth()->user()->hasRole('admin')) {
+            abort(403, 'You do not have permission to delete ledgers.');
+        }
+        
+        // optional safety: cegah delete ledger yg terhubung jurnal
+        if ($ledger->journals()->exists()) {
+            return request()->expectsJson()
+                ? response()->json([
+                    'success' => false,
+                    'message' => 'Ledger tidak dapat dihapus karena sedang digunakan.'
+                ], 409)
+                : back()->with('error', 'Ledger tidak dapat dihapus karena sedang digunakan.');
+        }
+
+        $ledgerType = $ledger->tipe_ledger;
+        $ledger->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Ledger berhasil dihapus'
+            ]);
+        }
+        
+        // Redirect based on ledger type
+        $redirectRoute = match($ledgerType) {
+            'kas' => 'ledgers.cash',
+            'bank' => 'ledgers.bank',
+            default => 'ledgers.index'
+        };
+        
+        return redirect()->route($redirectRoute)->with('success', 'Ledger berhasil dihapus');
     }
 }

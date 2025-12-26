@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Services\JournalNumberService;
 
 class JournalController extends Controller
 {
@@ -76,7 +74,7 @@ class JournalController extends Controller
 
         $journal = Journal::create([
             'date' => $validated['date'],
-            'number' => JournalNumberService::generate($validated['date']),
+            'number' => $this->generateJournalNumber(),
             'reference' => $validated['reference'] ?? null,
             'description' => $validated['description'],
             'pic' => $validated['pic'] ?? null,
@@ -204,5 +202,21 @@ class JournalController extends Controller
         ]);
     }
 
-
+    private function generateJournalNumber()
+    {
+        $date = now();
+        $prefix = 'JRN-' . $date->format('Ym') . '-';
+        $lastJournal = Journal::where('number', 'like', $prefix . '%')
+                            ->orderBy('number', 'desc')
+                            ->first();
+        
+        if ($lastJournal) {
+            $lastNumber = intval(substr($lastJournal->number, -4));
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    }
 }

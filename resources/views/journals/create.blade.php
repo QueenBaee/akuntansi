@@ -141,18 +141,18 @@
                                 <table class="table table-bordered" id="journalTable" style="border: 1px solid #dee2e6;">
                                     <thead class="table-light">
                                         <tr style="border: 1px solid #dee2e6;">
-                                            <th style="border: 1px solid #dee2e6; width: 80px; text-align:center">Tanggal</th>
-                                            <th style="border: 1px solid #dee2e6; width: 200px; text-align:center">Keterangan</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">PIC</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">Bukti</th>
-                                            <th style="border: 1px solid #dee2e6; width: 100px; text-align:center">No. Bukti</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Masuk</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Keluar</th>
-                                            <th style="border: 1px solid #dee2e6; width: 120px; text-align:center">Saldo</th>
-                                            <th style="border: 1px solid #dee2e6; width: 230px; text-align:center">Kode & Akun CF</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px; text-align:center">Debit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 150px; text-align:center">Kredit</th>
-                                            <th style="border: 1px solid #dee2e6; width: 50px; text-align:center">Aksi</th>
+                                            <th style="border: 1px solid #dee2e6; width: 80px;">Tanggal</th>
+                                            <th style="border: 1px solid #dee2e6; width: 200px;">Keterangan</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">PIC</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">Bukti</th>
+                                            <th style="border: 1px solid #dee2e6; width: 100px;">No. Bukti</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Masuk</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Keluar</th>
+                                            <th style="border: 1px solid #dee2e6; width: 120px;">Saldo</th>
+                                            <th style="border: 1px solid #dee2e6; width: 230px;">Kode & Akun CF</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Debit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 150px;">Kredit</th>
+                                            <th style="border: 1px solid #dee2e6; width: 50px;">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="journalLines">
@@ -200,13 +200,6 @@
                                                     <button type="button" class="btn btn-sm btn-warning me-1"
                                                         onclick="editTransaction(this, {{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">✎</button>
-                                                    @if($history['can_create_asset'] ?? false)
-                                                        <button type="button" class="btn btn-sm btn-success me-1" onclick="createAssetFromTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;" title="Buat Aset Tetap">+</button>
-                                                    @else
-                                                        @if(isset($history['journal_id']) && \App\Models\Journal::find($history['journal_id'])?->fixed_asset_id)
-                                                            <span class="badge bg-success" style="font-size: 9px;" title="Aset sudah dibuat">✓ Aset</span>
-                                                        @endif
-                                                    @endif
                                                     <button type="button" class="btn btn-sm btn-danger"
                                                         onclick="deleteTransaction({{ $history['journal_id'] }})"
                                                         style="font-size: 10px; padding: 2px 6px;">×</button>
@@ -414,7 +407,12 @@
                             creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            handleCashflowSelection(row, cashflowHidden.value);
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
+                            }
                         } else {
                             cashInInput.value = '';
                             // Set credit to cash account
@@ -425,7 +423,12 @@
                             debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            handleCashflowSelection(row, cashflowHidden.value);
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
+                            }
                         }
                     } else {
                         debitInput.disabled = false;
@@ -438,33 +441,44 @@
                 }
 
                 function calculateBalance(input) {
-                    // Recalculate all balances from the beginning
-                    recalculateAllBalances();
-                }
+                    const row = input.closest('tr');
+                    const cashInInput = row.querySelector('.cash-in');
+                    const cashOutInput = row.querySelector('.cash-out');
+                    const balanceDisplay = row.querySelector('.balance-display');
 
-                function recalculateAllBalances() {
-                    const tbody = document.getElementById('journalLines');
-                    const rows = tbody.querySelectorAll('tr');
-                    let runningBalance = openingBalance;
-
-                    rows.forEach(row => {
-                        if (row.hasAttribute('data-existing')) {
-                            // For existing rows, use the stored balance
-                            runningBalance = parseFloat(row.getAttribute('data-balance'));
+                    let prevBalance = currentBalance;
+                    const prevRow = row.previousElementSibling;
+                    if (prevRow) {
+                        if (prevRow.hasAttribute('data-existing')) {
+                            prevBalance = parseFloat(prevRow.getAttribute('data-balance'));
                         } else {
-                            // For new rows, calculate balance
-                            const cashInInput = row.querySelector('.cash-in');
-                            const cashOutInput = row.querySelector('.cash-out');
-                            const balanceDisplay = row.querySelector('.balance-display');
-
-                            if (cashInInput && cashOutInput && balanceDisplay) {
-                                const cashIn = parseFloat(cashInInput.value) || 0;
-                                const cashOut = parseFloat(cashOutInput.value) || 0;
-                                runningBalance = runningBalance + cashIn - cashOut;
-                                balanceDisplay.textContent = formatter.format(runningBalance);
+                            const prevBalanceDisplay = prevRow.querySelector('.balance-display');
+                            if (prevBalanceDisplay) {
+                                prevBalance = parseFloat(prevBalanceDisplay.textContent.replace(/[^0-9.-]/g, ''));
                             }
                         }
-                    });
+                    }
+
+                    const cashIn = parseFloat(cashInInput.value) || 0;
+                    const cashOut = parseFloat(cashOutInput.value) || 0;
+                    const newBalance = prevBalance + cashIn - cashOut;
+
+                    balanceDisplay.textContent = formatter.format(newBalance);
+
+                    let nextRow = row.nextElementSibling;
+                    let runningBalance = newBalance;
+
+                    while (nextRow && !nextRow.hasAttribute('data-existing')) {
+                        const nextCashIn = parseFloat(nextRow.querySelector('.cash-in').value) || 0;
+                        const nextCashOut = parseFloat(nextRow.querySelector('.cash-out').value) || 0;
+                        runningBalance = runningBalance + nextCashIn - nextCashOut;
+
+                        const nextBalanceDisplay = nextRow.querySelector('.balance-display');
+                        if (nextBalanceDisplay) {
+                            nextBalanceDisplay.textContent = formatter.format(runningBalance);
+                        }
+                        nextRow = nextRow.nextElementSibling;
+                    }
                 }
 
                 function generateProofNumber(input, index) {
@@ -590,7 +604,7 @@
                     cashflowDropdown.addEventListener('click', (e) => {
                         if (e.target.classList.contains('dropdown-item')) {
                             selectDropdownItem(row, 'cashflow', e.target.dataset.value, e.target.textContent);
-                            handleCashflowSelection(row, e.target.dataset.value);
+                            updateTrialBalanceFromCashflow(row);
                         }
                     });
                     
@@ -615,26 +629,10 @@
                     document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
                     
                     if (!isVisible) {
-                        // Position dropdown relative to input with viewport awareness
+                        // Position dropdown relative to input
                         const rect = input.getBoundingClientRect();
-                        const viewportHeight = window.innerHeight;
-                        const dropdownHeight = 200; // max-height from CSS
-                        
-                        let top = rect.bottom + window.scrollY;
-                        
-                        // Check if dropdown would go below viewport
-                        if (rect.bottom + dropdownHeight > viewportHeight) {
-                            // Position above input if there's more space
-                            if (rect.top > dropdownHeight) {
-                                top = rect.top + window.scrollY - dropdownHeight;
-                            } else {
-                                // Keep below but adjust to fit viewport
-                                top = window.scrollY + viewportHeight - dropdownHeight - 10;
-                            }
-                        }
-                        
                         dropdown.style.left = rect.left + 'px';
-                        dropdown.style.top = top + 'px';
+                        dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
                         dropdown.style.width = Math.max(rect.width, 200) + 'px';
                         
                         // Make input editable for search
@@ -753,30 +751,12 @@
                     }
                 }
 
-                function handleCashflowSelection(row, cashflowId) {
-                    if (!cashflowId || !cashflowData[cashflowId] || !cashflowData[cashflowId].trial_balance_id) {
-                        return;
-                    }
+                function updateTrialBalanceFromCashflow(row) {
+                    const cashflowHidden = row.querySelector('.cashflow-select');
+                    const selectedId = cashflowHidden.value;
                     
-                    const trialBalanceAccount = findAccountById(cashflowData[cashflowId].trial_balance_id);
-                    if (!trialBalanceAccount) {
-                        return;
-                    }
-                    
-                    const cashInInput = row.querySelector('.cash-in');
-                    const cashOutInput = row.querySelector('.cash-out');
-                    const cashIn = parseFloat(cashInInput.value) || 0;
-                    const cashOut = parseFloat(cashOutInput.value) || 0;
-                    
-                    if (cashIn > 0) {
-                        // Cash in: Debit = Cash Account, Credit = Trial Balance Account
-                        setDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
-                    } else if (cashOut > 0) {
-                        // Cash out: Debit = Trial Balance Account, Credit = Cash Account
-                        setDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
-                    } else {
-                        // No cash amount yet, set both possibilities
-                        // User will choose cash in/out later and it will auto-set correctly
+                    if (selectedId && cashflowData && cashflowData[selectedId] && cashflowData[selectedId].trial_balance_id) {
+                        setTrialBalanceAccount(row, cashflowData[selectedId].trial_balance_id);
                     }
                 }
                 
@@ -944,7 +924,6 @@
                     cashflowDropdown.addEventListener('click', (e) => {
                         if (e.target.classList.contains('dropdown-item')) {
                             setEditDropdownValue(row, 'cashflow', e.target.dataset.value, e.target.textContent);
-                            handleEditCashflowSelection(row, e.target.dataset.value);
                         }
                     });
                     
@@ -998,7 +977,12 @@
                             creditInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            handleEditCashflowSelection(row, cashflowHidden.value);
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setEditDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
+                            }
                         } else {
                             cashInInput.value = '';
                             setEditDropdownValue(row, 'credit', selectedCashAccountId, selectedAccountName);
@@ -1008,7 +992,12 @@
                             debitInput.style.backgroundColor = '';
                             
                             // Auto-set trial balance account if cashflow is selected
-                            handleEditCashflowSelection(row, cashflowHidden.value);
+                            if (cashflowHidden.value && cashflowData[cashflowHidden.value] && cashflowData[cashflowHidden.value].trial_balance_id) {
+                                const trialBalanceAccount = findAccountById(cashflowData[cashflowHidden.value].trial_balance_id);
+                                if (trialBalanceAccount) {
+                                    setEditDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
+                                }
+                            }
                         }
                     } else {
                         debitInput.disabled = false;
@@ -1043,30 +1032,6 @@
                             });
                         }
                     );
-                }
-
-                function handleEditCashflowSelection(row, cashflowId) {
-                    if (!cashflowId || !cashflowData[cashflowId] || !cashflowData[cashflowId].trial_balance_id) {
-                        return;
-                    }
-                    
-                    const trialBalanceAccount = findAccountById(cashflowData[cashflowId].trial_balance_id);
-                    if (!trialBalanceAccount) {
-                        return;
-                    }
-                    
-                    const cashInInput = row.querySelector('.edit-cash-in');
-                    const cashOutInput = row.querySelector('.edit-cash-out');
-                    const cashIn = parseFloat(cashInInput.value) || 0;
-                    const cashOut = parseFloat(cashOutInput.value) || 0;
-                    
-                    if (cashIn > 0) {
-                        // Cash in: Debit = Cash Account, Credit = Trial Balance Account
-                        setEditDropdownValue(row, 'credit', trialBalanceAccount.id, trialBalanceAccount.text);
-                    } else if (cashOut > 0) {
-                        // Cash out: Debit = Trial Balance Account, Credit = Cash Account
-                        setEditDropdownValue(row, 'debit', trialBalanceAccount.id, trialBalanceAccount.text);
-                    }
                 }
 
                 function showConfirmModal(title, message, onConfirm) {
@@ -1132,10 +1097,6 @@
                         document.body.removeChild(modal);
                         if (onClose) onClose();
                     });
-                }
-
-                function createAssetFromTransaction(journalId) {
-                    window.location.href = `/fixed-assets/create-from-transaction?journal_id=${journalId}`;
                 }
 
                 function showErrorModal(title, message) {

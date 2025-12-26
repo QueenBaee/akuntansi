@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - E-Pro</title>
+    <title>@yield('title', 'Dashboard') - Sistem Akuntansi</title>
     <link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
@@ -66,36 +66,6 @@
         table th {
             text-transform: none !important;
         }
-        
-        /* Consistent Financial Report Styling */
-        .financial-report-header {
-            background-color: #e9ecef !important;
-            font-weight: bold !important;
-            font-size: 16px !important;
-        }
-        
-        .financial-report-subheader {
-            background-color: #f8f9fa !important;
-            font-weight: bold !important;
-            font-style: italic !important;
-        }
-        
-        .financial-report-total {
-            background-color: #f8f9fa !important;
-            font-weight: bold !important;
-        }
-        
-        .financial-report-major-total {
-            background-color: #dee2e6 !important;
-            font-weight: bold !important;
-            font-size: 16px !important;
-        }
-        
-        .financial-report-final-total {
-            background-color: #ced4da !important;
-            font-weight: bold !important;
-            font-size: 17px !important;
-        }
     </style>
 </head>
 
@@ -108,16 +78,16 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href="{{ route('dashboard') }}">E-Pro</a>
+                    <a href="{{ route('dashboard') }}">Sistem Akuntansi</a>
                 </h1>
                 <div class="navbar-nav flex-row order-md-last">
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown">
                             <span class="avatar avatar-sm"
-                                style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode(auth()->user()?->name ?? 'User') }}&background=206bc4&color=fff)"></span>
+                                style="background-image: url(https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=206bc4&color=fff)"></span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>{{ auth()->user()?->name ?? 'User' }}</div>
-                                <div class="mt-1 small text-muted">{{ auth()->user()?->email ?? '-' }}</div>
+                                <div>{{ auth()->user()->name }}</div>
+                                <div class="mt-1 small text-muted">{{ auth()->user()->email }}</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
@@ -289,17 +259,16 @@
                                         href="{{ route('reports.cashflow') }}">Cashflow Report</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
-                                    <a class="dropdown-item {{ request()->routeIs('financial-position.*') ? 'active' : '' }}" href="{{ route('financial-position.index') }}">Laporan Posisi Keuangan</a>
-                                    <a class="dropdown-item {{ request()->routeIs('comprehensive-income.*') ? 'active' : '' }}" href="{{ route('comprehensive-income.index') }}">Laporan Penghasilan Komprehensif & Laporan Laba Rugi</a>
+                                    <a class="dropdown-item" href="#">Laporan Posisi Keuangan</a>
+                                    <a class="dropdown-item" href="#">Laporan Penghasil Komprehensif & Laporan Laba Rugi</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
-                                    <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}" href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan Keuangan</a>
+                                    <a class="dropdown-item" href="#">Catatan Atas Laporan Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
                                     <a class="dropdown-item {{ request()->routeIs('trial_balance_report.*') ? 'active' : '' }}"
                                         href="{{ route('trial_balance_report.index') }}">Trial Balance</a>
-                                    <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}" href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
-                                    <a class="dropdown-item {{ request()->routeIs('assets-in-progress.*') ? 'active' : '' }}" href="{{ route('assets-in-progress.index') }}">Aset Dalam Penyelesaian</a>
-                                    <a class="dropdown-item {{ request()->routeIs('ledger.*') ? 'active' : '' }}" href="{{ route('ledger.index') }}">Buku Besar</a>
+                                    <a class="dropdown-item" href="#">Asset</a>
+                                    <a class="dropdown-item" href="#">Buku Besar</a>
                                 </div>
                             </li>
 
@@ -338,30 +307,6 @@
 
 
                         </ul>
-                        
-                        <!-- Asset Notification Dropdown -->
-                        <div class="nav-item dropdown d-none" id="asset-notification-nav">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
-                                <span class="nav-link-icon position-relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-                                        <path d="M12 9v2m0 4v.01"/>
-                                        <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"/>
-                                    </svg>
-                                    <span class="badge bg-red badge-notification badge-pill" id="asset-badge">0</span>
-                                </span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end" style="min-width: 400px;">
-                                <div class="dropdown-header">Transaksi Aset Belum Dikonversi</div>
-                                <div id="asset-transactions-list" style="max-height: 300px; overflow-y: auto;">
-                                    <!-- Transactions will be loaded here -->
-                                </div>
-                                <div class="dropdown-divider"></div>
-                                <div class="dropdown-item text-center">
-                                    <small class="text-muted">Klik transaksi untuk membuat aset tetap</small>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -426,8 +371,6 @@
                         </div>
                     @endif
 
-
-
                     @yield('content')
                 </div>
             </div>
@@ -438,46 +381,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        // Check for unconverted asset transactions
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAssetTransactions();
-        });
-
-        function checkAssetTransactions() {
-            fetch('/api/unconverted-asset-transactions')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.count > 0) {
-                        const navNotification = document.getElementById('asset-notification-nav');
-                        const badge = document.getElementById('asset-badge');
-                        const transactionsList = document.getElementById('asset-transactions-list');
-                        
-                        if (navNotification && badge && transactionsList) {
-                            badge.textContent = data.count;
-                            navNotification.classList.remove('d-none');
-                            
-                            // Populate dropdown list
-                            transactionsList.innerHTML = data.transactions.map(t => `
-                                <a href="/fixed-assets/create-from-transaction?journal_id=${t.journal_id}" class="dropdown-item">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <strong>${t.description}</strong><br>
-                                            <small class="text-muted">${t.date} • ${t.asset_account}</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <small>Rp ${new Intl.NumberFormat('id-ID').format(t.amount)}</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            `).join('');
-                        }
-                    }
-                })
-                .catch(error => console.log('Asset notification check failed:', error));
-        }
-
-
-
         // Initialize Select2 for all select elements
         function initSelect2() {
             // Regular selects (non-AJAX)

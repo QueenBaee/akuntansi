@@ -49,11 +49,11 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th style="text-align:center">Akun</th>
-                                    <th style="text-align:center">Deskripsi</th>
-                                    <th style="text-align:center">Debit</th>
-                                    <th style="text-align:center">Kredit</th>
-                                    <th style="text-align:center">Aksi</th>
+                                    <th>Akun</th>
+                                    <th>Deskripsi</th>
+                                    <th>Debit</th>
+                                    <th>Kredit</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="journal-lines">
@@ -87,12 +87,12 @@
                 <table class="table table-vcenter card-table">
                     <thead>
                         <tr>
-                            <th style="text-align:center">Tanggal</th>
-                            <th style="text-align:center">Referensi</th>
-                            <th style="text-align:center">Deskripsi</th>
-                            <th style="text-align:center">Total</th>
-                            <th style="text-align:center">Status</th>
-                            <th class="w-1" style="text-align:center">Aksi</th>
+                            <th>Tanggal</th>
+                            <th>Referensi</th>
+                            <th>Deskripsi</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

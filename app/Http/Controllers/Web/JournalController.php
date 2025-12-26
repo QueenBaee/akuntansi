@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\JournalRequest;
 use App\Services\JournalService;
-use App\Services\JournalNumberService;
 use App\Models\Journal;
 use App\Models\Account;
 use App\Models\Cashflow;
@@ -171,7 +170,7 @@ class JournalController extends Controller
                 // Create journal
                 $journal = Journal::create([
                     'date' => $entry['date'],
-                    'number' => JournalNumberService::generate($entry['date']),
+                    'number' => 'CASH/' . date('Ymd') . '/' . str_pad(Journal::count() + 1, 4, '0', STR_PAD_LEFT),
                     'reference' => $entry['proof_number'] ?? null,
                     'description' => $entry['description'],
                     'source_module' => 'cash',
@@ -278,6 +277,4 @@ class JournalController extends Controller
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
-
-
 }

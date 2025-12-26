@@ -18,12 +18,8 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div style="overflow-x: auto;">
+                <div class="table-responsive">
                     <style>
-                        .no-equal-width td,
-                        .no-equal-width th {
-                            white-space: nowrap !important;
-                        }
                         .cf-text {
                             display: flex;
                             align-items: center;
@@ -39,29 +35,33 @@
 
                         .no-equal-width td:nth-child(1),
                         .no-equal-width th:nth-child(1) {
+                            min-width: 80px !important;
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
                         .no-equal-width td:nth-child(2),
                         .no-equal-width th:nth-child(2) {
+                            min-width: 300px !important;
                             text-align: left !important;
                         }
 
                         .no-equal-width td:nth-child(n+3):nth-child(-n+14),
                         .no-equal-width th:nth-child(n+3):nth-child(-n+14) {
                             text-align: right !important;
-                            width: 80px !important;
                             min-width: 80px !important;
+                            width: 80px !important;
                         }
 
                         .no-equal-width td:nth-child(15),
                         .no-equal-width th:nth-child(15) {
+                            min-width: 80px !important;
                             text-align: left !important;
                         }
 
                         .no-equal-width td:nth-child(16),
                         .no-equal-width th:nth-child(16) {
+                            min-width: 200px !important;
                             text-align: left !important;
                         }
 
@@ -143,17 +143,17 @@
                         }
                     </style>
 
-                    <table class="table table-bordered table-striped no-equal-width" style="table-layout: auto; width: max-content; min-width: 100%;">
+                    <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th style="text-align:center">Kode</th>
-                                <th style="text-align:center">Keterangan</th>
+                                <th>Kode</th>
+                                <th>Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th style="text-align:center">{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
+                                    <th>{{ date('M', mktime(0, 0, 0, $m, 1, $year)) }} {{ substr($year, -2) }}</th>
                                 @endfor
-                                <th style="text-align:center">{{ $year }}</th>
-                                <th style="text-align:center">Kode TB</th>
-                                <th style="text-align:center">Akun Laporan Keuangan</th>
+                                <th>{{ $year }}</th>
+                                <th>Kode TB</th>
+                                <th>Akun Laporan Keuangan</th>
                             </tr>
                         </thead>
                         <tbody>

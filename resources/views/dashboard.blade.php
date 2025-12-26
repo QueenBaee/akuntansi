@@ -244,7 +244,7 @@
                     return;
                 }
                 
-                let html = '<div class="table-responsive"><table class="table table-vcenter"><thead><tr><th style="text-align:center">Tanggal</th><th style="text-align:center">Deskripsi</th><th style="text-align:center">Jumlah</th><th style="text-align:center">Tipe</th></tr></thead><tbody>';
+                let html = '<div class="table-responsive"><table class="table table-vcenter"><thead><tr><th>Tanggal</th><th>Deskripsi</th><th>Jumlah</th><th>Tipe</th></tr></thead><tbody>';
                 
                 data.data.forEach(transaction => {
                     html += `

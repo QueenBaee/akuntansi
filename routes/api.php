@@ -25,10 +25,6 @@ Route::prefix('auth')->group(function () {
 Route::get('trial-balance/get-data', [App\Http\Controllers\TrialBalanceController::class, 'getData']);
 Route::get('cashflow/get-data', [App\Http\Controllers\CashflowController::class, 'getData']);
 
-// Batch Depreciation API
-Route::post('batch-depreciation/preview', [App\Http\Controllers\BatchDepreciationController::class, 'preview']);
-Route::post('batch-depreciation/process', [App\Http\Controllers\BatchDepreciationController::class, 'process']);
-
 // Utility routes
 Route::prefix('utils')->group(function () {
     Route::get('cashflow-categories', function () {

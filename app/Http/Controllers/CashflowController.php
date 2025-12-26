@@ -237,13 +237,8 @@ class CashflowController extends Controller
                     : 0;
             });
 
-            // If no transactions exist, show all cashflows in hierarchy
-            if ($transactionCounts->isEmpty()) {
-                $items = $this->buildHierarchy($allCashflows);
-            } else {
-                // Filter and build hierarchy only when transactions exist
-                $items = $this->buildFilteredHierarchy($allCashflows);
-            }
+            // Filter and build hierarchy
+            $items = $this->buildFilteredHierarchy($allCashflows);
 
             return response()->json([
                 'status' => 'success',

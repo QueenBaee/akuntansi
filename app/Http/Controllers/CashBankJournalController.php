@@ -7,8 +7,6 @@ use App\Models\Account;
 use App\Models\Ledger;
 use App\Models\Cashflow;
 use App\Models\TrialBalance;
-use App\Services\AssetFromTransactionService;
-use App\Services\JournalNumberService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,12 +14,6 @@ use Illuminate\Support\Facades\Validator;
 
 class CashBankJournalController extends Controller
 {
-    protected $assetFromTransactionService;
-
-    public function __construct(AssetFromTransactionService $assetFromTransactionService)
-    {
-        $this->assetFromTransactionService = $assetFromTransactionService;
-    }
     public function create(Request $request)
     {
         $selectedLedger = null;
@@ -144,7 +136,7 @@ class CashBankJournalController extends Controller
 
                 $journal = Journal::create([
                     'date' => $entry['date'],
-                    'number' => JournalNumberService::generate($entry['date']),
+                    'number' => $this->generateJournalNumber(),
                     'description' => $entry['description'] ?? null,
                     'pic' => $entry['pic'] ?? null,
                     'proof_number' => $entry['proof_number'], // sudah aman
@@ -249,14 +241,29 @@ class CashBankJournalController extends Controller
                 'cashflow_desc' => $journal->cashflow ? $journal->cashflow->keterangan : null,
                 'attachments' => $journal->attachments,
                 'balance' => $runningBalance,
-                'can_create_asset' => $this->assetFromTransactionService->canCreateAssetFromTransaction($journal),
             ];
         }
 
         return $history;
     }
 
+    private function generateJournalNumber()
+    {
+        $date = now();
+        $prefix = 'JRN-' . $date->format('Ym') . '-';
+        $lastJournal = Journal::where('number', 'like', $prefix . '%')
+            ->orderBy('number', 'desc')
+            ->first();
 
+        if ($lastJournal) {
+            $lastNumber = intval(substr($lastJournal->number, -4));
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+    }
 
     public function getAttachments($id)
     {

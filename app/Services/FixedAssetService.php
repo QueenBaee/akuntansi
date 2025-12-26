@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\FixedAsset;
 use App\Models\AssetDepreciation;
 use App\Models\Journal;
-use App\Services\JournalNumberService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -14,8 +13,7 @@ class FixedAssetService
     public function generateDepreciationSchedule(FixedAsset $asset): array
     {
         $schedule = [];
-        // Start depreciation from the next month after acquisition
-        $startDate = Carbon::parse($asset->acquisition_date)->addMonth()->startOfMonth();
+        $startDate = Carbon::parse($asset->acquisition_date)->startOfMonth();
         $monthlyDepreciation = $this->calculateMonthlyDepreciationAmount($asset);
         $accumulatedDepreciation = 0;
         $bookValue = $asset->acquisition_price;
@@ -132,15 +130,13 @@ class FixedAssetService
 
     private function createDepreciationJournal(FixedAsset $asset, Carbon $period, float $amount, int $userId): Journal
     {
-        $journalNumber = JournalNumberService::generate($period->format('Y-m-01'));
+        $journalNumber = $this->generateJournalNumber($period);
 
         $journal = Journal::create([
             'date' => $period->format('Y-m-01'),
             'number' => $journalNumber,
             'description' => "Penyusutan {$asset->name} - {$period->format('M Y')}",
             'pic' => 'System',
-            'cash_in' => $amount,
-            'cash_out' => $amount,
             'total_debit' => $amount,
             'total_credit' => $amount,
             'debit_account_id' => $asset->expense_account_id,
@@ -154,108 +150,14 @@ class FixedAssetService
         return $journal;
     }
 
-    public function disposeAsset(FixedAsset $asset, string $disposalDate, int $userId): array
+    private function generateJournalNumber(Carbon $date): string
     {
-        return DB::transaction(function () use ($asset, $disposalDate, $userId) {
-            // Get Memorial Account (AM)
-            $memorialAccount = \App\Models\TrialBalance::where('kode', 'AM')->first();
-            if (!$memorialAccount) {
-                throw new \Exception('Memorial Account (AM) not found');
-            }
-
-            // Get Loss on Disposal Account (E31-03)
-            $lossAccount = \App\Models\TrialBalance::where('kode', 'E31-03')->first();
-            if (!$lossAccount) {
-                throw new \Exception('Loss on Disposal Account (E31-03) not found');
-            }
-
-            $acquisitionCost = $asset->acquisition_price;
-            $accumulatedDepreciation = $asset->accumulated_depreciation;
-            $bookValue = $acquisitionCost - $accumulatedDepreciation;
-
-            $journals = [];
-
-            // Step 1: Remove Asset Acquisition Cost
-            // Debit AM, Credit A23-xx
-            $journal1 = Journal::create([
-                'date' => $disposalDate,
-                'number' => JournalNumberService::generate($disposalDate),
-                'description' => "Disposal {$asset->name} - Remove Acquisition Cost",
-                'pic' => 'System',
-                'cash_in' => $acquisitionCost,
-                'cash_out' => $acquisitionCost,
-                'total_debit' => $acquisitionCost,
-                'total_credit' => $acquisitionCost,
-                'debit_account_id' => $memorialAccount->id,
-                'credit_account_id' => $asset->asset_account_id,
-                'source_module' => 'asset_disposal',
-                'source_id' => $asset->id,
-                'is_posted' => true,
-                'created_by' => $userId,
-            ]);
-            $journals[] = $journal1;
-
-            // Step 2: Remove Accumulated Depreciation
-            // Debit A24-xx, Credit AM
-            if ($accumulatedDepreciation > 0) {
-                $journal2 = Journal::create([
-                    'date' => $disposalDate,
-                    'number' => JournalNumberService::generate($disposalDate),
-                    'description' => "Disposal {$asset->name} - Remove Accumulated Depreciation",
-                    'pic' => 'System',
-                    'cash_in' => $accumulatedDepreciation,
-                    'cash_out' => $accumulatedDepreciation,
-                    'total_debit' => $accumulatedDepreciation,
-                    'total_credit' => $accumulatedDepreciation,
-                    'debit_account_id' => $asset->accumulated_account_id,
-                    'credit_account_id' => $memorialAccount->id,
-                    'source_module' => 'asset_disposal',
-                    'source_id' => $asset->id,
-                    'is_posted' => true,
-                    'created_by' => $userId,
-                ]);
-                $journals[] = $journal2;
-            }
-
-            // Step 3: Recognize Loss on Disposal
-            // Debit E31-03, Credit AM
-            if ($bookValue > 0) {
-                $journal3 = Journal::create([
-                    'date' => $disposalDate,
-                    'number' => JournalNumberService::generate($disposalDate),
-                    'description' => "Disposal {$asset->name} - Loss on Disposal",
-                    'pic' => 'System',
-                    'cash_in' => $bookValue,
-                    'cash_out' => $bookValue,
-                    'total_debit' => $bookValue,
-                    'total_credit' => $bookValue,
-                    'debit_account_id' => $lossAccount->id,
-                    'credit_account_id' => $memorialAccount->id,
-                    'source_module' => 'asset_disposal',
-                    'source_id' => $asset->id,
-                    'is_posted' => true,
-                    'created_by' => $userId,
-                ]);
-                $journals[] = $journal3;
-            }
-
-            // Mark asset as inactive
-            $asset->update([
-                'is_active' => false,
-                'status' => 'disposed'
-            ]);
-
-            return [
-                'asset' => $asset,
-                'journals' => $journals,
-                'disposal_summary' => [
-                    'acquisition_cost' => $acquisitionCost,
-                    'accumulated_depreciation' => $accumulatedDepreciation,
-                    'book_value' => $bookValue,
-                    'loss_on_disposal' => $bookValue
-                ]
-            ];
-        });
+        $prefix = 'DEP/' . $date->format('Ym') . '/';
+        
+        $lastNumber = Journal::where('number', 'like', $prefix . '%')
+            ->whereDate('date', $date->format('Y-m-01'))
+            ->count();
+            
+        return $prefix . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
     }
-
 }

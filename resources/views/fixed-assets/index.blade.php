@@ -2,170 +2,137 @@
 
 @section('title', 'Kelola Aset Tetap')
 
-@php
-use App\Helpers\AssetGroupHelper;
-@endphp
-
 @section('page-header')
     <div class="page-pretitle">Master Data</div>
     <h2 class="page-title">Kelola Aset Tetap</h2>
 @endsection
 
 @section('page-actions')
-    <div class="btn-list">
-        <button type="button" class="btn btn-primary" onclick="showBatchDepreciationModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M12 3v18m9-9H3"/></svg>
-            Mass Depreciation
-        </button>
-        <button type="button" class="btn btn-success" id="convertSelectedBtn" style="display: none;" onclick="showMergeConvertModal()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M16 4l4 4l-4 4" /><path d="M20 8H4" /></svg>
-            Convert Selected (<span id="selectedCount">0</span>)
-        </button>
-    </div>
+    <button type="button" class="btn btn-primary" onclick="toggleCreateForm()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span id="toggleText">Tambah Aset Tetap</span>
+    </button>
 @endsection
 
-@push('styles')
-<style>
-.table-vcenter {
-    width: 100%;
-}
-
-.table-vcenter td {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.table-vcenter td:nth-child(2) {
-    white-space: normal;
-    word-wrap: break-word;
-}
-
-.group-header {
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-
-.account-header {
-    background-color: #e9ecef;
-    font-weight: bold;
-}
-</style>
-@endpush
-
 @section('content')
+    <!-- Create Form -->
+    <div class="card mb-3" id="createForm" style="display: none;">
+        <div class="card-header">
+            <h3 class="card-title">Tambah Aset Tetap Baru</h3>
+        </div>
+        <div class="card-body">
+            <form id="assetForm">
+                <div class="row">
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Kode Aset</label>
+                            <input type="text" class="form-control" id="code" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Aset</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Kategori</label>
+                            <select class="form-select" id="categoryKode">
+                                <option value="">Pilih Kategori</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Tanggal Perolehan</label>
+                            <input type="date" class="form-control" id="acquisitionDate" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Harga Perolehan (Rp)</label>
+                            <input type="text" class="form-control" id="acquisitionPrice" placeholder="1,000,000" required>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="mb-3">
+                            <label class="form-label">Umur Manfaat (bulan)</label>
+                            <input type="number" class="form-control" id="usefulLifeMonths" min="1" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Asset Account</label>
+                            <select class="form-select" id="assetAccountId" required>
+                                <option value="">Pilih Asset Account</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Accumulated Account</label>
+                            <select class="form-select" id="accumulatedAccountId" required>
+                                <option value="">Pilih Accumulated Account</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Expense Account</label>
+                            <select class="form-select" id="expenseAccountId" required>
+                                <option value="">Pilih Expense Account</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Nilai Residual (%)</label>
+                            <input type="number" class="form-control" id="residualValue" placeholder="10" value="0" min="0" max="100" step="0.01">
+                            <small class="form-hint">Masukkan dalam persen (contoh: 10 untuk 10%)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <button type="submit" class="btn btn-primary me-2">Simpan</button>
+                            <button type="button" class="btn btn-secondary" onclick="toggleCreateForm()">Batal</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Table -->
     <div class="card">
         <div class="table-responsive">
             <table class="table table-vcenter card-table">
                 <thead>
                     <tr>
-                        <th style="text-align:center">No</th>
-                        <th style="text-align:center">Jenis Aset</th>
-                        <th style="text-align:center">Jumlah</th>
-                        <th style="text-align:center">Tanggal Perolehan</th>
-                        <th style="text-align:center">Tarif (%)</th>
-                        <th style="text-align:center">Harga Perolehan</th>
-                        <th class="w-1" style="text-align:center">Aksi</th>
+                        <th>Kode</th>
+                        <th>Nama Aset</th>
+                        <th>Tanggal Perolehan</th>
+                        <th>Harga Perolehan</th>
+                        <th>Umur Manfaat</th>
+                        <th>Nilai Residual</th>
+                        <th>Asset Account</th>
+                        <th>Accumulated Account</th>
+                        <th>Expense Account</th>
+                        <th>Nilai Buku</th>
+                        <th>Status</th>
+                        <th class="w-1">Aksi</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @php $counter = 1; @endphp
-                    @forelse($groupedAssets ?? [] as $accountName => $accountGroups)
-                        <tr class="account-header">
-                            <td class="text-center">-</td>
-                            <td><strong>{{ $accountName }}</strong></td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                        </tr>
-                        @foreach($accountGroups as $groupName => $assets)
-                            <tr class="group-header">
-                                <td class="text-center">-</td>
-                                <td style="padding-left: 20px;"><strong>{{ AssetGroupHelper::translateGroup($groupName) }}</strong></td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                            @foreach($assets as $asset)
-                                <tr>
-                                    <td class="text-center">{{ $counter++ }}</td>
-                                    <td style="padding-left: 40px;">{{ $asset->name }}</td>
-                                    <td class="text-center">{{ $asset->quantity ?? 1 }}</td>
-                                    <td class="text-center">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('d/m/Y') : '-' }}</td>
-                                    <td class="text-center">{{ $asset->depreciation_rate ? number_format($asset->depreciation_rate, 2) : '-' }}</td>
-                                    <td class="text-end">{{ $asset->acquisition_price ? number_format($asset->acquisition_price, 0, ',', '.') : '-' }}</td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap">
-                                            <a href="/fixed-assets/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
-                                            @if($asset->is_active)
-                                            <button type="button" class="btn btn-sm btn-warning" onclick="showDisposeModal({{ $asset->id }}, '{{ $asset->name }}', {{ $asset->acquisition_price }}, {{ $asset->accumulated_depreciation }})">Dispose</button>
-                                            @endif
-                                            <form method="POST" action="/fixed-assets/{{ $asset->id }}" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endforeach
-                    @empty
-                        <tr>
-                            <td class="text-center text-muted">-</td>
-                            <td class="text-center text-muted">Tidak ada data aset tetap</td>
-                            <td class="text-center text-muted">-</td>
-                            <td class="text-center text-muted">-</td>
-                            <td class="text-center text-muted">-</td>
-                            <td class="text-center text-muted">-</td>
-                            <td class="text-center text-muted">-</td>
-                        </tr>
-                    @endforelse
+                <tbody id="assetTableBody">
+                    <tr>
+                        <td colspan="12" class="text-center">Loading...</td>
+                    </tr>
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Batch Depreciation Modal -->
-    <div class="modal modal-blur fade" id="batchDepreciationModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Mass Depreciation Processing</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="step1" class="depreciation-step">
-                        <h6>Select Depreciation Period</h6>
-                        <div class="mb-3">
-                            <label class="form-label">Period Month</label>
-                            <input type="month" class="form-control" id="depreciationPeriod" required>
-                        </div>
-                        <button type="button" class="btn btn-primary" onclick="previewDepreciation()">Preview Eligible Assets</button>
-                    </div>
-                    
-                    <div id="step2" class="depreciation-step" style="display: none;">
-                        <h6>Eligible Assets Preview</h6>
-                        <div id="previewResults"></div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-secondary" onclick="backToStep1()">Back</button>
-                            <button type="button" class="btn btn-success" onclick="processDepreciation()" id="processBtn">Process Depreciation</button>
-                        </div>
-                    </div>
-                    
-                    <div id="step3" class="depreciation-step" style="display: none;">
-                        <h6>Processing Results</h6>
-                        <div id="processResults"></div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-primary" onclick="closeModal()">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -186,361 +153,487 @@ use App\Helpers\AssetGroupHelper;
             </div>
         </div>
     </div>
-
-    <!-- Asset Disposal Modal -->
-    <div class="modal modal-blur fade" id="disposeModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Asset Disposal (Memorial Account)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="disposeForm" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="alert alert-warning">
-                            <strong>Warning:</strong> This action will permanently dispose the asset using Memorial Account method. This cannot be undone.
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Asset Name</label>
-                                <input type="text" class="form-control" id="disposeAssetName" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Disposal Date</label>
-                                <input type="date" class="form-control" name="disposal_date" required>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Acquisition Cost</label>
-                                <input type="text" class="form-control" id="disposeAcquisitionCost" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Accumulated Depreciation</label>
-                                <input type="text" class="form-control" id="disposeAccumulatedDepreciation" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Book Value (Loss)</label>
-                                <input type="text" class="form-control" id="disposeBookValue" readonly>
-                            </div>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <h6>Journal Entries to be Created:</h6>
-                            <ol>
-                                <li><strong>Remove Acquisition Cost:</strong> Debit AM, Credit A23-xx</li>
-                                <li><strong>Remove Accumulated Depreciation:</strong> Debit A24-xx, Credit AM</li>
-                                <li><strong>Recognize Loss:</strong> Debit E31-03, Credit AM</li>
-                            </ol>
-                            <p class="mb-0"><small>Memorial Account (AM) balance will be zero after all entries.</small></p>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Dispose Asset</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @push('scripts')
 <script>
-function showBatchDepreciationModal() {
-    document.getElementById('step1').style.display = 'block';
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step3').style.display = 'none';
-    
-    const now = new Date();
-    const currentMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    document.getElementById('depreciationPeriod').value = currentMonth;
-    
-    new bootstrap.Modal(document.getElementById('batchDepreciationModal')).show();
+let originalData = {};
+let trialBalances = [];
+
+function refreshTableData() {
+    loadAssets();
 }
 
-function previewDepreciation() {
-    const period = document.getElementById('depreciationPeriod').value;
-    if (!period) {
-        showAlert('error', 'Error', 'Please select a period');
+function toggleCreateForm() {
+    const form = document.getElementById('createForm');
+    const toggleText = document.getElementById('toggleText');
+    
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        toggleText.textContent = 'Batal';
+        document.getElementById('assetForm').reset();
+        loadFormData();
+    } else {
+        form.style.display = 'none';
+        toggleText.textContent = 'Tambah Aset Tetap';
+    }
+}
+
+async function loadFormData() {
+    try {
+        const response = await fetch('/fixed-assets/create', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        trialBalances = result.data.trialBalances;
+        
+        const assetSelect = document.getElementById('assetAccountId');
+        const accumulatedSelect = document.getElementById('accumulatedAccountId');
+        const expenseSelect = document.getElementById('expenseAccountId');
+        
+        const options = '<option value="">Pilih Account</option>' + 
+            trialBalances.map(account => `<option value="${account.id}">${account.kode} - ${account.keterangan}</option>`).join('');
+            
+        assetSelect.innerHTML = options;
+        accumulatedSelect.innerHTML = options;
+        expenseSelect.innerHTML = options;
+        
+        const categorySelect = document.getElementById('categoryKode');
+        const categoryOptions = '<option value="">Pilih Kategori</option>' + 
+            result.data.categories.map(cat => {
+                const indent = cat.level === 2 ? '&nbsp;&nbsp;' : '';
+                const style = cat.level === 1 ? 'font-weight: bold;' : '';
+                return `<option value="${cat.kode}" style="${style}">${indent}${cat.nama}</option>`;
+            }).join('');
+        categorySelect.innerHTML = categoryOptions;
+        
+    } catch (error) {
+        showAlert('error', 'Gagal memuat data form: ' + error.message);
+    }
+}
+
+async function loadAssets() {
+    try {
+        const response = await fetch('/fixed-assets', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        const assets = result.data.data;
+        
+        renderAssets(assets);
+    } catch (error) {
+        showAlert('error', 'Gagal memuat data: ' + error.message);
+    }
+}
+
+function renderAssets(assets) {
+    const tbody = document.getElementById('assetTableBody');
+    
+    if (assets.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-muted">Tidak ada data aset tetap</td></tr>';
         return;
     }
     
-    fetch('/api/batch-depreciation/preview', {
-        method: 'POST',
+    // Group assets by category
+    const categories = {
+        '1': { name: 'Bangunan', assets: [] },
+        '2': { name: 'Kendaraan', assets: [] },
+        '3': { name: 'Peralatan', assets: [] },
+        '4': { name: 'Tanah', assets: [] },
+        'uncategorized': { name: 'Tidak Berkategori', assets: [] }
+    };
+    
+    assets.forEach(asset => {
+        const categoryCode = asset.category_kode ? asset.category_kode.split('.')[0] : 'uncategorized';
+        if (categories[categoryCode]) {
+            categories[categoryCode].assets.push(asset);
+        } else {
+            categories['uncategorized'].assets.push(asset);
+        }
+    });
+    
+    let html = '';
+    
+    Object.keys(categories).forEach(categoryCode => {
+        const category = categories[categoryCode];
+        if (category.assets.length > 0) {
+            // Category header
+            html += `
+                <tr class="table-active">
+                    <td colspan="12" class="fw-bold text-primary">${category.name}</td>
+                </tr>
+            `;
+            
+            // Assets in category
+            category.assets.forEach(asset => {
+                html += `
+                    <tr id="row-${asset.id}" data-id="${asset.id}">
+                        <td class="editable ps-4" data-field="code">${asset.code}</td>
+                        <td class="editable" data-field="name">${asset.name}</td>
+                        <td class="editable" data-field="acquisition_date">${new Date(asset.acquisition_date).toLocaleDateString('id-ID')}</td>
+                        <td class="editable" data-field="acquisition_price">${new Intl.NumberFormat('id-ID').format(asset.acquisition_price)}</td>
+                        <td class="editable" data-field="useful_life_months">${asset.useful_life_months} bulan</td>
+                        <td class="editable" data-field="residual_value">${(asset.residual_value * 100).toFixed(2)}%</td>
+                        <td class="editable text-muted small" data-field="asset_account_id">${asset.asset_account ? asset.asset_account.kode + ' - ' + asset.asset_account.keterangan : '-'}</td>
+                        <td class="editable text-muted small" data-field="accumulated_account_id">${asset.accumulated_account ? asset.accumulated_account.kode + ' - ' + asset.accumulated_account.keterangan : '-'}</td>
+                        <td class="editable text-muted small" data-field="expense_account_id">${asset.expense_account ? asset.expense_account.kode + ' - ' + asset.expense_account.keterangan : '-'}</td>
+                        <td class="text-success">${new Intl.NumberFormat('id-ID').format(asset.current_book_value)}</td>
+                        <td class="editable" data-field="is_active">
+                            <span class="badge bg-${asset.is_active ? 'success' : 'danger'}">
+                                ${asset.is_active ? 'Aktif' : 'Tidak Aktif'}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a href="/fixed-assets/${asset.id}" class="btn btn-sm btn-white">Detail</a>
+                                <button class="btn btn-sm btn-primary edit-btn" onclick="editRow(${asset.id})">Edit</button>
+                                <button class="btn btn-sm btn-success save-btn" onclick="saveRow(${asset.id})" style="display: none;">Simpan</button>
+                                <button class="btn btn-sm btn-secondary cancel-btn" onclick="cancelEdit(${asset.id})" style="display: none;">Batal</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAsset(${asset.id})">Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function editRow(id) {
+    const row = document.getElementById(`row-${id}`);
+    const editables = row.querySelectorAll('.editable');
+    
+    originalData[id] = {};
+    
+    editables.forEach(cell => {
+        const field = cell.dataset.field;
+        const currentValue = cell.textContent.trim();
+        originalData[id][field] = currentValue;
+        
+        if (field === 'is_active') {
+            const isActive = currentValue === 'Aktif';
+            cell.innerHTML = `
+                <select class="form-select form-select-sm">
+                    <option value="1" ${isActive ? 'selected' : ''}>Aktif</option>
+                    <option value="0" ${!isActive ? 'selected' : ''}>Tidak Aktif</option>
+                </select>
+            `;
+        } else if (field === 'acquisition_date') {
+            const dateValue = new Date(currentValue.split('/').reverse().join('-')).toISOString().split('T')[0];
+            cell.innerHTML = `<input type="date" class="form-control form-control-sm" value="${dateValue}">`;
+        } else if (field === 'acquisition_price') {
+            const numericValue = currentValue.replace(/\./g, '');
+            cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${numericValue}" step="0.01">`;
+        } else if (field === 'useful_life_months') {
+            const numericValue = currentValue.replace(' bulan', '');
+            cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${numericValue}" min="1">`;
+        } else if (field === 'residual_value') {
+            const percentValue = parseFloat(currentValue.replace('%', ''));
+            cell.innerHTML = `<input type="number" class="form-control form-control-sm" value="${percentValue}" min="0" max="100" step="0.01">`;
+        } else if (field === 'asset_account_id' || field === 'accumulated_account_id' || field === 'expense_account_id') {
+            const options = '<option value="">Pilih Account</option>' + 
+                trialBalances.map(account => `<option value="${account.id}">${account.kode} - ${account.keterangan}</option>`).join('');
+            cell.innerHTML = `<select class="form-select form-select-sm">${options}</select>`;
+            
+            // Set selected value
+            const select = cell.querySelector('select');
+            if (currentValue !== '-') {
+                const accountCode = currentValue.split(' - ')[0];
+                const account = trialBalances.find(acc => acc.kode === accountCode);
+                if (account) select.value = account.id;
+            }
+        } else {
+            cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${currentValue}">`;
+        }
+    });
+    
+    row.querySelector('.edit-btn').style.display = 'none';
+    row.querySelector('.save-btn').style.display = 'inline-block';
+    row.querySelector('.cancel-btn').style.display = 'inline-block';
+}
+
+function saveRow(id) {
+    const row = document.getElementById(`row-${id}`);
+    const editables = row.querySelectorAll('.editable');
+    const formData = {};
+    
+    editables.forEach(cell => {
+        const field = cell.dataset.field;
+        const input = cell.querySelector('input, select');
+        if (input) {
+            if (field === 'residual_value') {
+                formData[field] = parseFloat(input.value) / 100 || 0;
+            } else {
+                formData[field] = input.value;
+            }
+        }
+    });
+    
+    fetch(`/fixed-assets/${id}`, {
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ period_month: period })
+        body: JSON.stringify(formData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    })
     .then(data => {
         if (data.success) {
-            displayPreview(data.data);
-            document.getElementById('step1').style.display = 'none';
-            document.getElementById('step2').style.display = 'block';
+            showAlert('success', data.message || 'Data berhasil diupdate');
+            refreshTableData();
         } else {
-            showAlert('error', 'Error', data.message || 'Failed to preview assets');
+            showAlert('error', data.message || 'Gagal mengupdate data');
+            cancelEdit(id);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('error', 'Error', 'Network error occurred');
+        showAlert('error', error.message || 'Terjadi kesalahan saat mengupdate data');
+        cancelEdit(id);
     });
 }
 
-function displayPreview(data) {
-    const container = document.getElementById('previewResults');
-    
-    if (data.eligible_count === 0) {
-        container.innerHTML = `
-            <div class="alert alert-info">
-                <h6>No Eligible Assets</h6>
-                <p>No assets found for depreciation in ${data.period}</p>
-            </div>
-        `;
-        document.getElementById('processBtn').disabled = true;
-        return;
-    }
-    
-    let html = `
-        <div class="alert alert-success">
-            <h6>Found ${data.eligible_count} eligible assets for ${data.period}</h6>
-            <p><strong>Total Depreciation Amount:</strong> ${formatCurrency(data.total_depreciation)}</p>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Asset Name</th>
-                        <th>Group</th>
-                        <th>Monthly Depreciation</th>
-                        <th>Book Value After</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    data.assets.forEach(asset => {
-        html += `
-            <tr>
-                <td>${asset.code || '-'}</td>
-                <td>${asset.name}</td>
-                <td>${asset.group}</td>
-                <td class="text-end">${formatCurrency(asset.monthly_depreciation)}</td>
-                <td class="text-end">${formatCurrency(asset.book_value_after)}</td>
-            </tr>
-        `;
-    });
-    
-    html += `
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    container.innerHTML = html;
-    document.getElementById('processBtn').disabled = false;
+function cancelEdit(id) {
+    refreshTableData();
 }
 
-function processDepreciation() {
-    const period = document.getElementById('depreciationPeriod').value;
-    document.getElementById('processBtn').disabled = true;
-    document.getElementById('processBtn').textContent = 'Processing...';
+
+
+function deleteAsset(id) {
+    showAlert('warning', 'Apakah Anda yakin ingin menghapus aset tetap ini?');
     
-    fetch('/api/batch-depreciation/process', {
+    const alertButton = document.getElementById('alertButton');
+    alertButton.onclick = function() {
+        bootstrap.Modal.getInstance(document.getElementById('alertModal')).hide();
+        
+        fetch(`/fixed-assets/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message || 'Data berhasil dihapus');
+                refreshTableData();
+            } else {
+                showAlert('error', data.message || 'Gagal menghapus data');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', error.message || 'Terjadi kesalahan saat menghapus data');
+        });
+        
+        alertButton.onclick = null;
+    };
+}
+
+document.getElementById('assetForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        code: document.getElementById('code').value,
+        name: document.getElementById('name').value,
+        category_kode: document.getElementById('categoryKode').value,
+        acquisition_date: document.getElementById('acquisitionDate').value,
+        acquisition_price: parseCurrency(document.getElementById('acquisitionPrice').value),
+        residual_value: parseFloat(document.getElementById('residualValue').value) / 100 || 0,
+        useful_life_months: document.getElementById('usefulLifeMonths').value,
+        asset_account_id: document.getElementById('assetAccountId').value,
+        accumulated_account_id: document.getElementById('accumulatedAccountId').value,
+        expense_account_id: document.getElementById('expenseAccountId').value
+    };
+    
+    fetch('/fixed-assets', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ period_month: period })
+        body: JSON.stringify(formData)
     })
-    .then(response => response.json())
+    .then(async response => {
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    })
     .then(data => {
-        displayResults(data);
-        document.getElementById('step2').style.display = 'none';
-        document.getElementById('step3').style.display = 'block';
+        if (data.success) {
+            showAlert('success', data.message || 'Data berhasil ditambahkan');
+            document.getElementById('assetForm').reset();
+            toggleCreateForm();
+            refreshTableData();
+        } else {
+            showAlert('error', data.message || 'Gagal menambahkan data');
+        }
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('error', 'Error', 'Processing failed');
-        document.getElementById('processBtn').disabled = false;
-        document.getElementById('processBtn').textContent = 'Process Depreciation';
+        showAlert('error', error.message || 'Terjadi kesalahan saat menambahkan data');
+    });
+});
+
+function showAlert(type, message) {
+    const modal = new bootstrap.Modal(document.getElementById('alertModal'));
+    const icon = document.getElementById('alertIcon');
+    const title = document.getElementById('alertTitle');
+    const messageEl = document.getElementById('alertMessage');
+    const button = document.getElementById('alertButton');
+    
+    if (type === 'success') {
+        icon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-green" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                <path d="M5 12l5 5l10 -10"/>
+            </svg>
+        `;
+        title.textContent = 'Berhasil!';
+        title.className = 'text-green';
+        button.className = 'btn btn-success w-100';
+    } else if (type === 'error') {
+        icon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-red" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                <circle cx="12" cy="12" r="9"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        `;
+        title.textContent = 'Gagal!';
+        title.className = 'text-red';
+        button.className = 'btn btn-danger w-100';
+    } else if (type === 'warning') {
+        icon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-yellow" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
+                <path d="M12 9v2m0 4v.01"/>
+                <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"/>
+            </svg>
+        `;
+        title.textContent = 'Peringatan!';
+        title.className = 'text-yellow';
+        button.className = 'btn btn-warning w-100';
+    }
+    
+    messageEl.textContent = message;
+    modal.show();
+}
+
+// Format currency input
+function formatCurrency(input) {
+    let value = input.value.replace(/[^\d]/g, '');
+    if (value) {
+        value = parseInt(value).toLocaleString('id-ID');
+    }
+    input.value = value;
+}
+
+// Parse currency to number
+function parseCurrency(value) {
+    return parseInt(value.replace(/[^\d]/g, '')) || 0;
+}
+
+function createSampleData() {
+    const sampleAssets = [
+        {code: 'BNG-001', name: 'Gedung Kantor Pusat', category_kode: '1.1', price: 2500000000},
+        {code: 'BNG-002', name: 'Gudang Penyimpanan', category_kode: '1.2', price: 800000000},
+        {code: 'KND-001', name: 'Mobil Toyota Avanza', category_kode: '2.1', price: 250000000},
+        {code: 'KND-002', name: 'Motor Honda Vario', category_kode: '2.2', price: 25000000},
+        {code: 'PRL-001', name: 'Laptop Dell Latitude', category_kode: '3.1', price: 15000000},
+        {code: 'PRL-002', name: 'Mesin Produksi A1', category_kode: '3.2', price: 500000000},
+    ];
+    
+    let created = 0;
+    
+    sampleAssets.forEach(async (asset, index) => {
+        setTimeout(async () => {
+            try {
+                const response = await fetch('/fixed-assets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        code: asset.code,
+                        name: asset.name,
+                        category_kode: asset.category_kode,
+                        acquisition_date: '2023-01-15',
+                        acquisition_price: asset.price,
+                        residual_value: 0.10,
+                        useful_life_months: 60,
+                        asset_account_id: trialBalances[0]?.id,
+                        accumulated_account_id: trialBalances[1]?.id,
+                        expense_account_id: trialBalances[2]?.id
+                    })
+                });
+                
+                created++;
+                if (created === sampleAssets.length) {
+                    showAlert('success', 'Sample data berhasil dibuat!');
+                    refreshTableData();
+                }
+            } catch (error) {
+                console.error('Error creating sample:', error);
+            }
+        }, index * 500);
     });
 }
 
-function displayResults(data) {
-    const container = document.getElementById('processResults');
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    loadFormData();
+    loadAssets();
     
-    let html = `
-        <div class="alert ${data.success ? 'alert-success' : 'alert-danger'}">
-            <h6>${data.message}</h6>
-            <p><strong>Processed:</strong> ${data.processed_count} / ${data.total_eligible} assets</p>
-        </div>
-    `;
-    
-    if (data.results && data.results.length > 0) {
-        html += `
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Asset Code</th>
-                            <th>Asset Name</th>
-                            <th>Status</th>
-                            <th>Depreciation Amount</th>
-                            <th>Journal Number</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        data.results.forEach(result => {
-            const statusBadge = result.status === 'success' 
-                ? '<span class="badge bg-success">Success</span>'
-                : '<span class="badge bg-danger">Error</span>';
-                
-            html += `
-                <tr>
-                    <td>${result.asset_code || '-'}</td>
-                    <td>${result.asset_name}</td>
-                    <td>${statusBadge}</td>
-                    <td class="text-end">${result.depreciation_amount ? formatCurrency(result.depreciation_amount) : '-'}</td>
-                    <td>${result.journal_number || (result.error_message || '-')}</td>
-                </tr>
-            `;
-        });
-        
-        html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
-    
-    container.innerHTML = html;
-}
-
-function backToStep1() {
-    document.getElementById('step2').style.display = 'none';
-    document.getElementById('step1').style.display = 'block';
-}
-
-function closeModal() {
-    bootstrap.Modal.getInstance(document.getElementById('batchDepreciationModal')).hide();
-    window.location.reload();
-}
-
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0
-    }).format(amount);
-}
-
-function showAlert(type, title, message) {
-    const alertModal = document.getElementById('alertModal');
-    const alertIcon = document.getElementById('alertIcon');
-    const alertTitle = document.getElementById('alertTitle');
-    const alertMessage = document.getElementById('alertMessage');
-    const alertButton = document.getElementById('alertButton');
-    
-    alertTitle.textContent = title;
-    alertMessage.textContent = message;
-    
-    if (type === 'success') {
-        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check text-success" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>';
-        alertButton.className = 'btn btn-success w-100';
-    } else {
-        alertIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="m0 0h24v24H0z" fill="none"/><path d="M12 9v2m0 4v.01M5 19h14a2 2 0 0 0 1.84 -2.75L13.74 4a2 2 0 0 0 -3.5 0L3.16 16.25A2 2 0 0 0 5 19"/></svg>';
-        alertButton.className = 'btn btn-danger w-100';
-    }
-    
-    new bootstrap.Modal(alertModal).show();
-}
-
-function showDisposeModal(assetId, assetName, acquisitionCost, accumulatedDepreciation) {
-    const modal = document.getElementById('disposeModal');
-    const form = document.getElementById('disposeForm');
-    
-    // Set form action
-    form.action = `/fixed-assets/${assetId}/dispose`;
-    
-    // Fill form fields
-    document.getElementById('disposeAssetName').value = assetName;
-    document.getElementById('disposeAcquisitionCost').value = formatCurrency(acquisitionCost);
-    document.getElementById('disposeAccumulatedDepreciation').value = formatCurrency(accumulatedDepreciation);
-    
-    // Calculate book value
-    const bookValue = acquisitionCost - accumulatedDepreciation;
-    document.getElementById('disposeBookValue').value = formatCurrency(bookValue);
-    
-    // Set default disposal date to today
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelector('input[name="disposal_date"]').value = today;
-    
-    // Show modal
-    new bootstrap.Modal(modal).show();
-}
-
-// Handle disposal form submission
-document.addEventListener('DOMContentLoaded', function() {
-    const disposeForm = document.getElementById('disposeForm');
-    if (disposeForm) {
-        disposeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Processing...';
-            
-            fetch(this.action, {
-                method: 'POST',
-                body: new FormData(this)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                // Check if response is JSON
-                try {
-                    const jsonData = JSON.parse(data);
-                    if (jsonData.success) {
-                        bootstrap.Modal.getInstance(document.getElementById('disposeModal')).hide();
-                        showAlert('success', 'Success', 'Asset disposed successfully');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        showAlert('error', 'Error', jsonData.message || 'Failed to dispose asset');
-                    }
-                } catch (e) {
-                    // Response is HTML (redirect), assume success
-                    bootstrap.Modal.getInstance(document.getElementById('disposeModal')).hide();
-                    showAlert('success', 'Success', 'Asset disposed successfully');
-                    setTimeout(() => window.location.reload(), 1500);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('error', 'Error', 'Network error occurred');
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            });
-        });
-    }
+    // Add currency formatting to acquisition price
+    document.getElementById('acquisitionPrice').addEventListener('input', function() {
+        formatCurrency(this);
+    });
 });
 </script>
 @endpush

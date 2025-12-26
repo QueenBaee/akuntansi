@@ -88,21 +88,21 @@
 
             <div class="card">
 
-                <div class="card-body" style="padding: 0;">
+                <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered" id="memorialTable" style="border: 1px solid #dee2e6;">
                             <thead class="table-light">
                                 <tr style="border: 1px solid #dee2e6;">
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Tanggal</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Keterangan</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">PIC</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">No Bukti</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Dokumen</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Debit</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Rp</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Kredit</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Rp</th>
-                                    <th style="border: 1px solid #dee2e6; text-align:center">Aksi</th>
+                                    <th style="border: 1px solid #dee2e6;">Tanggal</th>
+                                    <th style="border: 1px solid #dee2e6;">Keterangan</th>
+                                    <th style="border: 1px solid #dee2e6;">PIC</th>
+                                    <th style="border: 1px solid #dee2e6;">No Bukti</th>
+                                    <th style="border: 1px solid #dee2e6;">Dokumen</th>
+                                    <th style="border: 1px solid #dee2e6;">Debit</th>
+                                    <th style="border: 1px solid #dee2e6;">Rp</th>
+                                    <th style="border: 1px solid #dee2e6;">Kredit</th>
+                                    <th style="border: 1px solid #dee2e6;">Rp</th>
+                                    <th style="border: 1px solid #dee2e6;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="memorialLines">
@@ -125,9 +125,6 @@
                                         <td style="border: 1px solid #dee2e6; padding: 4px; font-size: 12px; text-align: right;">{{ $history['credit_amount'] > 0 ? number_format($history['credit_amount'], 0, ',', '.') : '' }}</td>
                                         <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;">
                                             <button type="button" class="btn btn-sm btn-warning me-1" onclick="editTransaction(this, {{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">✎</button>
-                                            @if($history['can_create_asset'] ?? false)
-                                                <button type="button" class="btn btn-sm btn-success me-1" onclick="createAssetFromTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;" title="Buat Aset Tetap">+</button>
-                                            @endif
                                             <button type="button" class="btn btn-sm btn-danger" onclick="deleteTransaction({{ $history['journal_id'] }})" style="font-size: 10px; padding: 2px 6px;">×</button>
                                         </td>
                                     </tr>
@@ -335,22 +332,22 @@
                 document.querySelectorAll('.dropdown-list').forEach(d => d.style.display = 'none');
                 
                 if (!isVisible) {
-                    // Position dropdown relative to input with viewport awareness
+                    // Position dropdown relative to input
                     const rect = input.getBoundingClientRect();
                     const viewportHeight = window.innerHeight;
-                    const dropdownHeight = 200; // max-height from CSS
+                    const dropdownHeight = 200; // max-height of dropdown
                     
-                    let top = rect.bottom + window.scrollY;
+                    // Check if dropdown should appear above or below
+                    const spaceBelow = viewportHeight - rect.bottom;
+                    const spaceAbove = rect.top;
                     
-                    // Check if dropdown would go below viewport
-                    if (rect.bottom + dropdownHeight > viewportHeight) {
-                        // Position above input if there's more space
-                        if (rect.top > dropdownHeight) {
-                            top = rect.top + window.scrollY - dropdownHeight;
-                        } else {
-                            // Keep below but adjust to fit viewport
-                            top = window.scrollY + viewportHeight - dropdownHeight - 10;
-                        }
+                    let top;
+                    if (spaceBelow >= dropdownHeight || spaceBelow >= spaceAbove) {
+                        // Show below
+                        top = rect.bottom + window.scrollY;
+                    } else {
+                        // Show above
+                        top = rect.top + window.scrollY - dropdownHeight;
                     }
                     
                     dropdown.style.left = rect.left + 'px';
@@ -671,34 +668,21 @@
                                 method: 'DELETE',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                        'content'),
                                     'Accept': 'application/json'
                                 }
                             })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
+                            .then(response => response.json())
                             .then(data => {
-                                if (data.success) {
-                                    showAlert('success', 'Memorial berhasil dihapus!');
-                                    setTimeout(() => window.location.reload(), 1500);
-                                } else {
-                                    showAlert('error', data.error || 'Gagal menghapus memorial');
-                                }
+                                showAlert('success', 'Memorial berhasil dihapus!');
+                                setTimeout(() => window.location.reload(), 1500);
                             })
                             .catch(error => {
-                                console.error('Error:', error);
-                                showAlert('error', 'Gagal menghapus memorial: ' + error.message);
+                                showAlert('error', 'Gagal menghapus memorial');
                             });
                     }
                 );
-            }
-
-            function createAssetFromTransaction(journalId) {
-                window.location.href = `/fixed-assets/create-from-transaction?journal_id=${journalId}`;
             }
 
             function showConfirmModal(title, message, onConfirm) {
@@ -727,6 +711,72 @@
                     bsModal.hide();
                     onConfirm();
                 });
+
+                modal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(modal);
+                });
+            }
+
+            function showSuccessModal(title, message, onClose = null) {
+                const modal = document.createElement('div');
+                modal.className = 'modal modal-blur fade';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body text-center">
+                                <div class="text-success mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                        <path d="m5 12l5 5l10 -10"></path>
+                                    </svg>
+                                </div>
+                                <div class="modal-title">${title}</div>
+                                <div>${message}</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+
+                modal.addEventListener('hidden.bs.modal', () => {
+                    document.body.removeChild(modal);
+                    if (onClose) onClose();
+                });
+            }
+
+            function showErrorModal(title, message) {
+                const modal = document.createElement('div');
+                modal.className = 'modal modal-blur fade';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-body text-center">
+                                <div class="text-danger mb-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"></path>
+                                        <path d="m18 6l-12 12"></path>
+                                        <path d="m6 6l12 12"></path>
+                                    </svg>
+                                </div>
+                                <div class="modal-title">${title}</div>
+                                <div>${message}</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
 
                 modal.addEventListener('hidden.bs.modal', () => {
                     document.body.removeChild(modal);
@@ -771,6 +821,7 @@
                         if (creditAmount > 0 && !creditAccountId) {
                             errors.push(`Baris ${index + 1}: Akun kredit wajib dipilih`);
                         }
+
                     }
                 });
 

@@ -1,141 +1,392 @@
 @extends('layouts.app')
 
-@section('content')
-<div class="container-fluid ledger-page">
+@section('title', 'Master Ledger')
 
-    <div class="filter-section">
-        <form method="GET" action="{{ route('ledger.index') }}">
-            <div class="row align-items-end">
-                <div class="col-md-5">
-                    <label>Pilih Akun</label>
-                    <select name="account_id" class="form-control" required>
-                        <option value="">-- Pilih Akun --</option>
-                        @foreach($accounts as $acc)
-                            <option value="{{ $acc->id }}" {{ $selectedAccount && $selectedAccount->id == $acc->id ? 'selected' : '' }}>
-                                {{ $acc->kode }} - {{ $acc->keterangan }}
-                            </option>
-                        @endforeach
-                    </select>
+@section('page-header')
+<h2 class="page-title">Master Ledger</h2>
+@endsection
+
+@section('content')
+<!-- Alert Messages -->
+<div id="alert-container"></div>
+
+<!-- Create Form -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Tambah Ledger Baru</h3>
+    </div>
+    <div class="card-body">
+        <form id="create-form">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Kode</label>
+                        <input type="text" name="kode" class="form-control" required>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <label>Tahun</label>
-                    <input type="number" name="year" class="form-control" value="{{ $year }}" min="2020" max="2099">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Nama</label>
+                        <input type="text" name="nama" class="form-control" required>
+                    </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Tipe Akun</label>
+                        <select name="tipe_akun" class="form-select" required>
+                            <option value="">Pilih Tipe Akun</option>
+                            <option value="aset">Aset</option>
+                            <option value="kewajiban">Kewajiban</option>
+                            <option value="ekuitas">Ekuitas</option>
+                            <option value="pendapatan">Pendapatan</option>
+                            <option value="beban">Beban</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Grup</label>
+                        <input type="text" name="grup" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label class="form-label">Saldo Normal</label>
+                        <select name="saldo_normal" class="form-select" required>
+                            <option value="">Pilih Saldo Normal</option>
+                            <option value="debit">Debit</option>
+                            <option value="kredit">Kredit</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Simpan Ledger</button>
                 </div>
             </div>
         </form>
     </div>
+</div>
 
-@if($selectedAccount)
-    <div class="ledger-header">
-        <h4>BUKU BESAR</h4>
-        <div>Tahun: {{ $year }}</div>
-        <div>
-            Akun: {{ $selectedAccount->kode }} - {{ $selectedAccount->keterangan }}
+<!-- Data Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Daftar Ledger</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Tipe Akun</th>
+                    <th>Grup</th>
+                    <th>Saldo Normal</th>
+                    <th class="w-1">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="ledger-table">
+                @foreach($ledgers as $ledger)
+                <tr data-id="{{ $ledger->id }}">
+                    <td class="editable" data-field="kode">{{ $ledger->kode }}</td>
+                    <td class="editable" data-field="nama">{{ $ledger->nama }}</td>
+                    <td class="editable" data-field="tipe_akun">{{ ucfirst($ledger->tipe_akun) }}</td>
+                    <td class="editable" data-field="grup">{{ $ledger->grup }}</td>
+                    <td class="editable" data-field="saldo_normal">{{ ucfirst($ledger->saldo_normal) }}</td>
+                    <td class="actions">
+                        <div class="d-grid gap-1">
+                            <button class="btn btn-sm btn-warning edit-btn">Edit</button>
+                            <button class="btn btn-sm btn-success save-btn" style="display: none;">Simpan</button>
+                            <button class="btn btn-sm btn-secondary cancel-btn" style="display: none;">Batal</button>
+                            <button class="btn btn-sm btn-danger delete-btn">Hapus</button>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal modal-blur fade" id="delete-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="modal-title">Konfirmasi Hapus</div>
+                <div>Apakah Anda yakin ingin menghapus ledger ini?</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancel-delete" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">Ya, Hapus</button>
+            </div>
         </div>
     </div>
-
-    <table class="ledger-table no-equal-width">
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Keterangan</th>
-                <th>PIC</th>
-                <th>No. Bukti</th>
-                <th>Debit</th>
-                <th>Kredit</th>
-                <th>Saldo</th>
-            </tr>
-        </thead>
-        <tbody>
-
-            {{-- SALDO AWAL --}}
-            <tr class="row-opening">
-                <td colspan="4">Saldo Awal</td>
-                <td>-</td>
-                <td>-</td>
-                <td>{{ number_format($openingBalance,0,',','.') }}</td>
-            </tr>
-
-            {{-- TRANSAKSI --}}
-            @forelse($ledgerData as $i => $row)
-            <tr>
-                <td>{{ $i + 1 }}</td>
-                <td>{{ $row['description'] }}</td>
-                <td>{{ $row['pic'] }}</td>
-                <td>{{ $row['proof_number'] ?? '-' }}</td>
-                <td>
-                    {{ $row['debit'] > 0 ? number_format($row['debit'],0,',','.') : '-' }}
-                </td>
-                <td>
-                    {{ $row['credit'] > 0 ? number_format($row['credit'],0,',','.') : '-' }}
-                </td>
-                <td>{{ number_format($row['balance'],0,',','.') }}</td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="7" class="text-center">Tidak ada transaksi</td>
-            </tr>
-            @endforelse
-
-            {{-- TOTAL --}}
-            <tr class="row-total">
-                <td colspan="4">Total</td>
-                <td>{{ number_format($totalDebit,0,',','.') }}</td>
-                <td>{{ number_format($totalCredit,0,',','.') }}</td>
-                <td>-</td>
-            </tr>
-
-            {{-- SALDO AKHIR --}}
-            <tr class="row-ending">
-                <td colspan="4">Saldo Akhir</td>
-                <td>-</td>
-                <td>-</td>
-                <td>{{ number_format($endingBalance,0,',','.') }}</td>
-            </tr>
-
-        </tbody>
-    </table>
-
-    <div class="ledger-footer">
-        <button onclick="window.print()" class="btn btn-secondary btn-sm">
-            Cetak
-        </button>
-    </div>
-@endif
-
 </div>
-@endsection
 
-<style>
-.filter-section {
-    background: #f8f9fa;
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-}
-.ledger-page { padding: 20px; }
-.ledger-header { text-align: center; margin-bottom: 20px; }
-.ledger-header h4 { margin: 0 0 10px 0; font-weight: bold; }
-.ledger-table { width: 100% !important; border-collapse: collapse; font-size: 13px; table-layout: fixed !important; }
-.ledger-table th, .ledger-table td { border: 1px solid #000; padding: 4px 6px; }
-.ledger-table th { background: #e9ecef; font-weight: bold; text-align: center; width: auto !important; }
-.ledger-table th:nth-child(1) { width: 40px !important; }
-.ledger-table th:nth-child(2) { width: 30% !important; }
-.ledger-table th:nth-child(3) { width: 10% !important; }
-.ledger-table th:nth-child(4) { width: 12% !important; }
-.ledger-table th:nth-child(5) { width: 13% !important; }
-.ledger-table th:nth-child(6) { width: 13% !important; }
-.ledger-table th:nth-child(7) { width: 15% !important; }
-.ledger-table td { overflow: hidden; text-overflow: ellipsis; }
-.ledger-table td:nth-child(2) { white-space: normal; word-wrap: break-word; }
-.ledger-table td:nth-child(5), .ledger-table td:nth-child(6), .ledger-table td:nth-child(7) { text-align: right; }
-.row-opening, .row-total, .row-ending { font-weight: bold; background: #f8f9fa; }
-.ledger-footer { margin-top: 20px; text-align: center; }
-.ledger-table.no-equal-width { table-layout: fixed !important; }
-@media print {
-    .filter-section, .ledger-footer { display: none; }
-}
-</style>
+    <script>
+        class LedgerManager {
+            constructor() {
+                this.currentEditRow = null;
+                this.deleteId = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // Create form
+                document.getElementById('create-form').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createLedger();
+                });
+
+                // Table events
+                document.getElementById('ledger-table').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('edit-btn')) {
+                        this.editRow(e.target.closest('tr'));
+                    } else if (e.target.classList.contains('save-btn')) {
+                        this.saveRow(e.target.closest('tr'));
+                    } else if (e.target.classList.contains('cancel-btn')) {
+                        this.cancelEdit(e.target.closest('tr'));
+                    } else if (e.target.classList.contains('delete-btn')) {
+                        this.showDeleteModal(e.target.closest('tr').dataset.id);
+                    }
+                });
+
+                // Modal events
+                document.getElementById('confirm-delete').addEventListener('click', () => {
+                    this.deleteLedger();
+                });
+
+                document.getElementById('cancel-delete').addEventListener('click', () => {
+                    this.hideDeleteModal();
+                });
+
+
+            }
+
+            async createLedger() {
+                const form = document.getElementById('create-form');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+
+                try {
+                    const response = await fetch('/ledger', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showAlert('success', result.message);
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        this.showAlert('error', result.message);
+                    }
+                } catch (error) {
+                    this.showAlert('error', 'Terjadi kesalahan saat menyimpan data');
+                }
+            }
+
+            editRow(row) {
+                if (this.currentEditRow) {
+                    this.cancelEdit(this.currentEditRow);
+                }
+
+                this.currentEditRow = row;
+                row.classList.add('editing');
+
+                const cells = row.querySelectorAll('.editable');
+                cells.forEach(cell => {
+                    const field = cell.dataset.field;
+                    const value = cell.textContent.trim();
+                    
+                    if (field === 'tipe_akun') {
+                        cell.innerHTML = `
+                            <select class="form-select form-select-sm">
+                                <option value="aset" ${value.toLowerCase() === 'aset' ? 'selected' : ''}>Aset</option>
+                                <option value="kewajiban" ${value.toLowerCase() === 'kewajiban' ? 'selected' : ''}>Kewajiban</option>
+                                <option value="ekuitas" ${value.toLowerCase() === 'ekuitas' ? 'selected' : ''}>Ekuitas</option>
+                                <option value="pendapatan" ${value.toLowerCase() === 'pendapatan' ? 'selected' : ''}>Pendapatan</option>
+                                <option value="beban" ${value.toLowerCase() === 'beban' ? 'selected' : ''}>Beban</option>
+                            </select>
+                        `;
+                    } else if (field === 'saldo_normal') {
+                        cell.innerHTML = `
+                            <select class="form-select form-select-sm">
+                                <option value="debit" ${value.toLowerCase() === 'debit' ? 'selected' : ''}>Debit</option>
+                                <option value="kredit" ${value.toLowerCase() === 'kredit' ? 'selected' : ''}>Kredit</option>
+                            </select>
+                        `;
+                    } else {
+                        cell.innerHTML = `<input type="text" class="form-control form-control-sm" value="${value}">`;
+                    }
+                });
+
+                // Toggle buttons
+                row.querySelector('.edit-btn').style.display = 'none';
+                row.querySelector('.save-btn').style.display = 'inline-block';
+                row.querySelector('.cancel-btn').style.display = 'inline-block';
+                row.querySelector('.delete-btn').style.display = 'none';
+            }
+
+            async saveRow(row) {
+                const id = row.dataset.id;
+                const data = {};
+
+                const cells = row.querySelectorAll('.editable');
+                cells.forEach(cell => {
+                    const field = cell.dataset.field;
+                    const input = cell.querySelector('.form-control, .form-select');
+                    data[field] = input.value;
+                });
+
+                try {
+                    const response = await fetch(`/ledger/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showAlertWithReload('success', result.message);
+                    } else {
+                        this.showAlert('error', result.message);
+                    }
+                } catch (error) {
+                    this.showAlert('error', 'Terjadi kesalahan saat mengupdate data');
+                }
+            }
+
+            cancelEdit(row) {
+                location.reload();
+            }
+
+            exitEditMode(row) {
+                row.classList.remove('editing');
+                row.querySelector('.edit-btn').style.display = 'inline-block';
+                row.querySelector('.save-btn').style.display = 'none';
+                row.querySelector('.cancel-btn').style.display = 'none';
+                row.querySelector('.delete-btn').style.display = 'inline-block';
+                this.currentEditRow = null;
+            }
+
+            updateRowDisplay(row, data) {
+                const cells = row.querySelectorAll('.editable');
+                cells.forEach(cell => {
+                    const field = cell.dataset.field;
+                    let value = data[field];
+                    
+                    if (field === 'tipe_akun' || field === 'saldo_normal') {
+                        value = value.charAt(0).toUpperCase() + value.slice(1);
+                    }
+                    
+                    cell.textContent = value;
+                });
+            }
+
+            showDeleteModal(id) {
+                this.deleteId = id;
+                const modal = new bootstrap.Modal(document.getElementById('delete-modal'));
+                modal.show();
+            }
+
+            hideDeleteModal() {
+                this.deleteId = null;
+                const modal = bootstrap.Modal.getInstance(document.getElementById('delete-modal'));
+                if (modal) modal.hide();
+            }
+
+            async deleteLedger() {
+                try {
+                    const response = await fetch(`/ledger/${this.deleteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.showAlert('success', result.message);
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        this.showAlert('error', result.message);
+                    }
+                } catch (error) {
+                    this.showAlert('error', 'Terjadi kesalahan saat menghapus data');
+                }
+
+                this.hideDeleteModal();
+            }
+
+            addRowToTable(data) {
+                const tbody = document.getElementById('ledger-table');
+                const row = document.createElement('tr');
+                row.dataset.id = data.id;
+                row.innerHTML = `
+                    <td class="editable" data-field="kode">${data.kode}</td>
+                    <td class="editable" data-field="nama">${data.nama}</td>
+                    <td class="editable" data-field="tipe_akun">${data.tipe_akun.charAt(0).toUpperCase() + data.tipe_akun.slice(1)}</td>
+                    <td class="editable" data-field="grup">${data.grup}</td>
+                    <td class="editable" data-field="saldo_normal">${data.saldo_normal.charAt(0).toUpperCase() + data.saldo_normal.slice(1)}</td>
+                    <td class="actions">
+                        <div class="d-grid gap-1">
+                            <button class="btn btn-sm btn-warning edit-btn">Edit</button>
+                            <button class="btn btn-sm btn-success save-btn" style="display: none;">Simpan</button>
+                            <button class="btn btn-sm btn-secondary cancel-btn" style="display: none;">Batal</button>
+                            <button class="btn btn-sm btn-danger delete-btn">Hapus</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+
+            showAlertWithReload(type, message) {
+                if (confirm(message)) {
+                    location.reload();
+                }
+            }
+
+            showAlert(type, message) {
+                const container = document.getElementById('alert-container');
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible`;
+                alert.innerHTML = `
+                    <div class="d-flex">
+                        <div>${message}</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                `;
+                
+                container.innerHTML = '';
+                container.appendChild(alert);
+                
+                setTimeout(() => {
+                    alert.remove();
+                }, 5000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new LedgerManager();
+        });
+    </script>
+@endsection

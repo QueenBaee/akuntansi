@@ -120,17 +120,16 @@
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            <th style="text-align:center">Kode</th>
-                            <th style="text-align:center">Keterangan</th>
-                            <th class="text-center" style="text-align:center">Kas/Bank</th>
-                            <th class="text-center" style="text-align:center">Aset</th>
-                            <th style="text-align:center">2024 (Rp)</th>
-                            <th class="w-1" style="text-align:center">Aksi</th>
+                            <th>Kode</th>
+                            <th>Keterangan</th>
+                            <th class="text-center">Kas/Bank</th>
+                            <th>2024 (Rp)</th>
+                            <th class="w-1">Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="trial-balance-tbody">
                         <tr id="loading-row">
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="5" class="text-center py-4">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
@@ -173,7 +172,7 @@ function loadTrialBalanceData() {
             console.error('Error loading trial balance data:', error);
             alert('Error loading data: ' + error.message);
             document.getElementById('trial-balance-tbody').innerHTML = 
-                '<tr><td colspan="6" class="text-center text-danger">Error loading data</td></tr>';
+                '<tr><td colspan="5" class="text-center text-danger">Error loading data</td></tr>';
         });
 }
 
@@ -207,22 +206,6 @@ function renderTrialBalanceRow(item, prefix) {
         html += '</svg>Yes</span>';
     } else {
         html += '<span class="text-muted">No</span>';
-    }
-    html += '</td>';
-    
-    // Asset Status
-    html += '<td class="text-center">';
-    if (item.is_aset) {
-        html += '<span class="badge bg-info-lt text-info">';
-        html += '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-sm me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">';
-        html += '<path stroke="none" d="M0 0h24v24H0z" fill="none"/>';
-        html += '<rect x="3" y="4" width="18" height="12" rx="1"/>';
-        html += '<line x1="7" y1="8" x2="7" y2="8"/>';
-        html += '<line x1="17" y1="8" x2="17" y2="8"/>';
-        html += '<line x1="7" y1="12" x2="17" y2="12"/>';
-        html += '</svg>Aset</span>';
-    } else {
-        html += '<span class="text-muted">-</span>';
     }
     html += '</td>';
     
