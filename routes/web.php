@@ -7,6 +7,7 @@ use App\Http\Controllers\CashBankJournalController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\BukuBesarController;
 use App\Http\Controllers\TrialBalanceReportController;
 use App\Http\Controllers\CashflowReportController;
 
@@ -136,6 +137,10 @@ Route::middleware('auth')->group(function () {
     // Cashflow Report
     Route::get('/reports/cashflow', [CashflowReportController::class, 'index'])
         ->name('reports.cashflow');
+
+    // Buku Besar
+    Route::get('/buku-besar', [BukuBesarController::class, 'index'])
+        ->name('buku-besar.index');
 
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])
