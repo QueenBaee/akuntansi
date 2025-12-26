@@ -15,6 +15,47 @@
 @endsection
 
 @section('content')
+<style>
+    /* Make table fill full width with proper column sizing */
+    .table {
+        width: 100% !important;
+        table-layout: auto !important;
+    }
+    
+    .table-responsive {
+        width: 100% !important;
+    }
+    
+    /* Fixed width columns */
+    .table td:nth-child(3),
+    .table th:nth-child(3) {
+        min-width: 80px;
+        width: 80px;
+        white-space: nowrap;
+    }
+    
+    .table td:nth-child(4),
+    .table th:nth-child(4) {
+        min-width: 80px;
+        width: 80px;
+        white-space: nowrap;
+    }
+    
+    .table td:nth-child(5),
+    .table th:nth-child(5) {
+        min-width: 120px;
+        width: 120px;
+        white-space: nowrap;
+    }
+    
+    .table td:nth-child(6),
+    .table th:nth-child(6) {
+        min-width: 100px;
+        width: 100px;
+        white-space: nowrap;
+    }
+</style>
+
     <!-- Create Form -->
     <div class="card mb-3" id="createForm" style="display: none;">
         <div class="card-header">
@@ -71,7 +112,7 @@
     <!-- Table -->
     <div class="card">
         <div class="table-responsive">
-            <table class="table table-vcenter card-table">
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th style="text-align:center">User</th>

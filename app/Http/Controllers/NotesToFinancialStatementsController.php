@@ -32,29 +32,30 @@ class NotesToFinancialStatementsController extends Controller
         'ASET LANCAR LAINNYA' => ['A18-01', 'A18-02'],
         'PIUTANG LAIN-LAIN - JANGKA PANJANG' => ['A21-01', 'A21-02'],
         'INVESTASI JANGKA PANJANG' => ['A22-01', 'A22-02'],
-        '6. ASET TETAP BERSIH - HARGA PEROLEHAN' => ['A23-01', 'A23-02', 'A23-03', 'A23-04', 'A23-99'],
-        '6. ASET TETAP BERSIH - AKUMULASI PENYUSUTAN' => ['A24-01', 'A24-02', 'A24-03'],
-        'ASET TIDAK BERWUJUD' => ['A25-01', 'A25-02'],
-        '7. ASET TIDAK LANCAR LAINNYA' => ['A26-01', 'A26-02'],
-        '8. UTANG USAHA' => ['L11-01', 'L11-99'],
-        'UTANG LAIN-LAIN' => ['L12-01', 'L12-02'],
-        '9. BIAYA YANG HARUS DIBAYAR' => ['L13-01', 'L13-02', 'L13-03', 'L13-04', 'L13-05', 'L13-06', 'L13-99'],
-        '10. UTANG PAJAK' => ['L14-01', 'L14-02', 'L14-03', 'L14-04', 'L14-05', 'L14-11', 'L14-12'],
+        '6. ASET TETAP BERSIH - HARGA PEROLEHAN' => ['A23-01', 'A23-02', 'A23-03', 'A23-04', 'A23-05'],
+        '6. ASET TETAP BERSIH - AKUMULASI PENYUSUTAN' => ['A24-01', 'A24-02', 'A24-03', 'A24-04'],
+        '6. ASET DALAM PENYELESAIAN' => ['A25-01', 'A25-02', 'A25-03', 'A25-04', 'A25-05'],
+        'ASET TIDAK BERWUJUD' => ['A26-01', 'A26-02'],
+        '8. ASET TIDAK LANCAR LAINNYA' => ['A27-01', 'A27-02'],
+        '9. UTANG USAHA' => ['L11-01', 'L11-99'],
+        '10. UTANG LAIN-LAIN' => ['L12-01', 'L12-02'],
+        '11. BIAYA YANG HARUS DIBAYAR' => ['L13-01', 'L13-02', 'L13-03', 'L13-04', 'L13-05', 'L13-06', 'L13-99'],
+        '12. UTANG PAJAK' => ['L14-01', 'L14-02', 'L14-03', 'L14-04', 'L14-05', 'L14-11', 'L14-12'],
         'UANG MUKA PENDAPATAN' => ['L15-01', 'L15-02', 'L15-99'],
         'PINJAMAN JANGKA PENDEK' => ['L16-01', 'L16-02'],
-        '11. KEWAJIBAN IMBALAN PASCA KERJA' => ['L17-01', 'L17-02'],
+        '13. KEWAJIBAN IMBALAN PASCA KERJA' => ['L17-01', 'L17-02'],
         'UTANG USAHA - JK. PANJANG' => ['L21-01', 'L21-02'],
         'UTANG LAIN-LAIN - JK. PANJANG' => ['L22-01', 'L22-02'],
         'PINJAMAN JANGKA PANJANG' => ['L23-01', 'L23-02'],
         'KEWAJIBAN IMBALAN PASCA KERJA - JK. PANJANG' => ['L24-01', 'L24-02'],
         'KEWAJIBAN JANGKA PANJANG LAINNYA' => ['L25-01', 'L25-02'],
-        '12. MODAL DISETOR' => ['C11-01', 'C11-02', 'C11-03'],
-        '13. PENDAPATAN' => ['R11-01', 'R11-02', 'R11-03'],
-        '14. BEBAN PRODUKSI' => ['E11-01', 'E11-02', 'E11-03', 'E11-04', 'E11-05', 'E11-06', 'E11-07'],
+        '14. MODAL DISETOR' => ['C11-01', 'C11-02', 'C11-03'],
+        '15. PENDAPATAN' => ['R11-01', 'R11-02', 'R11-03'],
+        '16. BEBAN PRODUKSI' => ['E11-01', 'E11-02', 'E11-03', 'E11-04', 'E11-05', 'E11-06', 'E11-07'],
         'PEMASARAN' => ['E21-01', 'E21-02'],
-        '15. ADMINISTRASI & UMUM' => ['E22-01', 'E22-02', 'E22-03', 'E22-04', 'E22-05', 'E22-06', 'E22-07', 'E22-08', 'E22-09', 'E22-10', 'E22-11', 'E22-89', 'E22-96', 'E22-97', 'E22-98', 'E22-99'],
-        '16. PENDAPATAN LAIN-LAIN' => ['R21-01', 'R21-02', 'R21-99'],
-        '17. BEBAN LAIN-LAIN' => ['E31-01', 'E31-02', 'E31-03']
+        '17. ADMINISTRASI & UMUM' => ['E22-01', 'E22-02', 'E22-03', 'E22-04', 'E22-05', 'E22-06', 'E22-07', 'E22-08', 'E22-09', 'E22-10', 'E22-11', 'E22-89', 'E22-96', 'E22-97', 'E22-98', 'E22-99'],
+        '18. PENDAPATAN LAIN-LAIN' => ['R21-01', 'R21-02', 'R21-99'],
+        '19. BEBAN LAIN-LAIN' => ['E31-01', 'E31-02', 'E31-03']
     ];
 
     public function index(Request $request)
@@ -62,7 +63,6 @@ class NotesToFinancialStatementsController extends Controller
         $year = $request->year ?? date('Y');
         $previousYear = $year - 1;
 
-        // Use exact same logic as TrialBalanceReportController
         $items = TrialBalance::orderBy('id')->get();
 
         $baseSaldo = [];
@@ -138,11 +138,8 @@ class NotesToFinancialStatementsController extends Controller
         foreach ($items as $item) {
             $row = [];
             $isBalanceSheet = $this->isBalanceSheetAccount($item->kode);
-            $isIncomeStatement = $this->isIncomeStatementAccount($item->kode);
-            $isDividend = $this->isDividendAccount($item->kode);
             
             if ($isBalanceSheet) {
-                // Balance Sheet: cumulative logic
                 $saldo = $openingBalance[$item->id] ?? 0;
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
@@ -153,7 +150,6 @@ class NotesToFinancialStatementsController extends Controller
                 }
                 $row['opening'] = $openingBalance[$item->id] ?? 0;
             } else {
-                // Income Statement & Dividend: period movements only
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
                     $debit = $trx->where('month', $m)->sum('debit_amount');
@@ -170,7 +166,7 @@ class NotesToFinancialStatementsController extends Controller
             $data[$item->id] = $row;
         }
 
-        // Apply custom calculation rules (same as TrialBalanceReportController)
+        // Apply custom calculation rules
         $c2101 = $items->where('kode', 'C21-01')->first();
         $c2102 = $items->where('kode', 'C21-02')->first();
         $c2199 = $items->where('kode', 'C21-99')->first();
@@ -226,6 +222,7 @@ class NotesToFinancialStatementsController extends Controller
             $data[$c2199->id]['total'] = array_sum($c2199Changes);
         }
 
-        return view('notes_to_financial_statements.index', compact('items', 'data', 'year'));
+        $accountGroups = $this->accountGroups;
+        return view('notes_to_financial_statements.index', compact('items', 'data', 'year', 'accountGroups'));
     }
 }

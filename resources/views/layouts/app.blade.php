@@ -15,30 +15,34 @@
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 36px;
             padding-left: 12px;
         }
+
         .select2-container--default .select2-selection--single .select2-selection__arrow {
             height: 36px;
         }
+
         .select2-dropdown {
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
         }
-        
+
         /* Equal-width tables - no text cutting */
         .table-equal-width {
             table-layout: auto !important;
             width: auto !important;
         }
-        
+
         .table-equal-width th,
         .table-equal-width td {
             white-space: nowrap !important;
             overflow: visible !important;
             text-overflow: clip !important;
         }
+
         .dropdown-item.active {
             background-color: #206bc4;
             color: white;
@@ -48,49 +52,49 @@
             background-color: #1a5ba8;
             color: white;
         }
-        
+
         /* Make all card titles uppercase */
         .card-title,
         h3.card-title,
         .card-header .card-title {
             text-transform: uppercase !important;
         }
-        
+
         /* Make all page titles and subtitles uppercase */
         .page-title,
         .page-subtitle {
             text-transform: uppercase !important;
         }
-        
+
         /* Keep table headers normal case */
         table th {
             text-transform: none !important;
         }
-        
+
         /* Consistent Financial Report Styling */
         .financial-report-header {
             background-color: #e9ecef !important;
             font-weight: bold !important;
             font-size: 16px !important;
         }
-        
+
         .financial-report-subheader {
             background-color: #f8f9fa !important;
             font-weight: bold !important;
             font-style: italic !important;
         }
-        
+
         .financial-report-total {
             background-color: #f8f9fa !important;
             font-weight: bold !important;
         }
-        
+
         .financial-report-major-total {
             background-color: #dee2e6 !important;
             font-weight: bold !important;
             font-size: 16px !important;
         }
-        
+
         .financial-report-final-total {
             background-color: #ced4da !important;
             font-weight: bold !important;
@@ -264,7 +268,7 @@
                                         href="{{ route('maklon.index') }}">Data Maklon</a>
                                 </div>
                             </li>
-                            
+
                             <!-- Laporan -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
@@ -273,13 +277,16 @@
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            class="icon">
+                                            class="icon icon-tabler icons-tabler-outline icon-tabler-report">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M8 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h5.697" />
+                                            <path d="M18 14v4h4" />
+                                            <path d="M18 11v-4a2 2 0 0 0 -2 -2h-2" />
                                             <path
-                                                d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />
-                                            <rect x="9" y="3" width="6" height="4" rx="2" />
-                                            <path d="M14 11h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3h-2.5" />
-                                            <path d="M12 17v1m0 -8v1" />
+                                                d="M8 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                                            <path d="M18 18m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+                                            <path d="M8 11h4" />
+                                            <path d="M8 15h3" />
                                         </svg>
                                     </span>
                                     <span class="nav-link-title">Laporan</span>
@@ -289,17 +296,25 @@
                                         href="{{ route('reports.cashflow') }}">Cashflow Report</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Laporan Keuangan</h6>
-                                    <a class="dropdown-item {{ request()->routeIs('financial-position.*') ? 'active' : '' }}" href="{{ route('financial-position.index') }}">Laporan Posisi Keuangan</a>
-                                    <a class="dropdown-item {{ request()->routeIs('comprehensive-income.*') ? 'active' : '' }}" href="{{ route('comprehensive-income.index') }}">Laporan Penghasilan Komprehensif & Laporan Laba Rugi</a>
+                                    <a class="dropdown-item {{ request()->routeIs('financial-position.*') ? 'active' : '' }}"
+                                        href="{{ route('financial-position.index') }}">Laporan Posisi Keuangan</a>
+                                    <a class="dropdown-item {{ request()->routeIs('comprehensive-income.*') ? 'active' : '' }}"
+                                        href="{{ route('comprehensive-income.index') }}">Laporan Penghasilan
+                                        Komprehensif & Laporan Laba Rugi</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
-                                    <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}" href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan Keuangan</a>
+                                    <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}"
+                                        href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan
+                                        Keuangan</a>
                                     <div class="dropdown-divider"></div>
                                     <h6 class="dropdown-header">Pendukung</h6>
                                     <a class="dropdown-item {{ request()->routeIs('trial_balance_report.*') ? 'active' : '' }}"
                                         href="{{ route('trial_balance_report.index') }}">Trial Balance</a>
-                                    <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}" href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
-                                    <a class="dropdown-item {{ request()->routeIs('assets-in-progress.*') ? 'active' : '' }}" href="{{ route('assets-in-progress.index') }}">Aset Dalam Penyelesaian</a>
-                                    <a class="dropdown-item {{ request()->routeIs('ledger.*') ? 'active' : '' }}" href="{{ route('ledger.index') }}">Buku Besar</a>
+                                    <a class="dropdown-item {{ request()->routeIs('fixed-assets.*') ? 'active' : '' }}"
+                                        href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
+                                    <a class="dropdown-item {{ request()->routeIs('assets-in-progress.*') ? 'active' : '' }}"
+                                        href="{{ route('assets-in-progress.index') }}">Aset Dalam Penyelesaian</a>
+                                    <a class="dropdown-item {{ request()->routeIs('ledger.*') ? 'active' : '' }}"
+                                        href="{{ route('ledger.index') }}">Buku Besar</a>
                                 </div>
                             </li>
 
@@ -324,9 +339,8 @@
                                     <div class="dropdown-menu">
                                         <a class="dropdown-item {{ request()->routeIs('users.*') ? 'active' : '' }}"
                                             href="{{ route('users.index') }}">User Management</a>
-                                        {{-- <a class="dropdown-item {{ request()->routeIs('accounts.*') ? 'active' : '' }}" href="{{ route('accounts.index') }}">List Account</a> --}}
-                                        <!-- <a class="dropdown-item {{ request()->routeIs('user-accounts.*') ? 'active' : '' }}"
-                                            href="{{ route('user-accounts.index') }}">User Accounts</a> -->
+                                        <a class="dropdown-item {{ request()->routeIs('ledgers.*') ? 'active' : '' }}"
+                                            href="{{ route('user-ledgers.index') }}">User Ledgers</a>
                                         <div class="dropdown-divider"></div>
                                         <a class="dropdown-item {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}"
                                             href="{{ route('trial-balance.index') }}">Akun Trial Balances</a>
@@ -338,15 +352,19 @@
 
 
                         </ul>
-                        
+
                         <!-- Asset Notification Dropdown -->
                         <div class="nav-item dropdown d-none" id="asset-notification-nav">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown" role="button">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"
+                                role="button">
                                 <span class="nav-link-icon position-relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path stroke="none" d="m0 0h24v24H0z" fill="none"/>
-                                        <path d="M12 9v2m0 4v.01"/>
-                                        <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"/>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24"
+                                        height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                        fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="m0 0h24v24H0z" fill="none" />
+                                        <path d="M12 9v2m0 4v.01" />
+                                        <path
+                                            d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
                                     </svg>
                                     <span class="badge bg-red badge-notification badge-pill" id="asset-badge">0</span>
                                 </span>
@@ -451,11 +469,11 @@
                         const navNotification = document.getElementById('asset-notification-nav');
                         const badge = document.getElementById('asset-badge');
                         const transactionsList = document.getElementById('asset-transactions-list');
-                        
+
                         if (navNotification && badge && transactionsList) {
                             badge.textContent = data.count;
                             navNotification.classList.remove('d-none');
-                            
+
                             // Populate dropdown list
                             transactionsList.innerHTML = data.transactions.map(t => `
                                 <a href="/fixed-assets/create-from-transaction?journal_id=${t.journal_id}" class="dropdown-item">
@@ -487,7 +505,7 @@
                 placeholder: 'Pilih...',
                 allowClear: true
             });
-            
+
             // AJAX selects for accounts
             $('select.ajax-select').select2({
                 theme: 'default',
@@ -498,12 +516,12 @@
                     url: '/api/accounts/search',
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) {
+                    data: function(params) {
                         return {
                             q: params.term
                         };
                     },
-                    processResults: function (data) {
+                    processResults: function(data) {
                         return {
                             results: data.results
                         };
@@ -513,27 +531,31 @@
                 minimumInputLength: 1
             });
         }
-        
+
         // Initialize on document ready
         $(document).ready(function() {
             initSelect2();
             initEqualWidth();
             applyInputLimits();
         });
-        
+
         // Re-initialize after dynamic content is added
         function reinitSelect2() {
             $('select:not(.no-select2)').select2('destroy');
             initSelect2();
         }
-        
+
         function equalizeTableColumns() {
             document.querySelectorAll('table').forEach(table => {
                 if (table.classList.contains('no-equal-width')) return;
-                
+
+                // Skip user-ledgers tables
+                if (window.location.pathname.includes('user-ledgers') ||
+                    window.location.pathname.includes('ledgers')) return;
+
                 const headers = table.querySelectorAll('thead th');
                 const skipIndexes = [];
-                
+
                 // Find Kode and Keterangan column indexes
                 headers.forEach((th, index) => {
                     const text = th.textContent.toLowerCase().trim();
@@ -541,16 +563,16 @@
                         skipIndexes.push(index);
                     }
                 });
-                
+
                 // Reset table
                 table.style.tableLayout = 'auto';
                 table.querySelectorAll('th, td').forEach(cell => {
                     cell.style.width = 'auto';
                     cell.style.whiteSpace = 'nowrap';
                 });
-                
+
                 table.offsetHeight;
-                
+
                 // Find max width excluding skip columns
                 let maxWidth = 0;
                 table.querySelectorAll('tr').forEach(row => {
@@ -561,7 +583,7 @@
                         }
                     });
                 });
-                
+
                 // Apply max width to non-skip columns
                 if (maxWidth > 0) {
                     table.querySelectorAll('tr').forEach(row => {
@@ -573,36 +595,51 @@
                         });
                     });
                 }
-                
+
                 table.classList.add('table-equal-width');
             });
         }
-        
+
         // Initialize equal-width on load and after dynamic content
         function initEqualWidth() {
             equalizeTableColumns();
             setTimeout(equalizeTableColumns, 100);
         }
-        
+
         // Global function to call after adding dynamic content
         window.refreshTableWidths = function() {
             setTimeout(equalizeTableColumns, 50);
         };
-        
+
         // Auto-apply maxlength to inputs
         function applyInputLimits() {
             const limits = {
-                'date': 10, 'tanggal': 10, 'description': 70, 'keterangan': 70,
-                'pic': 15, 'reference': 10, 'no_bukti': 10, 'proof_number': 10,
-                'masuk': 15, 'keluar': 15, 'saldo': 15, 'balance': 15,
-                'akun_cf': 50, 'debit': 50, 'kredit': 50, 'credit': 50,
-                'debit_amount': 15, 'credit_amount': 15, 'cash_in': 15, 'cash_out': 15
+                'date': 10,
+                'tanggal': 10,
+                'description': 70,
+                'keterangan': 70,
+                'pic': 15,
+                'reference': 10,
+                'no_bukti': 10,
+                'proof_number': 10,
+                'masuk': 15,
+                'keluar': 15,
+                'saldo': 15,
+                'balance': 15,
+                'akun_cf': 50,
+                'debit': 50,
+                'kredit': 50,
+                'credit': 50,
+                'debit_amount': 15,
+                'credit_amount': 15,
+                'cash_in': 15,
+                'cash_out': 15
             };
-            
+
             document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
                 const name = input.name || input.id || input.placeholder?.toLowerCase() || '';
                 const className = input.className.toLowerCase();
-                
+
                 for (const [field, limit] of Object.entries(limits)) {
                     if (name.includes(field) || className.includes(field)) {
                         input.maxLength = limit;

@@ -37,31 +37,26 @@
                             background-color: #f8f9fa !important;
                         }
 
-                        .no-equal-width td:nth-child(1),
-                        .no-equal-width th:nth-child(1) {
+                        .no-equal-width td:nth-child(1) {
                             text-align: left !important;
                             font-weight: 600 !important;
                         }
 
-                        .no-equal-width td:nth-child(2),
-                        .no-equal-width th:nth-child(2) {
+                        .no-equal-width td:nth-child(2) {
                             text-align: left !important;
                         }
 
-                        .no-equal-width td:nth-child(n+3):nth-child(-n+14),
-                        .no-equal-width th:nth-child(n+3):nth-child(-n+14) {
+                        .no-equal-width td:nth-child(n+3):nth-child(-n+14) {
                             text-align: right !important;
                             width: 80px !important;
                             min-width: 80px !important;
                         }
 
-                        .no-equal-width td:nth-child(15),
-                        .no-equal-width th:nth-child(15) {
+                        .no-equal-width td:nth-child(15) {
                             text-align: left !important;
                         }
 
-                        .no-equal-width td:nth-child(16),
-                        .no-equal-width th:nth-child(16) {
+                        .no-equal-width td:nth-child(16) {
                             text-align: left !important;
                         }
 

@@ -22,34 +22,43 @@ class FinancialPositionController extends Controller
     }
 
     private $accountGroups = [
-        '1. KAS & SETARA KAS' => ['A11-01', 'A11-21', 'A11-22', 'A11-23'],
-        '2. PIUTANG USAHA' => ['A12-01', 'A12-02', 'A12-03'],
-        '3. PIUTANG LAIN-LAIN' => ['A13-01', 'A13-02', 'A13-03', 'A13-98', 'A13-99'],
-        'INVESTASI JANGKA PENDEK' => ['A14-01', 'A14-02', 'A14-99'],
-        'PERSEDIAAN' => ['A15-01', 'A15-02', 'A15-99'],
-        '4. BIAYA DIBAYAR DI MUKA' => ['A16-01', 'A16-02'],
-        '5. UANG MUKA PAJAK' => ['A17-01', 'A17-02', 'A17-03', 'A17-04', 'A17-11'],
-        'ASET LANCAR LAINNYA' => ['A18-01', 'A18-02'],
-        'PIUTANG LAIN-LAIN - JANGKA PANJANG' => ['A21-01', 'A21-02'],
-        'INVESTASI JANGKA PANJANG' => ['A22-01', 'A22-02'],
-        '6. ASET TETAP BERSIH - HARGA PEROLEHAN' => ['A23-01', 'A23-02', 'A23-03', 'A23-04', 'A23-99'],
-        '6. ASET TETAP BERSIH - AKUMULASI PENYUSUTAN' => ['A24-01', 'A24-02', 'A24-03'],
-        'ASET TIDAK BERWUJUD' => ['A25-01', 'A25-02'],
-        '7. ASET TIDAK LANCAR LAINNYA' => ['A26-01', 'A26-02'],
-        '8. UTANG USAHA' => ['L11-01', 'L11-99'],
-        'UTANG LAIN-LAIN' => ['L12-01', 'L12-02'],
-        '9. BIAYA YANG HARUS DIBAYAR' => ['L13-01', 'L13-02', 'L13-03', 'L13-04', 'L13-05', 'L13-06', 'L13-99'],
-        '10. UTANG PAJAK' => ['L14-01', 'L14-02', 'L14-03', 'L14-04', 'L14-05', 'L14-11', 'L14-12'],
-        'UANG MUKA PENDAPATAN' => ['L15-01', 'L15-02', 'L15-99'],
-        'PINJAMAN JANGKA PENDEK' => ['L16-01', 'L16-02'],
-        '11. KEWAJIBAN IMBALAN PASCA KERJA' => ['L17-01', 'L17-02'],
-        'UTANG USAHA - JK. PANJANG' => ['L21-01', 'L21-02'],
-        'UTANG LAIN-LAIN - JK. PANJANG' => ['L22-01', 'L22-02'],
-        'PINJAMAN JANGKA PANJANG' => ['L23-01', 'L23-02'],
-        'KEWAJIBAN IMBALAN PASCA KERJA - JK. PANJANG' => ['L24-01', 'L24-02'],
-        'KEWAJIBAN JANGKA PANJANG LAINNYA' => ['L25-01', 'L25-02'],
-        '12. MODAL DISETOR' => ['C11-01', 'C11-02', 'C11-03'],
-        'SALDO LABA / (AKUMULASI RUGI)' => ['C21-01'],
+        // ASET LANCAR
+        'Kas & Setara Kas' => ['A11-01', 'A11-21', 'A11-22', 'A11-23'], // Note 1
+        'Piutang Usaha' => ['A12-01', 'A12-02', 'A12-03'], // Note 2
+        'Piutang Lain-lain' => ['A13-01', 'A13-02', 'A13-03', 'A13-98', 'A13-99'], // Note 3
+        'Investasi Jangka Pendek' => ['A14-01', 'A14-02', 'A14-99'],
+        'Persediaan' => ['A15-01', 'A15-02', 'A15-99'],
+        'Biaya Dibayar Di muka' => ['A16-01', 'A16-02'], // Note 4
+        'Uang Muka Pajak' => ['A17-01', 'A17-02', 'A17-03', 'A17-04', 'A17-11'], // Note 5
+        'Aset Lancar Lainnya' => ['A18-01', 'A18-02'],
+        
+        // ASET TIDAK LANCAR
+        'Piutang Lain-lain - Jangka Panjang' => ['A21-01', 'A21-02'],
+        'Investasi Jangka Panjang' => ['A22-01', 'A22-02'],
+        'Aset Tetap Bersih' => ['A23-01', 'A23-02', 'A23-03', 'A23-04', 'A23-05', 'A24-01', 'A24-02', 'A24-03', 'A24-04'], // Note 6
+        'Aset dalam Penyelesaian' => ['A25-01', 'A25-02', 'A25-03', 'A25-04', 'A25-05'], // Note 6
+        'Aset Tidak Berwujud' => ['A26-01', 'A26-02'],
+        'Aset Tidak Lancar Lainnya' => ['A27-01', 'A27-02'], // Note 8
+        
+        // KEWAJIBAN JANGKA PENDEK
+        'Utang Usaha' => ['L11-01', 'L11-99'], // Note 9
+        'Utang Lain-lain' => ['L12-01', 'L12-02'], // Note 10
+        'Biaya yang Harus Dibayar' => ['L13-01', 'L13-02', 'L13-03', 'L13-04', 'L13-05', 'L13-06', 'L13-99'], // Note 11
+        'Utang Pajak' => ['L14-01', 'L14-02', 'L14-03', 'L14-04', 'L14-05', 'L14-11', 'L14-12'], // Note 12
+        'Uang Muka Pendapatan' => ['L15-01', 'L15-02', 'L15-99'],
+        'Pinjaman Jangka Pendek' => ['L16-01', 'L16-02'],
+        'Kewajiban Imbalan Pasca Kerja' => ['L17-01', 'L17-02'], // Note 13
+        
+        // KEWAJIBAN JANGKA PANJANG
+        'Utang Usaha - Jk. Panjang' => ['L21-01', 'L21-02'],
+        'Utang Lain-lain - Jk. Panjang' => ['L22-01', 'L22-02'],
+        'Pinjaman Jangka Panjang' => ['L23-01', 'L23-02'],
+        'Kewajiban Imbalan Pasca Kerja - Jk. Panjang' => ['L24-01', 'L24-02'],
+        'Kewajiban Jangka Panjang Lainnya' => ['L25-01', 'L25-02'],
+        
+        // EKUITAS
+        'Modal Disetor' => ['C11-01', 'C11-02', 'C11-03'], // Note 14
+        'Saldo (Laba)/Rugi' => ['C21-01'],
     ];
 
     public function index(Request $request)
@@ -57,7 +66,6 @@ class FinancialPositionController extends Controller
         $year = $request->year ?? date('Y');
         $previousYear = $year - 1;
 
-        // Use exact same logic as NotesToFinancialStatementsController
         $items = TrialBalance::orderBy('id')->get();
 
         $baseSaldo = [];
@@ -133,11 +141,8 @@ class FinancialPositionController extends Controller
         foreach ($items as $item) {
             $row = [];
             $isBalanceSheet = $this->isBalanceSheetAccount($item->kode);
-            $isIncomeStatement = $this->isIncomeStatementAccount($item->kode);
-            $isDividend = $this->isDividendAccount($item->kode);
             
             if ($isBalanceSheet) {
-                // Balance Sheet: cumulative logic
                 $saldo = $openingBalance[$item->id] ?? 0;
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
@@ -148,7 +153,6 @@ class FinancialPositionController extends Controller
                 }
                 $row['opening'] = $openingBalance[$item->id] ?? 0;
             } else {
-                // Income Statement & Dividend: period movements only
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
                     $debit = $trx->where('month', $m)->sum('debit_amount');
@@ -165,7 +169,7 @@ class FinancialPositionController extends Controller
             $data[$item->id] = $row;
         }
 
-        // Apply custom calculation rules (same as NotesToFinancialStatementsController)
+        // Apply custom calculation rules
         $c2101 = $items->where('kode', 'C21-01')->first();
         $c2102 = $items->where('kode', 'C21-02')->first();
         $c2199 = $items->where('kode', 'C21-99')->first();
@@ -221,6 +225,7 @@ class FinancialPositionController extends Controller
             $data[$c2199->id]['total'] = array_sum($c2199Changes);
         }
 
-        return view('financial_position.index', compact('items', 'data', 'year'));
+        $accountGroups = $this->accountGroups;
+        return view('financial_position.index', compact('items', 'data', 'year', 'accountGroups'));
     }
 }

@@ -66,7 +66,7 @@
                     <table class="table table-bordered table-striped no-equal-width">
                         <thead>
                             <tr>
-                                <th style="text-align:center">Kode</th>
+                                <th style="text-align:center">Note</th>
                                 <th style="text-align:center">Keterangan</th>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <th style="text-align:center">{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
@@ -102,36 +102,8 @@
                                     return $groupTotals;
                                 }
                                 
-                                $accountGroups = [
-                                    '1. KAS & SETARA KAS' => ['A11-01', 'A11-21', 'A11-22', 'A11-23'],
-                                    '2. PIUTANG USAHA' => ['A12-01', 'A12-02', 'A12-03'],
-                                    '3. PIUTANG LAIN-LAIN' => ['A13-01', 'A13-02', 'A13-03', 'A13-98', 'A13-99'],
-                                    'INVESTASI JANGKA PENDEK' => ['A14-01', 'A14-02', 'A14-99'],
-                                    'PERSEDIAAN' => ['A15-01', 'A15-02', 'A15-99'],
-                                    '4. BIAYA DIBAYAR DI MUKA' => ['A16-01', 'A16-02'],
-                                    '5. UANG MUKA PAJAK' => ['A17-01', 'A17-02', 'A17-03', 'A17-04', 'A17-11'],
-                                    'ASET LANCAR LAINNYA' => ['A18-01', 'A18-02'],
-                                    'PIUTANG LAIN-LAIN - JANGKA PANJANG' => ['A21-01', 'A21-02'],
-                                    'INVESTASI JANGKA PANJANG' => ['A22-01', 'A22-02'],
-                                    'ASET TETAP - HARGA PEROLEHAN' => ['A23-01', 'A23-02', 'A23-03', 'A23-04', 'A23-99'],
-                                    'ASET TETAP - AKUMULASI PENYUSUTAN' => ['A24-01', 'A24-02', 'A24-03'],
-                                    'ASET TIDAK BERWUJUD' => ['A25-01', 'A25-02'],
-                                    '7. ASET TIDAK LANCAR LAINNYA' => ['A26-01', 'A26-02'],
-                                    '8. UTANG USAHA' => ['L11-01', 'L11-99'],
-                                    'UTANG LAIN-LAIN' => ['L12-01', 'L12-02'],
-                                    '9. BIAYA YANG HARUS DIBAYAR' => ['L13-01', 'L13-02', 'L13-03', 'L13-04', 'L13-05', 'L13-06', 'L13-99'],
-                                    '10. UTANG PAJAK' => ['L14-01', 'L14-02', 'L14-03', 'L14-04', 'L14-05', 'L14-11', 'L14-12'],
-                                    'UANG MUKA PENDAPATAN' => ['L15-01', 'L15-02', 'L15-99'],
-                                    'PINJAMAN JANGKA PENDEK' => ['L16-01', 'L16-02'],
-                                    '11. KEWAJIBAN IMBALAN PASCA KERJA' => ['L17-01', 'L17-02'],
-                                    'UTANG USAHA - JK. PANJANG' => ['L21-01', 'L21-02'],
-                                    'UTANG LAIN-LAIN - JK. PANJANG' => ['L22-01', 'L22-02'],
-                                    'PINJAMAN JANGKA PANJANG' => ['L23-01', 'L23-02'],
-                                    'KEWAJIBAN IMBALAN PASCA KERJA - JK. PANJANG' => ['L24-01', 'L24-02'],
-                                    'KEWAJIBAN JANGKA PANJANG LAINNYA' => ['L25-01', 'L25-02'],
-                                    '12. MODAL DISETOR' => ['C11-01', 'C11-02', 'C11-03'],
-                                    'SALDO LABA / (AKUMULASI RUGI)' => ['C21-01'],
-                                ];
+                                // Use account groups from controller
+                                // $accountGroups is passed from controller
                             @endphp
                             
                             <!-- ASET -->
@@ -148,14 +120,14 @@
                             
                             @php
                                 $currentAssetGroups = [
-                                    'Kas & Setara Kas' => ['1', '1. KAS & SETARA KAS'],
-                                    'Piutang Usaha' => ['2', '2. PIUTANG USAHA'],
-                                    'Piutang Lain-lain' => ['3', '3. PIUTANG LAIN-LAIN'],
-                                    'Investasi Jangka Pendek' => ['', 'INVESTASI JANGKA PENDEK'],
-                                    'Persediaan' => ['', 'PERSEDIAAN'],
-                                    'Biaya Dibayar Di muka' => ['4', '4. BIAYA DIBAYAR DI MUKA'],
-                                    'Uang Muka Pajak' => ['5', '5. UANG MUKA PAJAK'],
-                                    'Aset Lancar Lainnya' => ['', 'ASET LANCAR LAINNYA'],
+                                    'Kas & Setara Kas' => ['1', 'Kas & Setara Kas'],
+                                    'Piutang Usaha' => ['2', 'Piutang Usaha'],
+                                    'Piutang Lain-lain' => ['3', 'Piutang Lain-lain'],
+                                    'Investasi Jangka Pendek' => ['', 'Investasi Jangka Pendek'],
+                                    'Persediaan' => ['', 'Persediaan'],
+                                    'Biaya Dibayar Di muka' => ['4', 'Biaya Dibayar Di muka'],
+                                    'Uang Muka Pajak' => ['5', 'Uang Muka Pajak'],
+                                    'Aset Lancar Lainnya' => ['', 'Aset Lancar Lainnya'],
                                 ];
                                 
                                 $currentAssetTotals = ['total' => 0, 'opening' => 0];
@@ -209,10 +181,10 @@
                                 }
                                 
                                 $nonCurrentAssetGroups = [
-                                    'Piutang Lain-lain - Jangka Panjang' => ['', 'PIUTANG LAIN-LAIN - JANGKA PANJANG'],
-                                    'Investasi Jangka Panjang' => ['', 'INVESTASI JANGKA PANJANG'],
-                                    'Aset Tidak Berwujud' => ['', 'ASET TIDAK BERWUJUD'],
-                                    'Aset Tidak Lancar Lainnya' => ['7', '7. ASET TIDAK LANCAR LAINNYA'],
+                                    'Piutang Lain-lain - Jangka Panjang' => ['', 'Piutang Lain-lain - Jangka Panjang'],
+                                    'Investasi Jangka Panjang' => ['', 'Investasi Jangka Panjang'],
+                                    'Aset Tidak Berwujud' => ['', 'Aset Tidak Berwujud'],
+                                    'Aset Tidak Lancar Lainnya' => ['8', 'Aset Tidak Lancar Lainnya'],
                                 ];
                                 
                                 foreach ($nonCurrentAssetGroups as $displayName => [$noteNum, $groupKey]) {
@@ -236,8 +208,19 @@
                                 }
                                 
                                 // Aset Tetap - Net
-                                $fixedAssetCost = calculateGroupTotal($accountGroups['ASET TETAP - HARGA PEROLEHAN'], $items, $data);
-                                $fixedAssetDep = calculateGroupTotal($accountGroups['ASET TETAP - AKUMULASI PENYUSUTAN'], $items, $data);
+                                $fixedAssetCost = calculateGroupTotal($accountGroups['Aset Tetap Bersih'], $items, $data);
+                                $fixedAssetDep = [];
+                                
+                                // Extract depreciation accounts from Aset Tetap Bersih group
+                                $depAccounts = array_filter($accountGroups['Aset Tetap Bersih'], function($code) {
+                                    return strpos($code, 'A24-') === 0;
+                                });
+                                $costAccounts = array_filter($accountGroups['Aset Tetap Bersih'], function($code) {
+                                    return strpos($code, 'A23-') === 0;
+                                });
+                                
+                                $fixedAssetCost = calculateGroupTotal($costAccounts, $items, $data);
+                                $fixedAssetDep = calculateGroupTotal($depAccounts, $items, $data);
                                 
                                 if ($fixedAssetCost['total'] != 0 || $fixedAssetCost['opening'] != 0 || $fixedAssetDep['total'] != 0 || $fixedAssetDep['opening'] != 0) {
                                     echo '<tr>';
@@ -272,7 +255,7 @@
                             <!-- TOTAL ASET -->
                             <tr style="background-color: #dee2e6; font-weight: bold; font-size: 16px;">
                                 <td></td>
-                                <td>&nbsp;</td>
+                                <td>TOTAL ASET</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentAssetTotals["month_$m"] + $nonCurrentAssetTotals["month_$m"]) }}</td>
                                 @endfor
@@ -299,13 +282,13 @@
                                 }
                                 
                                 $currentLiabilityGroups = [
-                                    'Utang Usaha' => ['8', '8. UTANG USAHA'],
-                                    'Utang Lain-lain' => ['', 'UTANG LAIN-LAIN'],
-                                    'Biaya Yang Harus Dibayar' => ['9', '9. BIAYA YANG HARUS DIBAYAR'],
-                                    'Utang Pajak' => ['10', '10. UTANG PAJAK'],
-                                    'Uang Muka Pendapatan' => ['', 'UANG MUKA PENDAPATAN'],
-                                    'Pinjaman Jangka Pendek' => ['', 'PINJAMAN JANGKA PENDEK'],
-                                    'Kewajiban Imbalan Pasca Kerja' => ['11', '11. KEWAJIBAN IMBALAN PASCA KERJA'],
+                                    'Utang Usaha' => ['9', 'Utang Usaha'],
+                                    'Utang Lain-lain' => ['10', 'Utang Lain-lain'],
+                                    'Biaya Yang Harus Dibayar' => ['11', 'Biaya yang Harus Dibayar'],
+                                    'Utang Pajak' => ['12', 'Utang Pajak'],
+                                    'Uang Muka Pendapatan' => ['', 'Uang Muka Pendapatan'],
+                                    'Pinjaman Jangka Pendek' => ['', 'Pinjaman Jangka Pendek'],
+                                    'Kewajiban Imbalan Pasca Kerja' => ['13', 'Kewajiban Imbalan Pasca Kerja'],
                                 ];
                                 
                                 foreach ($currentLiabilityGroups as $displayName => [$noteNum, $groupKey]) {
@@ -354,11 +337,11 @@
                                 }
                                 
                                 $longTermLiabilityGroups = [
-                                    'Utang Usaha - Jk. Panjang' => ['', 'UTANG USAHA - JK. PANJANG'],
-                                    'Utang Lain-lain - Jk. Panjang' => ['', 'UTANG LAIN-LAIN - JK. PANJANG'],
-                                    'Pinjaman Jangka Panjang' => ['', 'PINJAMAN JANGKA PANJANG'],
-                                    'Kewajiban Imbalan Pasca Kerja - Jk. Panjang' => ['', 'KEWAJIBAN IMBALAN PASCA KERJA - JK. PANJANG'],
-                                    'Kewajiban Jangka Panjang Lainnya' => ['', 'KEWAJIBAN JANGKA PANJANG LAINNYA'],
+                                    'Utang Usaha - Jk. Panjang' => ['', 'Utang Usaha - Jk. Panjang'],
+                                    'Utang Lain-lain - Jk. Panjang' => ['', 'Utang Lain-lain - Jk. Panjang'],
+                                    'Pinjaman Jangka Panjang' => ['', 'Pinjaman Jangka Panjang'],
+                                    'Kewajiban Imbalan Pasca Kerja - Jk. Panjang' => ['', 'Kewajiban Imbalan Pasca Kerja - Jk. Panjang'],
+                                    'Kewajiban Jangka Panjang Lainnya' => ['', 'Kewajiban Jangka Panjang Lainnya'],
                                 ];
                                 
                                 foreach ($longTermLiabilityGroups as $displayName => [$noteNum, $groupKey]) {
@@ -416,8 +399,8 @@
                                 }
                                 
                                 $equityGroups = [
-                                    'Modal Disetor' => ['12', '12. MODAL DISETOR'],
-                                    'Saldo Laba / (Akumulasi Rugi)' => ['', 'SALDO LABA / (AKUMULASI RUGI)'],
+                                    'Modal Disetor' => ['14', 'Modal Disetor'],
+                                    'Saldo (Laba)/Rugi' => ['', 'Saldo (Laba)/Rugi'],
                                 ];
                                 
                                 foreach ($equityGroups as $displayName => [$noteNum, $groupKey]) {
@@ -453,7 +436,7 @@
                             <!-- TOTAL KEWAJIBAN & EKUITAS -->
                             <tr style="background-color: #ced4da; font-weight: bold; font-size: 17px;">
                                 <td></td>
-                                <td>&nbsp;</td>
+                                <td>TOTAL KEWAJIBAN DAN ASET BERSIH</td>
                                 @for ($m = 1; $m <= 12; $m++)
                                     <td>{{ formatAccounting($currentLiabilityTotals["month_$m"] + $longTermLiabilityTotals["month_$m"] + $equityTotals["month_$m"]) }}</td>
                                 @endfor
