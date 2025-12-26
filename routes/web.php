@@ -7,6 +7,7 @@ use App\Http\Controllers\CashBankJournalController;
 use App\Http\Controllers\CashAccountController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\BukuBesarController;
 use App\Http\Controllers\TrialBalanceReportController;
 use App\Http\Controllers\CashflowReportController;
 use App\Http\Controllers\FinancialPositionController;
@@ -179,6 +180,9 @@ Route::middleware('auth')->group(function () {
     // Comprehensive Income Report
     Route::get('/comprehensive-income', [ComprehensiveIncomeController::class, 'index'])
         ->name('comprehensive-income.index');
+    // Buku Besar
+    Route::get('/buku-besar', [BukuBesarController::class, 'index'])
+        ->name('buku-besar.index');
 
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])

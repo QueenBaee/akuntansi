@@ -313,8 +313,8 @@
                                         href="{{ route('fixed-assets.index') }}">Aset Tetap</a>
                                     <a class="dropdown-item {{ request()->routeIs('assets-in-progress.*') ? 'active' : '' }}"
                                         href="{{ route('assets-in-progress.index') }}">Aset Dalam Penyelesaian</a>
-                                    <a class="dropdown-item {{ request()->routeIs('ledger.*') ? 'active' : '' }}"
-                                        href="{{ route('ledger.index') }}">Buku Besar</a>
+                                    <a class="dropdown-item {{ request()->routeIs('buku-besar.*') ? 'active' : '' }}"
+                                        href="{{ route('buku-besar.index') }}">Buku Besar</a>
                                 </div>
                             </li>
 
