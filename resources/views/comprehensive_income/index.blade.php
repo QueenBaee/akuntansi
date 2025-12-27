@@ -68,7 +68,7 @@
                                 <th style="text-align:center">Keterangan</th>
                                 <th style="text-align:center">Note</th>
                                 @for ($m = 1; $m <= 12; $m++)
-                                    <th style="text-align:center">{{ date('j M Y', mktime(0, 0, 0, $m+1, 0, $year)) }}</th>
+                                    <th style="text-align:center">{{ date('M Y', mktime(0, 0, 0, $m, 1, $year)) }}</th>
                                 @endfor
                                 <th style="text-align:center">{{ $year }}</th>
                                 <th style="text-align:center">{{ $year - 1 }}</th>
