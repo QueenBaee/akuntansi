@@ -249,12 +249,18 @@ class TrialBalanceSeeder extends Seeder
             // Determine level
             $level = $this->getLevel($kode);
 
+            // Determine if this is a kas/bank account (asset accounts with cash/bank keywords)
+            $isKasBank = $this->isKasBankAccount($kode, $keterangan);
+            $isAset = $this->isAsetAccount($kode);
+
             $id = DB::table('trial_balances')->insertGetId([
                 'kode'          => $kode,
                 'keterangan'    => $keterangan,
                 'parent_id'     => $parentId,
                 'level'         => $level,
                 'tahun_2024'    => $this->parseNumber($val),
+                'is_kas_bank'   => $isKasBank,
+                'is_aset'       => $isAset,
                 'created_at'    => now(),
                 'updated_at'    => now(),
             ]);
@@ -303,5 +309,31 @@ class TrialBalanceSeeder extends Seeder
         if (strlen($kode) === 3) return 3;
         if (strlen($kode) === 2) return 2;
         return 1;
+    }
+
+    private function isKasBankAccount($kode, $keterangan)
+    {
+        // Kas & Bank accounts are under A11 (Kas & Setara Kas)
+        if (str_starts_with($kode, 'A11')) {
+            return true;
+        }
+        
+        // Also check for specific bank accounts in other sections
+        $bankKeywords = ['bank', 'bni', 'bca', 'mandiri', 'giro', 'tabungan', 'deposito'];
+        $keteranganLower = strtolower($keterangan);
+        
+        foreach ($bankKeywords as $keyword) {
+            if (str_contains($keteranganLower, $keyword)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private function isAsetAccount($kode)
+    {
+        // All accounts starting with 'A' are asset accounts
+        return str_starts_with($kode, 'A');
     }
 }

@@ -239,8 +239,24 @@ function editRow(id) {
         } else if (field === 'trial_balance_id') {
             const trialBalances = @json($trialBalances);
             let options = '<option value="">Pilih</option>';
+            
+            // Get current trial balance ID from the ledger data
+            const ledgerId = row.dataset.id;
+            const currentTBText = currentValue;
+            let selectedTBId = null;
+            
+            // Find the selected trial balance ID by matching the display text
+            if (currentTBText && currentTBText !== '-') {
+                const tbMatch = trialBalances.find(tb => 
+                    currentTBText.includes(tb.kode) && currentTBText.includes(tb.keterangan)
+                );
+                if (tbMatch) {
+                    selectedTBId = tbMatch.id;
+                }
+            }
+            
             trialBalances.forEach(tb => {
-                const selected = currentValue.includes(tb.kode) ? 'selected' : '';
+                const selected = (selectedTBId && tb.id == selectedTBId) ? 'selected' : '';
                 options += `<option value="${tb.id}" ${selected}>${tb.kode} - ${tb.keterangan}</option>`;
             });
             cell.innerHTML = `<select class="form-select form-select-sm">${options}</select>`;
