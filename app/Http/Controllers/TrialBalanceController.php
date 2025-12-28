@@ -84,11 +84,12 @@ class TrialBalanceController extends Controller
 
     public function create(Request $request)
     {
-        // Get parent_id from query string if you want to add child  
-        $parent_id = $request->query('parent_id');
-        $parent = $parent_id ? TrialBalance::find($parent_id) : null;
+        // Get all trial balances as potential parents
+        $parents = TrialBalance::where('level', '<', 4)
+            ->orderBy('kode')
+            ->get();
 
-        return view('trial_balance.create', compact('parent'));
+        return view('trial_balance.create', compact('parents'));
     }
 
     public function store(Request $request)
@@ -96,13 +97,12 @@ class TrialBalanceController extends Controller
         $request->validate([
             'kode' => 'required|unique:trial_balances,kode',
             'keterangan' => 'required',
+            'level' => 'required|integer|min:1|max:4',
             'parent_id' => 'nullable|exists:trial_balances,id',
             'tahun_2024' => 'nullable|numeric',
             'is_kas_bank' => 'nullable|boolean',
             'is_aset' => 'nullable|boolean'
         ]);
-
-        $level = $request->parent_id ? TrialBalance::find($request->parent_id)->level + 1 : 1;
         
         // Tentukan sort_order berdasarkan parent atau level
         $sortOrder = 1;
@@ -122,7 +122,7 @@ class TrialBalanceController extends Controller
             'kode' => $request->kode,
             'keterangan' => $request->keterangan,
             'parent_id' => $request->parent_id,
-            'level' => $level,
+            'level' => $request->level,
             'sort_order' => $sortOrder,
             'tahun_2024' => $request->tahun_2024,
             'is_kas_bank' => $request->boolean('is_kas_bank'),
