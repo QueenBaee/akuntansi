@@ -134,7 +134,13 @@ class TrialBalanceController extends Controller
 
     public function edit(TrialBalance $trial_balance)
     {
-        return view('trial_balance.edit', compact('trial_balance'));
+        // Get all trial balances as potential parents (exclude self and its children)
+        $parents = TrialBalance::where('level', '<', 4)
+            ->where('id', '!=', $trial_balance->id)
+            ->orderBy('kode')
+            ->get();
+
+        return view('trial_balance.edit', compact('trial_balance', 'parents'));
     }
 
     public function update(Request $request, TrialBalance $trial_balance)
@@ -142,12 +148,16 @@ class TrialBalanceController extends Controller
         $validated = $request->validate([
             'kode' => ['required', Rule::unique('trial_balances')->ignore($trial_balance->id)],
             'keterangan' => 'required',
+            'level' => 'required|integer|min:1|max:4',
+            'parent_id' => 'nullable|exists:trial_balances,id',
             'tahun_2024' => 'nullable|numeric',
         ]);
 
         $trial_balance->update([
             'kode' => $validated['kode'],
             'keterangan' => $validated['keterangan'],
+            'level' => $validated['level'],
+            'parent_id' => $request->parent_id,
             'tahun_2024' => $validated['tahun_2024'],
             'is_kas_bank' => $request->has('is_kas_bank'),
             'is_aset' => $request->has('is_aset'),
