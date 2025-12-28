@@ -4,7 +4,7 @@
 
 @section('page-header')
     <div class="page-pretitle">Laporan</div>
-    <h2 class="page-title">Laporan Penghasilan Komprehensif dan Laporan Laba Rugi Tahun {{ $year }}</h2>
+    <h2 class="page-title">Laporan Laba Rugi dan Penghasilan Komprehensif Lain {{ $year }}</h2>
 @endsection
 
 @section('page-actions')

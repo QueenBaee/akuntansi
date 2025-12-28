@@ -299,8 +299,7 @@
                                     <a class="dropdown-item {{ request()->routeIs('financial-position.*') ? 'active' : '' }}"
                                         href="{{ route('financial-position.index') }}">Laporan Posisi Keuangan</a>
                                     <a class="dropdown-item {{ request()->routeIs('comprehensive-income.*') ? 'active' : '' }}"
-                                        href="{{ route('comprehensive-income.index') }}">Laporan Penghasilan
-                                        Komprehensif & Laporan Laba Rugi</a>
+                                        href="{{ route('comprehensive-income.index') }}">Laporan Laba Rugi dan Penghasilan Komprehensif Lain</a>
                                     <a class="dropdown-item" href="#">Laporan Arus Kas</a>
                                     <a class="dropdown-item {{ request()->routeIs('notes-to-financial-statements.*') ? 'active' : '' }}"
                                         href="{{ route('notes-to-financial-statements.index') }}">Catatan Atas Laporan
