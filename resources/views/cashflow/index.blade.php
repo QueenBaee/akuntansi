@@ -20,6 +20,16 @@
             </svg>
             Cari
         </button>
+        @if(request('search'))
+            <a href="{{ route('cashflow.index') }}" class="btn btn-outline-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                Reset
+            </a>
+        @endif
     </form>
     <a href="{{ route('cashflow.create') }}" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
@@ -76,8 +86,16 @@
 
         function loadCashflowData() {
             console.log('FETCH CALLED');
+            
+            // Get search param from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const search = urlParams.get('search') || '';
+            
+            // Build API URL with params
+            let apiUrl = '/api/cashflow/get-data';
+            if (search) apiUrl += `?search=${encodeURIComponent(search)}`;
 
-            fetch('/api/cashflow/get-data')
+            fetch(apiUrl)
                 .then(response => {
                     console.log('RESPONSE RECEIVED', response);
                     return response.json();

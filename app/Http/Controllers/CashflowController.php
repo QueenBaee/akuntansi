@@ -217,6 +217,25 @@ class CashflowController extends Controller
     public function getData(Request $request)
     {
         try {
+            // If search is provided, return simple filtered list without hierarchy
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $items = Cashflow::with(['trialBalance', 'parent', 'children'])
+                    ->where(function($q) use ($search){
+                        $q->where('kode', 'like', "%$search%")
+                          ->orWhere('keterangan', 'like', "%$search%");
+                    })
+                    ->orderBy('kode')
+                    ->get();
+                    
+                return response()->json([
+                    'status' => 'success',
+                    'data' => [
+                        'items' => $items,
+                    ],
+                ]);
+            }
+            
             // Get transaction counts for each trial balance account
             $transactionCounts = \DB::table('cash_transactions')
                 ->join('trial_balances', function ($join) {
