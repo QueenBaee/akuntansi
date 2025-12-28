@@ -45,9 +45,7 @@ Route::middleware('auth')->post('/logout', function (\Illuminate\Http\Request $r
 })->name('logout');
 
 // Dashboard
-Route::middleware('auth')->get('/', function () {
-    return view('dashboard.index');
-})->name('dashboard');
+Route::middleware('auth')->get('/', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
 // Protected routes
 Route::middleware('auth')->group(function () {

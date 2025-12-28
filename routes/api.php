@@ -25,6 +25,16 @@ Route::prefix('auth')->group(function () {
 Route::get('trial-balance/get-data', [App\Http\Controllers\TrialBalanceController::class, 'getData']);
 Route::get('cashflow/get-data', [App\Http\Controllers\CashflowController::class, 'getData']);
 
+// Dashboard API
+Route::prefix('dashboard')->group(function () {
+    Route::get('stats', [App\Http\Controllers\DashboardController::class, 'stats']);
+    Route::get('cash-flow-chart', [App\Http\Controllers\DashboardController::class, 'cashFlowChart']);
+    Route::get('assets-by-category', [App\Http\Controllers\DashboardController::class, 'assetsByCategory']);
+    Route::get('monthly-journals', [App\Http\Controllers\DashboardController::class, 'monthlyJournals']);
+    Route::get('maklon-revenue', [App\Http\Controllers\DashboardController::class, 'maklonRevenue']);
+    Route::get('recent-transactions', [App\Http\Controllers\DashboardController::class, 'recentTransactions']);
+});
+
 // Batch Depreciation API
 Route::post('batch-depreciation/preview', [App\Http\Controllers\BatchDepreciationController::class, 'preview']);
 Route::post('batch-depreciation/process', [App\Http\Controllers\BatchDepreciationController::class, 'process']);
