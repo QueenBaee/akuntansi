@@ -194,6 +194,7 @@ Route::middleware('auth')->group(function () {
 Route::prefix('api')->group(function () {
     Route::get('accounts/search', [\App\Http\Controllers\Api\AccountSearchController::class, 'search'])->name('api.accounts.search');
     Route::get('cashflow/get-data', [CashflowController::class, 'getData'])->name('api.cashflow.get-data');
+    Route::get('trial-balance/get-data', [TrialBalanceController::class, 'getData'])->name('api.trial-balance.get-data');
     Route::get('unconverted-asset-transactions', [\App\Http\Controllers\FixedAssetController::class, 'getUnconvertedTransactions'])->name('api.unconverted-asset-transactions');
 });
 

@@ -157,7 +157,19 @@ document.addEventListener('DOMContentLoaded', function() {
 function loadTrialBalanceData() {
     console.log('FETCH CALLED');
     
-    fetch('/api/trial-balance/get-data')
+    // Get search and filter params from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const search = urlParams.get('search') || '';
+    const filterKasBank = urlParams.get('filter_kas_bank') || '';
+    
+    // Build API URL with params
+    let apiUrl = '/api/trial-balance/get-data';
+    const params = [];
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    if (filterKasBank) params.push(`filter_kas_bank=${filterKasBank}`);
+    if (params.length > 0) apiUrl += '?' + params.join('&');
+    
+    fetch(apiUrl)
         .then(response => {
             console.log('RESPONSE RECEIVED', response);
             return response.json();
