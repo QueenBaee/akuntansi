@@ -28,6 +28,7 @@ class FixedAssetController extends Controller
     public function index(Request $request)
     {
         $query = FixedAsset::regularAssets()
+            ->where('status', '!=', 'disposed')
             ->with(['assetAccount', 'accumulatedAccount', 'expenseAccount', 'creator'])
             ->orderBy('created_at', 'desc');
 
