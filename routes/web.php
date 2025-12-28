@@ -127,9 +127,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('cash-transactions', \App\Http\Controllers\Web\CashTransactionController::class);
 
     // Journals
-    Route::get('journals/create', [CashBankJournalController::class, 'create'])->name('journals.create');
-    Route::post('journals', [CashBankJournalController::class, 'store'])->name('journals.store');
-    Route::put('journals/{id}', [CashBankJournalController::class, 'update'])->name('journals.update');
+    Route::get('journals/create', [CashBankJournalController::class, 'create'])->name('journals.create')->middleware('ledger.access');
+    Route::post('journals', [CashBankJournalController::class, 'store'])->name('journals.store')->middleware('ledger.access');
+    Route::put('journals/{id}', [CashBankJournalController::class, 'update'])->name('journals.update')->middleware('ledger.access');
     Route::get('journals/{id}/attachments', [CashBankJournalController::class, 'getAttachments'])->name('journals.attachments');
     Route::delete('journals/{id}', [CashBankJournalController::class, 'destroy'])->name('journals.destroy');
     Route::resource('journals', \App\Http\Controllers\Web\JournalController::class)->except(['create', 'store', 'destroy']);

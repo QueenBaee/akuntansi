@@ -34,31 +34,46 @@ class JournalController extends Controller
 
     public function create(Request $request)
     {
-        // dd($request->get('account_id'));
-        $accounts = Account::where('is_active', true)->orderBy('code')->get();
+        $user = auth()->user();
+        
+        // Get accounts based on user access
+        if ($user->hasRole('admin')) {
+            $accounts = Account::where('is_active', true)->orderBy('code')->get();
+        } else {
+            // Non-admin users only see accounts from their accessible ledgers
+            $ledgerIds = $user->activeLedgers()->pluck('ledgers.id');
+            $accounts = Account::where('is_active', true)
+                ->whereIn('id', $ledgerIds)
+                ->orderBy('code')
+                ->get();
+        }
+        
         $cashflows = Cashflow::all();
         
-        // Get account_id from request parameter or session
-        $selectedAccountId = $request->get('account_id') ?? session('selected_cash_account_id');
+        // Get ledger_id from request parameter
+        $selectedLedgerId = $request->get('ledger_id');
         $selectedAccount = null;
         $openingBalance = 0;
         $journalsHistory = collect();
         
-        if ($selectedAccountId) {
-            // Store in session for persistence
-            session(['selected_cash_account_id' => $selectedAccountId]);
-            $selectedAccount = Account::find($selectedAccountId);
+        if ($selectedLedgerId) {
+            // Check if user has access to this ledger
+            if (!$user->hasLedgerAccess($selectedLedgerId)) {
+                abort(403, 'You do not have access to this ledger.');
+            }
+            
+            $selectedAccount = Account::find($selectedLedgerId);
             
             if ($selectedAccount) {
                 $openingBalance = $selectedAccount->opening_balance ?? 0;
                 
                 // Get journal history for this account
                 $journals = Journal::with(['details.account', 'cashflow', 'debitAccount', 'creditAccount', 'attachments'])
-                    ->where(function($q) use ($selectedAccountId) {
-                        $q->where('debit_account_id', $selectedAccountId)
-                          ->orWhere('credit_account_id', $selectedAccountId)
-                          ->orWhereHas('details', function($subQ) use ($selectedAccountId) {
-                              $subQ->where('account_id', $selectedAccountId);
+                    ->where(function($q) use ($selectedLedgerId) {
+                        $q->where('debit_account_id', $selectedLedgerId)
+                          ->orWhere('credit_account_id', $selectedLedgerId)
+                          ->orWhereHas('details', function($subQ) use ($selectedLedgerId) {
+                              $subQ->where('account_id', $selectedLedgerId);
                           });
                     })
                     ->orderBy('date', 'asc')
@@ -66,7 +81,7 @@ class JournalController extends Controller
                     ->get();
                 
                 $runningBalance = $openingBalance;
-                $journalsHistory = $journals->map(function($journal) use ($selectedAccountId, &$runningBalance, $selectedAccount) {
+                $journalsHistory = $journals->map(function($journal) use ($selectedLedgerId, &$runningBalance, $selectedAccount) {
                     // Handle both old format (using debit_account_id/credit_account_id) and new format (using details)
                     $cashIn = 0;
                     $cashOut = 0;
@@ -75,17 +90,17 @@ class JournalController extends Controller
                     
                     if ($journal->details->count() > 0) {
                         // New format with journal details
-                        $cashDetail = $journal->details->where('account_id', $selectedAccountId)->first();
+                        $cashDetail = $journal->details->where('account_id', $selectedLedgerId)->first();
                         $cashIn = $cashDetail ? $cashDetail->debit : 0;
                         $cashOut = $cashDetail ? $cashDetail->credit : 0;
                         
-                        $contraDetail = $journal->details->where('account_id', '!=', $selectedAccountId)->first();
+                        $contraDetail = $journal->details->where('account_id', '!=', $selectedLedgerId)->first();
                         $debitAccountName = $cashIn > 0 ? ($selectedAccount->code . ' - ' . $selectedAccount->name) : ($contraDetail ? $contraDetail->account->code . ' - ' . $contraDetail->account->name : '');
                         $creditAccountName = $cashOut > 0 ? ($selectedAccount->code . ' - ' . $selectedAccount->name) : ($contraDetail ? $contraDetail->account->code . ' - ' . $contraDetail->account->name : '');
                     } else {
                         // Old format using direct fields
-                        $cashIn = ($journal->debit_account_id == $selectedAccountId) ? $journal->cash_in : 0;
-                        $cashOut = ($journal->credit_account_id == $selectedAccountId) ? $journal->cash_out : 0;
+                        $cashIn = ($journal->debit_account_id == $selectedLedgerId) ? $journal->cash_in : 0;
+                        $cashOut = ($journal->credit_account_id == $selectedLedgerId) ? $journal->cash_out : 0;
                         
                         $debitAccountName = $journal->debitAccount ? ($journal->debitAccount->code . ' - ' . $journal->debitAccount->name) : '';
                         $creditAccountName = $journal->creditAccount ? ($journal->creditAccount->code . ' - ' . $journal->creditAccount->name) : '';
@@ -132,6 +147,12 @@ class JournalController extends Controller
         
         try {
             $cashAccountId = $request->selected_cash_account_id;
+            
+            // Check if user has access to this ledger
+            $user = auth()->user();
+            if (!$user->hasLedgerAccess($cashAccountId)) {
+                abort(403, 'You do not have access to this ledger.');
+            }
             
             // Get opening balance for validation
             $account = Account::find($cashAccountId);
@@ -218,7 +239,7 @@ class JournalController extends Controller
                 }
             }
 
-            return redirect()->route('journals.create', ['account_id' => $cashAccountId])
+            return redirect()->route('journals.create', ['ledger_id' => $cashAccountId])
                 ->with('success', 'Jurnal berhasil disimpan');
 
         } catch (\Exception $e) {

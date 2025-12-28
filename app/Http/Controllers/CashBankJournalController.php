@@ -24,6 +24,7 @@ class CashBankJournalController extends Controller
     }
     public function create(Request $request)
     {
+        $user = auth()->user();
         $selectedLedger = null;
         $selectedAccount = null;
         $openingBalance = 0;
@@ -31,6 +32,10 @@ class CashBankJournalController extends Controller
         $year = $request->get('year', date('Y'));
 
         if ($request->filled('ledger_id')) {
+            // Check if user has access to this ledger
+            if (!$user->hasLedgerAccess($request->ledger_id)) {
+                abort(403, 'You do not have access to this ledger.');
+            }
 
             // Pakai eager loading trialBalance
             $selectedLedger = Ledger::with('trialBalance')->find($request->ledger_id);
@@ -47,7 +52,18 @@ class CashBankJournalController extends Controller
             }
         }
 
-        $accounts = TrialBalance::orderBy('kode')->where('level', 4)->get();
+        // Filter accounts based on user access
+        if ($user->hasRole('admin')) {
+            $accounts = TrialBalance::orderBy('kode')->where('level', 4)->get();
+        } else {
+            // Non-admin users only see accounts from their accessible ledgers
+            $ledgerIds = $user->activeLedgers()->pluck('ledgers.id');
+            $accounts = TrialBalance::whereIn('id', $ledgerIds)
+                ->orderBy('kode')
+                ->where('level', 4)
+                ->get();
+        }
+        
         $cashflows = Cashflow::orderBy('kode')->where('level', 3)->get();
 
         return view('journals.create', compact(
@@ -125,6 +141,13 @@ class CashBankJournalController extends Controller
 
         DB::transaction(function () use ($validated, $request) {
             $cashAccountId = $validated['selected_cash_account_id'];
+            
+            // Check if user has access to this ledger
+            $user = auth()->user();
+            if (!$user->hasLedgerAccess($request->input('ledger_id'))) {
+                abort(403, 'You do not have access to this ledger.');
+            }
+            
             $currentBalance = $this->calculateCurrentBalance($cashAccountId);
 
             foreach ($validated['entries'] as $i => $entry) {
