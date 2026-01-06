@@ -11,7 +11,7 @@ class TrialBalanceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TrialBalance::with('children')->whereNull('parent_id')->orderBy('sort_order');
+        $query = TrialBalance::with('children')->whereNull('parent_id')->orderBy('sort_order')->orderBy('kode');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -45,9 +45,9 @@ class TrialBalanceController extends Controller
         }
 
         $items = $query->with(['children' => function($query) {
-            $query->orderBy('sort_order')->with(['children' => function($subQuery) {
-                $subQuery->orderBy('sort_order')->with(['children' => function($subSubQuery) {
-                    $subSubQuery->orderBy('sort_order');
+            $query->orderBy('sort_order')->orderBy('kode')->with(['children' => function($subQuery) {
+                $subQuery->orderBy('sort_order')->orderBy('kode')->with(['children' => function($subSubQuery) {
+                    $subSubQuery->orderBy('sort_order')->orderBy('kode');
                 }]);
             }]);
         }])->get();
@@ -61,6 +61,7 @@ class TrialBalanceController extends Controller
         // Ambil Beban (E) untuk group
         $bebanItems = TrialBalance::where('kode', 'like', 'E%')
             ->orderBy('sort_order')
+            ->orderBy('kode')
             ->get()
             ->groupBy(function($item){
                 return substr($item->kode, 0, 2); // E1, E2, E3, E9
@@ -104,18 +105,27 @@ class TrialBalanceController extends Controller
             'is_aset' => 'nullable|boolean'
         ]);
         
-        // Tentukan sort_order berdasarkan parent atau level
+        // Tentukan sort_order berdasarkan parent
         $sortOrder = 1;
         if ($request->parent_id) {
-            $lastChild = TrialBalance::where('parent_id', $request->parent_id)
-                ->orderBy('sort_order', 'desc')
-                ->first();
-            $sortOrder = $lastChild ? $lastChild->sort_order + 1 : 1;
+            $parent = TrialBalance::find($request->parent_id);
+            $sortOrder = $parent ? $parent->sort_order : 1;
         } else {
-            $lastRoot = TrialBalance::whereNull('parent_id')
-                ->orderBy('sort_order', 'desc')
-                ->first();
-            $sortOrder = $lastRoot ? $lastRoot->sort_order + 1 : 1;
+            // Untuk root account, tentukan berdasarkan kode
+            $firstLetter = strtoupper(substr($request->kode, 0, 1));
+            $sortOrder = match($firstLetter) {
+                'A' => 1,
+                'L' => 2, 
+                'C' => 3,
+                'R' => 4,
+                default => 5
+            };
+            
+            // Cek jika memorial/pindah buku
+            if (stripos($request->keterangan, 'memorial') !== false || 
+                stripos($request->keterangan, 'pindah buku') !== false) {
+                $sortOrder = 6;
+            }
         }
 
         TrialBalance::create([
@@ -153,11 +163,37 @@ class TrialBalanceController extends Controller
             'tahun_2024' => 'nullable|numeric',
         ]);
 
+        // Update sort_order jika parent berubah
+        $sortOrder = $trial_balance->sort_order;
+        if ($request->parent_id != $trial_balance->parent_id) {
+            if ($request->parent_id) {
+                $parent = TrialBalance::find($request->parent_id);
+                $sortOrder = $parent ? $parent->sort_order : 1;
+            } else {
+                // Untuk root account, tentukan berdasarkan kode
+                $firstLetter = strtoupper(substr($validated['kode'], 0, 1));
+                $sortOrder = match($firstLetter) {
+                    'A' => 1,
+                    'L' => 2,
+                    'C' => 3, 
+                    'R' => 4,
+                    default => 5
+                };
+                
+                // Cek jika memorial/pindah buku
+                if (stripos($validated['keterangan'], 'memorial') !== false ||
+                    stripos($validated['keterangan'], 'pindah buku') !== false) {
+                    $sortOrder = 6;
+                }
+            }
+        }
+
         $trial_balance->update([
             'kode' => $validated['kode'],
             'keterangan' => $validated['keterangan'],
             'level' => $validated['level'],
             'parent_id' => $request->parent_id,
+            'sort_order' => $sortOrder,
             'tahun_2024' => $validated['tahun_2024'],
             'is_kas_bank' => $request->has('is_kas_bank'),
             'is_aset' => $request->has('is_aset'),
@@ -217,7 +253,7 @@ class TrialBalanceController extends Controller
     public function getData(Request $request)
     {
         try {
-            $query = TrialBalance::orderBy('sort_order');
+            $query = TrialBalance::orderBy('sort_order')->orderBy('kode');
             
             // Apply search filter
             if ($request->filled('search')) {
