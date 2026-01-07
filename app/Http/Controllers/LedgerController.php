@@ -10,38 +10,17 @@ class LedgerController extends Controller
 {
     private function getTrialBalances($type = null)
     {
-        $query = TrialBalance::where('tahun_2024', '>', 0);
+        $query = TrialBalance::query();
         
         if ($type === 'kas') {
-            $query->where(function($q) {
-                $q->where('kode', 'A11-01')
-                  ->orWhere('keterangan', 'like', '%kas%');
-            });
+            // Cash: A11-00 to A11-19
+            $query->where('kode', 'REGEXP', '^A11-0[0-9]$|^A11-1[0-9]$');
         } elseif ($type === 'bank') {
-            $query->where(function($q) {
-                $q->where('keterangan', 'like', '%bank%')
-                  ->orWhere('keterangan', 'like', '%bni%')
-                  ->orWhere('keterangan', 'like', '%bca%')
-                  ->orWhere('keterangan', 'like', '%giro%')
-                  ->orWhere('keterangan', 'like', '%tab%')
-                  ->orWhere('keterangan', 'like', '%deposito%');
-            });
+            // Bank: A11-20 to A11-49
+            $query->where('kode', 'REGEXP', '^A11-[2-4][0-9]$');
         } else {
-            $query->where(function($q) {
-                $q->where('kode', 'like', 'A11%')
-                  ->orWhere(function($subQuery) {
-                      $subQuery->where('kode', 'like', 'A%')
-                               ->where(function($bankQuery) {
-                                   $bankQuery->where('keterangan', 'like', '%kas%')
-                                            ->orWhere('keterangan', 'like', '%bank%')
-                                            ->orWhere('keterangan', 'like', '%bni%')
-                                            ->orWhere('keterangan', 'like', '%bca%')
-                                            ->orWhere('keterangan', 'like', '%giro%')
-                                            ->orWhere('keterangan', 'like', '%tab%')
-                                            ->orWhere('keterangan', 'like', '%deposito%');
-                               });
-                  });
-            });
+            // All cash and bank accounts
+            $query->where('kode', 'REGEXP', '^A11-[0-4][0-9]$');
         }
         
         return $query->orderBy('kode')->get();
