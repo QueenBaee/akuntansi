@@ -21,12 +21,38 @@
             <div class="card">
 
 
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto;">
                     <style>
                         .tb-text {
                             display: flex;
                             align-items: center;
                             font-size: 14px;
+                        }
+
+                        .no-equal-width thead th:nth-child(1) {
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                            font-weight: 600 !important;
+                            background-color: #f8f9fa !important;
+                            width: auto !important;
+                            position: sticky;
+                            top: 0;
+                            left: 0;
+                            z-index: 12;
+                            border-bottom: 2px solid #dee2e6;
+                        }
+
+                        .no-equal-width thead th:nth-child(2) {
+                            text-align: center !important;
+                            vertical-align: middle !important;
+                            font-weight: 600 !important;
+                            background-color: #f8f9fa !important;
+                            width: auto !important;
+                            position: sticky;
+                            top: 0;
+                            left: 80px;
+                            z-index: 12;
+                            border-bottom: 2px solid #dee2e6;
                         }
 
                         .no-equal-width thead th {
@@ -35,6 +61,10 @@
                             font-weight: 600 !important;
                             background-color: #f8f9fa !important;
                             width: auto !important;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+                            border-bottom: 2px solid #dee2e6;
                         }
 
                         .no-equal-width tbody td:nth-child(1) {
@@ -42,6 +72,10 @@
                             width: 80px !important;
                             text-align: left !important;
                             font-weight: 600 !important;
+                            position: sticky;
+                            left: 0;
+                            background-color: #f8f9fa;
+                            z-index: 11;
                         }
 
                         .no-equal-width tbody td:nth-child(2) {
@@ -49,6 +83,10 @@
                             width: auto !important;
                             text-align: left !important;
                             white-space: nowrap !important;
+                            position: sticky;
+                            left: 80px;
+                            background-color: #f8f9fa;
+                            z-index: 11;
                         }
 
                         .no-equal-width tbody td:not(:nth-child(1)):not(:nth-child(2)) {

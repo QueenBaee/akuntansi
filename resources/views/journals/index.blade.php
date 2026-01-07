@@ -83,10 +83,10 @@
             <div class="card-header">
                 <h3 class="card-title">Daftar Jurnal</h3>
             </div>
-            <div class="table-responsive">
+            <div class="table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto;">
                 <table class="table table-vcenter card-table">
                     <thead>
-                        <tr>
+                        <tr style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10; border-bottom: 2px solid #dee2e6;">
                             <th style="text-align:center">Tanggal</th>
                             <th style="text-align:center">Referensi</th>
                             <th style="text-align:center">Deskripsi</th>

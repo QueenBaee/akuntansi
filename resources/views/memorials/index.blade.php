@@ -29,9 +29,9 @@
     <div class="col-12 p-0">
         <div class="card m-0">
             <div class="card-body p-0">
-                <div class="table-responsive">
+                <div class="table-responsive" style="max-height: calc(100vh - 250px); overflow-y: auto;">
                     <table class="table table-bordered table-striped m-0">
-                        <thead class="table-light">
+                        <thead class="table-light" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10; border-bottom: 2px solid #dee2e6;">
                             <tr>
                                 <th class="text-center" style="text-align:center">Tanggal</th>
                                 <th class="text-center" style="text-align:center">Keterangan</th>

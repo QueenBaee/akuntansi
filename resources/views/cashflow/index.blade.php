@@ -49,6 +49,25 @@
             width: 1%;
             white-space: nowrap;
         }
+        
+        /* Auto height based on screen */
+        .card {
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        
+        /* Sticky header */
+        .table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
     </style>
     <div class="row">
         <div class="col-12">

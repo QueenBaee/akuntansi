@@ -101,14 +101,27 @@
         text-transform: uppercase !important;
     }
     
+    /* Table container with max height and scroll */
+    .table-responsive {
+        max-height: calc(100vh - 250px);
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+    }
+    
+    /* Sticky header */
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        border-bottom: 2px solid #dee2e6;
+    }
+    
     /* Make table fill full width */
     .table {
         width: 100% !important;
         table-layout: auto !important;
-    }
-    
-    .table-responsive {
-        width: 100% !important;
+        margin-bottom: 0;
     }
 </style>
 <div class="row">

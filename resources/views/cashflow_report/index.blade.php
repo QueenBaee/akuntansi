@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div style="overflow-x: auto;">
+                <div style="overflow-x: auto; max-height: calc(100vh - 250px); overflow-y: auto;">
                     <style>
                         .no-equal-width td,
                         .no-equal-width th {
@@ -35,15 +35,41 @@
                             vertical-align: middle !important;
                             font-weight: 600 !important;
                             background-color: #f8f9fa !important;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+                            border-bottom: 2px solid #dee2e6;
+                        }
+
+                        .no-equal-width th:nth-child(1) {
+                            position: sticky;
+                            top: 0;
+                            left: 0;
+                            z-index: 12;
+                        }
+
+                        .no-equal-width th:nth-child(2) {
+                            position: sticky;
+                            top: 0;
+                            left: 80px;
+                            z-index: 12;
                         }
 
                         .no-equal-width td:nth-child(1) {
                             text-align: left !important;
                             font-weight: 600 !important;
+                            position: sticky;
+                            left: 0;
+                            background-color: #f8f9fa;
+                            z-index: 11;
                         }
 
                         .no-equal-width td:nth-child(2) {
                             text-align: left !important;
+                            position: sticky;
+                            left: 80px;
+                            background-color: #f8f9fa;
+                            z-index: 11;
                         }
 
                         .no-equal-width td:nth-child(n+3):nth-child(-n+14) {
