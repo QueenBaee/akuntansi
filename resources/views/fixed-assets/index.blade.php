@@ -65,6 +65,7 @@ use App\Helpers\AssetGroupHelper;
                         <th style="text-align:center">Tanggal Perolehan</th>
                         <th style="text-align:center">Tarif (%)</th>
                         <th style="text-align:center">Harga Perolehan</th>
+                        <th style="text-align:center">Akumulasi Penyusutan</th>
                         <th class="w-1" style="text-align:center">Aksi</th>
                     </tr>
                 </thead>
@@ -74,6 +75,7 @@ use App\Helpers\AssetGroupHelper;
                         <tr class="account-header">
                             <td class="text-center">-</td>
                             <td><strong>{{ $accountName }}</strong></td>
+                            <td>-</td>
                             <td>-</td>
                             <td>-</td>
                             <td>-</td>
@@ -89,6 +91,7 @@ use App\Helpers\AssetGroupHelper;
                                 <td>-</td>
                                 <td>-</td>
                                 <td>-</td>
+                                <td>-</td>
                             </tr>
                             @foreach($assets as $asset)
                                 <tr>
@@ -98,6 +101,7 @@ use App\Helpers\AssetGroupHelper;
                                     <td class="text-center">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('d/m/Y') : '-' }}</td>
                                     <td class="text-center">{{ $asset->depreciation_rate ? number_format($asset->depreciation_rate, 2) : '-' }}</td>
                                     <td class="text-end">{{ $asset->acquisition_price ? number_format($asset->acquisition_price, 0, ',', '.') : '-' }}</td>
+                                    <td class="text-end">{{ $asset->accumulated_depreciation ? number_format($asset->accumulated_depreciation, 0, ',', '.') : '0' }}</td>
                                     <td>
                                         <div class="btn-list flex-nowrap">
                                             <a href="/fixed-assets/{{ $asset->id }}" class="btn btn-sm btn-white">Detail</a>
@@ -118,6 +122,7 @@ use App\Helpers\AssetGroupHelper;
                         <tr>
                             <td class="text-center text-muted">-</td>
                             <td class="text-center text-muted">Tidak ada data aset tetap</td>
+                            <td class="text-center text-muted">-</td>
                             <td class="text-center text-muted">-</td>
                             <td class="text-center text-muted">-</td>
                             <td class="text-center text-muted">-</td>
