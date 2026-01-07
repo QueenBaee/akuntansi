@@ -14,7 +14,8 @@ class Cashflow extends Model
         'keterangan',
         'level',
         'parent_id',
-        'trial_balance_id'
+        'trial_balance_id',
+        'sort_order'
     ];
 
     public function parent()

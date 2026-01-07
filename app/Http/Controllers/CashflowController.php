@@ -16,6 +16,7 @@ class CashflowController extends Controller
                     $q->where('kode', 'like', "%{$request->search}%")
                         ->orWhere('keterangan', 'like', "%{$request->search}%");
                 })
+                ->orderBy('sort_order')
                 ->orderBy('kode');
             $cashflows = $query->get();
         } else {
@@ -62,10 +63,7 @@ class CashflowController extends Controller
         }
 
         $children = $grouped[$parentId]->sortBy(function ($item) {
-            // Custom sorting untuk urutan yang benar
-            $kode = $this->normalizeKode($item->kode);
-
-            return $kode;
+            return [$item->sort_order, $this->normalizeKode($item->kode)];
         });
 
         foreach ($children as $child) {
@@ -110,9 +108,7 @@ class CashflowController extends Controller
         }
 
         $children = $grouped[$parentId]->sortBy(function ($item) {
-            $kode = $this->normalizeKode($item->kode);
-
-            return $kode;
+            return [$item->sort_order, $this->normalizeKode($item->kode)];
         });
 
         foreach ($children as $child) {
@@ -164,12 +160,23 @@ class CashflowController extends Controller
 
     public function store(Request $request)
     {
+        // Determine sort_order based on kode
+        $sortOrder = 4; // default
+        $firstLetter = strtoupper(substr($request->kode, 0, 1));
+        $sortOrder = match($firstLetter) {
+            'R' => 1,
+            'E' => 2,
+            'F' => 3,
+            default => 4
+        };
+
         Cashflow::create([
             'kode' => $request->kode,
             'keterangan' => $request->keterangan,
             'parent_id' => $request->parent_id,
             'trial_balance_id' => $request->trial_balance_id,
             'level' => $request->level,
+            'sort_order' => $sortOrder,
         ]);
 
         return redirect()->route('cashflow.index');
@@ -194,11 +201,24 @@ class CashflowController extends Controller
     {
         $cashflow = Cashflow::findOrFail($id);
 
+        // Determine sort_order if kode changed
+        $sortOrder = $cashflow->sort_order;
+        if ($request->kode !== $cashflow->kode) {
+            $firstLetter = strtoupper(substr($request->kode, 0, 1));
+            $sortOrder = match($firstLetter) {
+                'R' => 1,
+                'E' => 2,
+                'F' => 3,
+                default => 4
+            };
+        }
+
         $cashflow->update([
             'kode' => $request->kode,
             'keterangan' => $request->keterangan,
             'parent_id' => $request->parent_id,
             'trial_balance_id' => $cashflow->level == 3 ? $request->trial_balance_id : null,
+            'sort_order' => $sortOrder,
         ]);
 
         return redirect()->route('cashflow.index');
@@ -225,6 +245,7 @@ class CashflowController extends Controller
                         $q->where('kode', 'like', "%$search%")
                           ->orWhere('keterangan', 'like', "%$search%");
                     })
+                    ->orderBy('sort_order')
                     ->orderBy('kode')
                     ->get();
                     
