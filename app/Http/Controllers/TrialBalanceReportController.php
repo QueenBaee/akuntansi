@@ -5,228 +5,336 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\TrialBalance;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class TrialBalanceReportController extends Controller
 {
+    private const BASE_YEAR = 2024;
+    private const START_BASE_YEAR = 2025;
+    private const MONTHS_IN_YEAR = 12;
+    private const MEMORY_LIMIT = '512M';
+    private const TIME_LIMIT = 300;
+
     public function index(Request $request)
     {
-        set_time_limit(300); // 5 minutes
-        ini_set('memory_limit', '512M');
+        $this->setResourceLimits();
         
         $year = $request->year ?? date('Y');
         $previousYear = $year - 1;
-
-        // Ambil master akun TB
+        
         $items = TrialBalance::orderBy('id')->get();
-
-        /**
-         * =======================================================
-         * 1. Saldo dasar dari tahun_2024
-         * =======================================================
-         */
-        $baseSaldo = [];
-        foreach ($items as $it) {
-            $baseSaldo[$it->id] = $it->tahun_2024 ?? 0;
-        }
-
-        /**
-         * =======================================================
-         * 2. Hitung SALDO AWAL untuk tahun berjalan
-         *    opening = tahun_2024 + mutasi(2025..previousYear)
-         * =======================================================
-         */
-        $startBaseYear = 2025;
-        $openingBalance = [];
-
-        if ($previousYear >= $startBaseYear) {
-
-            // Mutasi debit
-            $debitPrev = DB::table('journals')
-                ->select(
-                    DB::raw("debit_account_id AS account_id"),
-                    DB::raw("SUM(total_debit) AS debit_amount"),
-                    DB::raw("0 AS credit_amount")
-                )
-                ->whereYear('date', '>=', $startBaseYear)
-                ->whereYear('date', '<=', $previousYear)
-                ->whereNull('deleted_at')
-                ->groupBy('account_id');
-
-            // Mutasi kredit
-            $creditPrev = DB::table('journals')
-                ->select(
-                    DB::raw("credit_account_id AS account_id"),
-                    DB::raw("0 AS debit_amount"),
-                    DB::raw("SUM(total_credit) AS credit_amount")
-                )
-                ->whereYear('date', '>=', $startBaseYear)
-                ->whereYear('date', '<=', $previousYear)
-                ->whereNull('deleted_at')
-                ->groupBy('account_id');
-
-            $prevQuery = $debitPrev
-                ->unionAll($creditPrev)
-                ->get()
-                ->groupBy('account_id');
-
-            foreach ($items as $it) {
-
-                $rows = $prevQuery[$it->id] ?? collect();
-
-                $debit  = $rows->sum('debit_amount');
-                $credit = $rows->sum('credit_amount');
-
-                $openingBalance[$it->id] = ($baseSaldo[$it->id] ?? 0) + ($debit - $credit);
-            }
-
-        } else {
-            // Tahun 2025 → saldo awal = master TB
-            foreach ($items as $it) {
-                $openingBalance[$it->id] = $baseSaldo[$it->id] ?? 0;
-            }
-        }
-
-        /**
-         * =======================================================
-         * 3. Mutasi tahun berjalan (per bulan)
-         *    debit(+) kredit(-)
-         * =======================================================
-         */
-
-        // Mutasi DEBIT per bulan
-        $debits = DB::table('journals')
-            ->select(
-                DB::raw("debit_account_id AS account_id"),
-                DB::raw("MONTH(date) AS month"),
-                DB::raw("SUM(total_debit) AS debit_amount"),
-                DB::raw("0 AS credit_amount")
-            )
-            ->whereYear('date', $year)
-            ->whereNull('deleted_at')
-            ->groupBy('account_id', 'month');
-
-        // Mutasi KREDIT per bulan
-        $credits = DB::table('journals')
-            ->select(
-                DB::raw("credit_account_id AS account_id"),
-                DB::raw("MONTH(date) AS month"),
-                DB::raw("0 AS debit_amount"),
-                DB::raw("SUM(total_credit) AS credit_amount")
-            )
-            ->whereYear('date', $year)
-            ->whereNull('deleted_at')
-            ->groupBy('account_id', 'month');
-
-        // Gabungkan debit + kredit
-        $journalMonthly = $debits
-            ->unionAll($credits)
-            ->get()
-            ->groupBy('account_id');
-
-        /**
-         * =======================================================
-         * 4. Hitung saldo per bulan
-         * =======================================================
-         */
-        $data = [];
-
-        foreach ($items as $item) {
-
-            $saldo = $openingBalance[$item->id] ?? 0;
-            $row = [];
-
-            for ($m = 1; $m <= 12; $m++) {
-
-                $trx = $journalMonthly[$item->id] ?? collect();
-
-                $debit  = $trx->where('month', $m)->sum('debit_amount');
-                $credit = $trx->where('month', $m)->sum('credit_amount');
-
-                $saldo = $saldo + $debit - $credit;
-
-                $row["month_$m"] = $saldo;
-            }
-
-            $row['total']   = $saldo;
-            $row['opening'] = $openingBalance[$item->id] ?? 0;
-
-            $data[$item->id] = $row;
-        }
-
-        /**
-         * =======================================================
-         * 5. Apply custom calculation rules
-         * =======================================================
-         */
-        $c2101 = $items->where('kode', 'C21-01')->first();
-        $c2102 = $items->where('kode', 'C21-02')->first();
-        $c2199 = $items->where('kode', 'C21-99')->first();
-
-        if ($c2101 && $c2102 && $c2199) {
-            // Simpan nilai original sebelum custom rules
-            $originalC2101Opening = $data[$c2101->id]['opening'];
-            $originalC2102Opening = $data[$c2102->id]['opening'];
-            $originalC2199Opening = $data[$c2199->id]['opening'];
-            
-            // Hitung C21-01 opening balance dari penjumlahan 3 variabel
-            $c2101OpeningSum = $originalC2101Opening + $originalC2102Opening + $originalC2199Opening;
-            $data[$c2101->id]['opening'] = $c2101OpeningSum;
-            
-            // Tetap tampilkan C21-99 opening original untuk display
-            $data[$c2199->id]['opening'] = $originalC2199Opening;
-            
-            // Reset C21-02 opening ke 0 karena sudah dijumlahkan ke C21-01  
-            $data[$c2102->id]['opening'] = 0;
-            
-            // Simpan perubahan C21-99 per bulan untuk digunakan di C21-01
-            $c2199Changes = [];
-            
-            // Hitung perubahan C21-99 per bulan dan reset semua bulan ke 0 dulu
-            for ($m = 1; $m <= 12; $m++) {
-                $data[$c2199->id]["month_$m"] = 0; // Reset semua bulan ke 0
-                
-                $monthlyChange = 0;
-                $hasTransactionInHigherAccounts = false;
-                
-                foreach ($items as $item) {
-                    if ($item->id > $c2199->id) {
-                        $trx = $journalMonthly[$item->id] ?? collect();
-                        $debit = $trx->where('month', $m)->sum('debit_amount');
-                        $credit = $trx->where('month', $m)->sum('credit_amount');
-                        
-                        if ($debit > 0 || $credit > 0) {
-                            $hasTransactionInHigherAccounts = true;
-                            $monthlyChange += ($debit - $credit);
-                        }
-                    }
-                }
-                
-                // Simpan perubahan untuk digunakan di C21-01
-                $c2199Changes[$m] = $hasTransactionInHigherAccounts ? $monthlyChange : 0;
-                
-                // C21-99 hanya tampilkan perubahan jika ada transaksi
-                if ($hasTransactionInHigherAccounts) {
-                    $data[$c2199->id]["month_$m"] = $monthlyChange;
-                }
-            }
-            
-            // Hitung C21-01 menggunakan opening yang sudah dijumlahkan + perubahan C21-99
-            for ($m = 1; $m <= 12; $m++) {
-                if ($m == 1) {
-                    // Month 1: gunakan opening yang sudah dijumlahkan + perubahan C21-99 bulan ini
-                    $data[$c2101->id]["month_$m"] = $c2101OpeningSum + $c2199Changes[$m];
-                } else {
-                    // Month 2-12: gunakan bulan sebelumnya + perubahan C21-99 bulan ini
-                    $prevMonth = $m - 1;
-                    $data[$c2101->id]["month_$m"] = $data[$c2101->id]["month_$prevMonth"] + $c2199Changes[$m];
-                }
-            }
-
-            // Update totals for modified accounts
-            $data[$c2101->id]['total'] = $data[$c2101->id]['month_12'];
-            $data[$c2199->id]['total'] = array_sum($c2199Changes);
-        }
-
+        $baseSaldo = $this->extractBaseSaldo($items);
+        
+        $openingBalance = $this->calculateOpeningBalance($items, $baseSaldo, $previousYear);
+        $journalMonthly = $this->getMonthlyJournalMutations($year);
+        
+        $data = $this->calculateMonthlyBalances($items, $openingBalance, $journalMonthly);
+        $data = $this->applyC21CustomRules($items, $data, $journalMonthly, $year);
+        
         return view('trial_balance_report.index', compact('items', 'data', 'year'));
+    }
+
+    private function setResourceLimits(): void
+    {
+        set_time_limit(self::TIME_LIMIT);
+        ini_set('memory_limit', self::MEMORY_LIMIT);
+    }
+
+    private function extractBaseSaldo(Collection $items): array
+    {
+        return $items->mapWithKeys(fn($item) => [$item->id => $item->tahun_2024 ?? 0])->toArray();
+    }
+
+    private function calculateOpeningBalance(Collection $items, array $baseSaldo, int $previousYear): array
+    {
+        if ($previousYear < self::START_BASE_YEAR) {
+            return $baseSaldo;
+        }
+
+        $mutations = $this->getYearRangeMutations(self::START_BASE_YEAR, $previousYear);
+        
+        return $items->mapWithKeys(function ($item) use ($baseSaldo, $mutations) {
+            $rows = $mutations[$item->id] ?? collect();
+            $netMutation = $rows->sum('debit_amount') - $rows->sum('credit_amount');
+            
+            return [$item->id => ($baseSaldo[$item->id] ?? 0) + $netMutation];
+        })->toArray();
+    }
+
+    private function getYearRangeMutations(int $startYear, int $endYear): Collection
+    {
+        $debitQuery = $this->buildMutationQuery('debit_account_id', 'total_debit', $startYear, $endYear, true);
+        $creditQuery = $this->buildMutationQuery('credit_account_id', 'total_credit', $startYear, $endYear, false);
+        
+        return $debitQuery->unionAll($creditQuery)->get()->groupBy('account_id');
+    }
+
+    private function getMonthlyJournalMutations(int $year): Collection
+    {
+        $debitQuery = $this->buildMonthlyMutationQuery('debit_account_id', 'total_debit', $year, true);
+        $creditQuery = $this->buildMonthlyMutationQuery('credit_account_id', 'total_credit', $year, false);
+        
+        return $debitQuery->unionAll($creditQuery)->get()->groupBy('account_id');
+    }
+
+    private function buildMutationQuery(string $accountField, string $amountField, int $startYear, int $endYear, bool $isDebit)
+    {
+        return DB::table('journals')
+            ->select([
+                DB::raw("$accountField AS account_id"),
+                DB::raw($isDebit ? "SUM($amountField) AS debit_amount" : "0 AS debit_amount"),
+                DB::raw($isDebit ? "0 AS credit_amount" : "SUM($amountField) AS credit_amount")
+            ])
+            ->whereYear('date', '>=', $startYear)
+            ->whereYear('date', '<=', $endYear)
+            ->whereNull('deleted_at')
+            ->groupBy('account_id');
+    }
+
+    private function buildMonthlyMutationQuery(string $accountField, string $amountField, int $year, bool $isDebit)
+    {
+        return DB::table('journals')
+            ->select([
+                DB::raw("$accountField AS account_id"),
+                DB::raw("MONTH(date) AS month"),
+                DB::raw($isDebit ? "SUM($amountField) AS debit_amount" : "0 AS debit_amount"),
+                DB::raw($isDebit ? "0 AS credit_amount" : "SUM($amountField) AS credit_amount")
+            ])
+            ->whereYear('date', $year)
+            ->whereNull('deleted_at')
+            ->groupBy('account_id', 'month');
+    }
+
+    private function calculateMonthlyBalances(Collection $items, array $openingBalance, Collection $journalMonthly): array
+    {
+        return $items->mapWithKeys(function ($item) use ($openingBalance, $journalMonthly) {
+            $isRevenueExpense = $this->isRevenueOrExpense($item->kode);
+            $transactions = $journalMonthly[$item->id] ?? collect();
+            
+            $row = $this->processMonthlyTransactions(
+                $transactions,
+                $openingBalance[$item->id] ?? 0,
+                $isRevenueExpense
+            );
+            
+            $row['opening'] = $openingBalance[$item->id] ?? 0;
+            
+            return [$item->id => $row];
+        })->toArray();
+    }
+
+    private function processMonthlyTransactions(Collection $transactions, float $opening, bool $isRevenueExpense): array
+    {
+        $row = [];
+        $runningBalance = $opening;
+        $totalMutasi = 0;
+
+        for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+            $netMutation = $this->calculateNetMutation($transactions, $month);
+            
+            if ($isRevenueExpense) {
+                $row["month_$month"] = $netMutation;
+                $totalMutasi += $netMutation;
+            } else {
+                $runningBalance += $netMutation;
+                $row["month_$month"] = $runningBalance;
+            }
+        }
+
+        $row['total'] = $isRevenueExpense ? $totalMutasi : $runningBalance;
+        
+        return $row;
+    }
+
+    private function calculateNetMutation(Collection $transactions, int $month): float
+    {
+        $monthTransactions = $transactions->where('month', $month);
+        return $monthTransactions->sum('debit_amount') - $monthTransactions->sum('credit_amount');
+    }
+
+    private function isRevenueOrExpense(string $code): bool
+    {
+        return str_starts_with($code, 'R') || str_starts_with($code, 'E');
+    }
+
+    private function applyC21CustomRules(Collection $items, array $data, Collection $journalMonthly, int $year): array
+    {
+        $c21Accounts = $this->getC21Accounts($items);
+        
+        if (!$this->hasAllC21Accounts($c21Accounts)) {
+            return $data;
+        }
+
+        $c2199Opening = $this->calculateC2199Opening($items, $year);
+        $c2101Opening = $this->calculateC2101Opening($items, $year, $c2199Opening);
+
+        $c2102Monthly = $this->getAccountMonthlyMutation($c21Accounts['c2102']->id, $journalMonthly);
+        $c2199Monthly = $this->getC2199MonthlyMutation($items, $journalMonthly);
+
+        $data = $this->applyC2101Rules($c21Accounts['c2101'], $data, $c2101Opening, $c2199Opening, $c2199Monthly);
+        $data = $this->applyC2102Rules($c21Accounts['c2102'], $data, $c2102Monthly);
+        $data = $this->applyC2199Rules($c21Accounts['c2199'], $data, $c2199Opening, $c2199Monthly);
+
+        return $data;
+    }
+
+    private function getC21Accounts(Collection $items): array
+    {
+        return [
+            'c2101' => $items->where('kode', 'C21-01')->first(),
+            'c2102' => $items->where('kode', 'C21-02')->first(),
+            'c2199' => $items->where('kode', 'C21-99')->first(),
+        ];
+    }
+
+    private function hasAllC21Accounts(array $accounts): bool
+    {
+        return $accounts['c2101'] && $accounts['c2102'] && $accounts['c2199'];
+    }
+
+    private function calculateC2199Opening(Collection $items, int $year): float
+    {
+        if ($year <= self::BASE_YEAR) {
+            return 0;
+        }
+
+        $c2199 = $items->where('kode', 'C21-99')->first();
+        $base2024 = $c2199?->tahun_2024 ?? 0;
+
+        if ($year == self::START_BASE_YEAR) {
+            return $base2024;
+        }
+
+        $revenueExpenseIds = $this->getRevenueExpenseIds($items);
+        
+        if ($revenueExpenseIds->isEmpty()) {
+            return $base2024;
+        }
+
+        $netMutation = $this->calculateRevenueExpenseMutation($revenueExpenseIds, self::START_BASE_YEAR, $year - 1);
+        
+        return $netMutation;
+    }
+
+    private function calculateC2101Opening(Collection $items, int $year, float $c2199Opening): float
+    {
+        if ($year <= self::BASE_YEAR) {
+            return 0;
+        }
+
+        $c2101 = $items->where('kode', 'C21-01')->first();
+        $c2199 = $items->where('kode', 'C21-99')->first();
+        
+        $base2024C2101 = $c2101?->tahun_2024 ?? 0;
+        $base2024C2199 = $c2199?->tahun_2024 ?? 0;
+
+        if ($year == self::START_BASE_YEAR) {
+            return $base2024C2101;
+        }
+
+        $revenueExpenseIds = $this->getRevenueExpenseIds($items);
+        
+        if ($revenueExpenseIds->isEmpty()) {
+            return $base2024C2101;
+        }
+
+        $netMutation = $this->calculateRevenueExpenseMutation($revenueExpenseIds, self::START_BASE_YEAR, $year - 1);
+        
+        return $base2024C2101 + $base2024C2199 + $netMutation - $c2199Opening;
+    }
+
+    private function getRevenueExpenseIds(Collection $items): Collection
+    {
+        return $items->filter(fn($item) => $this->isRevenueOrExpense($item->kode))->pluck('id');
+    }
+
+    private function calculateRevenueExpenseMutation(Collection $accountIds, int $startYear, int $endYear): float
+    {
+        $debit = DB::table('journals')
+            ->whereIn('debit_account_id', $accountIds)
+            ->whereYear('date', '>=', $startYear)
+            ->whereYear('date', '<=', $endYear)
+            ->whereNull('deleted_at')
+            ->sum('total_debit');
+
+        $credit = DB::table('journals')
+            ->whereIn('credit_account_id', $accountIds)
+            ->whereYear('date', '>=', $startYear)
+            ->whereYear('date', '<=', $endYear)
+            ->whereNull('deleted_at')
+            ->sum('total_credit');
+
+        return $debit - $credit;
+    }
+
+    private function getAccountMonthlyMutation(int $accountId, Collection $journalMonthly): array
+    {
+        $transactions = $journalMonthly[$accountId] ?? collect();
+        $monthly = [];
+
+        for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+            $monthly[$month] = $this->calculateNetMutation($transactions, $month);
+        }
+
+        return $monthly;
+    }
+
+    private function getC2199MonthlyMutation(Collection $items, Collection $journalMonthly): array
+    {
+        $revenueExpenseItems = $items->filter(fn($item) => $this->isRevenueOrExpense($item->kode));
+        $monthly = array_fill(1, self::MONTHS_IN_YEAR, 0);
+
+        foreach ($revenueExpenseItems as $item) {
+            $transactions = $journalMonthly[$item->id] ?? collect();
+            
+            for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+                $monthly[$month] += $this->calculateNetMutation($transactions, $month);
+            }
+        }
+
+        return $monthly;
+    }
+
+    private function applyC2101Rules($account, array $data, float $opening, float $c2199Opening, array $c2199Monthly): array
+    {
+        $data[$account->id]['opening'] = $opening;
+
+        for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+            if ($month === 1) {
+                $data[$account->id]["month_1"] = $opening + $c2199Opening;
+            } else {
+                $data[$account->id]["month_$month"] = $data[$account->id]["month_" . ($month - 1)] + $c2199Monthly[$month - 1];
+            }
+        }
+
+        $data[$account->id]['total'] = $opening + $c2199Opening;
+
+        return $data;
+    }
+
+    private function applyC2102Rules($account, array $data, array $monthly): array
+    {
+        $data[$account->id]['opening'] = 0;
+
+        for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+            $data[$account->id]["month_$month"] = $monthly[$month];
+        }
+
+        $data[$account->id]['total'] = array_sum($monthly);
+
+        return $data;
+    }
+
+    private function applyC2199Rules($account, array $data, float $opening, array $monthly): array
+    {
+        $data[$account->id]['opening'] = $opening;
+
+        for ($month = 1; $month <= self::MONTHS_IN_YEAR; $month++) {
+            $data[$account->id]["month_$month"] = $monthly[$month];
+        }
+
+        $data[$account->id]['total'] = array_sum($monthly);
+
+        return $data;
     }
 }
