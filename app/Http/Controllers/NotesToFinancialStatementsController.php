@@ -149,6 +149,7 @@ class NotesToFinancialStatementsController extends Controller
                     $row["month_$m"] = $saldo;
                 }
                 $row['opening'] = $openingBalance[$item->id] ?? 0;
+                $row['total'] = $row['month_12']; // Saldo akhir bulan terakhir
             } else {
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
@@ -157,11 +158,10 @@ class NotesToFinancialStatementsController extends Controller
                     $row["month_$m"] = $debit - $credit;
                 }
                 $row['opening'] = 0;
+                $row['total'] = array_sum(array_filter($row, function($key) {
+                    return strpos($key, 'month_') === 0;
+                }, ARRAY_FILTER_USE_KEY));
             }
-            
-            $row['total'] = array_sum(array_filter($row, function($key) {
-                return strpos($key, 'month_') === 0;
-            }, ARRAY_FILTER_USE_KEY));
             
             $data[$item->id] = $row;
         }
