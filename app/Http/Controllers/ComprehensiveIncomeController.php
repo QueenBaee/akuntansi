@@ -113,11 +113,8 @@ class ComprehensiveIncomeController extends Controller
         foreach ($items as $item) {
             $row = [];
             $isBalanceSheet = $this->isBalanceSheetAccount($item->kode);
-            $isIncomeStatement = $this->isIncomeStatementAccount($item->kode);
-            $isDividend = $this->isDividendAccount($item->kode);
             
             if ($isBalanceSheet) {
-                // Balance Sheet: cumulative logic
                 $saldo = $openingBalance[$item->id] ?? 0;
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
@@ -127,26 +124,23 @@ class ComprehensiveIncomeController extends Controller
                     $row["month_$m"] = $saldo;
                 }
                 $row['opening'] = $openingBalance[$item->id] ?? 0;
+                $row['total'] = $row['month_12'];
             } else {
-                // Income Statement & Dividend: period movements only
                 for ($m = 1; $m <= 12; $m++) {
                     $trx = $journalMonthly[$item->id] ?? collect();
                     $debit = $trx->where('month', $m)->sum('debit_amount');
                     $credit = $trx->where('month', $m)->sum('credit_amount');
-                    // For expense accounts, debit increases expense (positive)
-                    // For revenue accounts, credit increases revenue (positive)
                     if (substr($item->kode, 0, 1) === 'E') {
-                        $row["month_$m"] = $debit - $credit; // Expense: debit positive
+                        $row["month_$m"] = $debit - $credit;
                     } else {
-                        $row["month_$m"] = $credit - $debit; // Revenue: credit positive
+                        $row["month_$m"] = $credit - $debit;
                     }
                 }
                 $row['opening'] = 0;
+                $row['total'] = array_sum(array_filter($row, function($key) {
+                    return strpos($key, 'month_') === 0;
+                }, ARRAY_FILTER_USE_KEY));
             }
-            
-            $row['total'] = array_sum(array_filter($row, function($key) {
-                return strpos($key, 'month_') === 0;
-            }, ARRAY_FILTER_USE_KEY));
             
             $data[$item->id] = $row;
         }
@@ -157,134 +151,113 @@ class ComprehensiveIncomeController extends Controller
         $c2199 = $items->where('kode', 'C21-99')->first();
 
         if ($c2101 && $c2102 && $c2199) {
-            $originalC2101Opening = $data[$c2101->id]['opening'];
-            $originalC2102Opening = $data[$c2102->id]['opening'];
-            $originalC2199Opening = $data[$c2199->id]['opening'];
-            
-            $c2101OpeningSum = $originalC2101Opening + $originalC2102Opening + $originalC2199Opening;
-            $data[$c2101->id]['opening'] = $c2101OpeningSum;
-            $data[$c2199->id]['opening'] = $originalC2199Opening;
-            $data[$c2102->id]['opening'] = 0;
-            
-            $c2199Changes = [];
-            
-            for ($m = 1; $m <= 12; $m++) {
-                $data[$c2199->id]["month_$m"] = 0;
+            // Calculate C2199 opening
+            $c2199Opening = 0;
+            if ($year > 2024) {
+                $revenueExpenseIds = $items->filter(function($item) {
+                    return $this->isIncomeStatementAccount($item->kode);
+                })->pluck('id');
                 
-                $monthlyChange = 0;
-                $hasTransactionInHigherAccounts = false;
+                if ($year == 2025) {
+                    $c2199Opening = $c2199->tahun_2024 ?? 0;
+                } else if (!$revenueExpenseIds->isEmpty()) {
+                    $debit = DB::table('journals')
+                        ->whereIn('debit_account_id', $revenueExpenseIds)
+                        ->whereYear('date', '>=', 2025)
+                        ->whereYear('date', '<=', $previousYear)
+                        ->whereNull('deleted_at')
+                        ->sum('total_debit');
+                    
+                    $credit = DB::table('journals')
+                        ->whereIn('credit_account_id', $revenueExpenseIds)
+                        ->whereYear('date', '>=', 2025)
+                        ->whereYear('date', '<=', $previousYear)
+                        ->whereNull('deleted_at')
+                        ->sum('total_credit');
+                    
+                    $c2199Opening = $debit - $credit;
+                }
+            }
+            
+            // Calculate C2101 opening
+            $c2101Opening = 0;
+            if ($year > 2024) {
+                $base2024C2101 = $c2101->tahun_2024 ?? 0;
+                $base2024C2199 = $c2199->tahun_2024 ?? 0;
                 
-                foreach ($items as $item) {
-                    if ($item->id > $c2199->id) {
-                        $trx = $journalMonthly[$item->id] ?? collect();
-                        $debit = $trx->where('month', $m)->sum('debit_amount');
-                        $credit = $trx->where('month', $m)->sum('credit_amount');
+                if ($year == 2025) {
+                    $c2101Opening = $base2024C2101;
+                } else {
+                    $revenueExpenseIds = $items->filter(function($item) {
+                        return $this->isIncomeStatementAccount($item->kode);
+                    })->pluck('id');
+                    
+                    if (!$revenueExpenseIds->isEmpty()) {
+                        $debit = DB::table('journals')
+                            ->whereIn('debit_account_id', $revenueExpenseIds)
+                            ->whereYear('date', '>=', 2025)
+                            ->whereYear('date', '<=', $previousYear)
+                            ->whereNull('deleted_at')
+                            ->sum('total_debit');
                         
-                        if ($debit > 0 || $credit > 0) {
-                            $hasTransactionInHigherAccounts = true;
-                            $monthlyChange += ($debit - $credit);
-                        }
+                        $credit = DB::table('journals')
+                            ->whereIn('credit_account_id', $revenueExpenseIds)
+                            ->whereYear('date', '>=', 2025)
+                            ->whereYear('date', '<=', $previousYear)
+                            ->whereNull('deleted_at')
+                            ->sum('total_credit');
+                        
+                        $netMutation = $debit - $credit;
+                        $c2101Opening = $base2024C2101 + $base2024C2199 + $netMutation - $c2199Opening;
+                    } else {
+                        $c2101Opening = $base2024C2101;
                     }
                 }
-                
-                $c2199Changes[$m] = $hasTransactionInHigherAccounts ? $monthlyChange : 0;
-                
-                if ($hasTransactionInHigherAccounts) {
-                    $data[$c2199->id]["month_$m"] = $monthlyChange;
+            }
+            
+            // Calculate C2199 monthly mutations
+            $c2199Monthly = array_fill(1, 12, 0);
+            $revenueExpenseItems = $items->filter(function($item) {
+                return $this->isIncomeStatementAccount($item->kode);
+            });
+            
+            foreach ($revenueExpenseItems as $item) {
+                $trx = $journalMonthly[$item->id] ?? collect();
+                for ($m = 1; $m <= 12; $m++) {
+                    $debit = $trx->where('month', $m)->sum('debit_amount');
+                    $credit = $trx->where('month', $m)->sum('credit_amount');
+                    $c2199Monthly[$m] += ($debit - $credit);
                 }
             }
             
+            // Apply C2101 rules
+            $data[$c2101->id]['opening'] = $c2101Opening;
+            $runningBalance = $c2101Opening + $c2199Opening;
             for ($m = 1; $m <= 12; $m++) {
-                if ($m == 1) {
-                    $data[$c2101->id]["month_$m"] = $c2101OpeningSum + $c2199Changes[$m];
-                } else {
-                    $prevMonth = $m - 1;
-                    $data[$c2101->id]["month_$m"] = $data[$c2101->id]["month_$prevMonth"] + $c2199Changes[$m];
-                }
+                $runningBalance += $c2199Monthly[$m];
+                $data[$c2101->id]["month_$m"] = $runningBalance;
             }
-
             $data[$c2101->id]['total'] = $data[$c2101->id]['month_12'];
-            $data[$c2199->id]['total'] = array_sum($c2199Changes);
-        }
-
-        // Debug: Check specific journal entries to see what accounts are being used
-        $sampleJournals = DB::table('journals')
-            ->select('debit_account_id', 'credit_account_id', 'total_debit', 'total_credit', 'date', 'description')
-            ->whereYear('date', $year)
-            ->whereNull('deleted_at')
-            ->limit(10)
-            ->get();
             
-        // Get account codes for these journals
-        $accountIds = $sampleJournals->pluck('debit_account_id')
-            ->merge($sampleJournals->pluck('credit_account_id'))
-            ->unique();
-            
-        $accountCodes = $items->whereIn('id', $accountIds)
-            ->pluck('kode', 'id');
-
-        // Debug: Check if there are any journals for R and E accounts
-        $rAccounts = $items->filter(function($item) {
-            return substr($item->kode, 0, 1) === 'R';
-        })->pluck('id');
-        
-        $eAccounts = $items->filter(function($item) {
-            return substr($item->kode, 0, 1) === 'E';
-        })->pluck('id');
-        
-        $rJournalCount = DB::table('journals')
-            ->where(function($query) use ($rAccounts) {
-                $query->whereIn('debit_account_id', $rAccounts)
-                      ->orWhereIn('credit_account_id', $rAccounts);
-            })
-            ->whereYear('date', $year)
-            ->whereNull('deleted_at')
-            ->count();
-            
-        $eJournalCount = DB::table('journals')
-            ->where(function($query) use ($eAccounts) {
-                $query->whereIn('debit_account_id', $eAccounts)
-                      ->orWhereIn('credit_account_id', $eAccounts);
-            })
-            ->whereYear('date', $year)
-            ->whereNull('deleted_at')
-            ->count();
-            
-        // Check all years available
-        $availableYears = DB::table('journals')
-            ->selectRaw('YEAR(date) as year, COUNT(*) as count')
-            ->whereNull('deleted_at')
-            ->groupBy('year')
-            ->orderBy('year', 'desc')
-            ->get();
-
-        // Debug: Add some logging to check if data exists
-        $debugInfo = [];
-        foreach ($items as $item) {
-            if (in_array($item->kode, ['R11-01', 'R11-02', 'R11-03', 'E11-01', 'E22-01', 'E22-97'])) {
-                $debugInfo[$item->kode] = [
-                    'opening' => $data[$item->id]['opening'] ?? 0,
-                    'month_1' => $data[$item->id]['month_1'] ?? 0,
-                    'month_10' => $data[$item->id]['month_10'] ?? 0,
-                    'total' => $data[$item->id]['total'] ?? 0,
-                ];
+            // Apply C2102 rules
+            $data[$c2102->id]['opening'] = 0;
+            $c2102Monthly = [];
+            for ($m = 1; $m <= 12; $m++) {
+                $trx = $journalMonthly[$c2102->id] ?? collect();
+                $debit = $trx->where('month', $m)->sum('debit_amount');
+                $credit = $trx->where('month', $m)->sum('credit_amount');
+                $c2102Monthly[$m] = $debit - $credit;
+                $data[$c2102->id]["month_$m"] = $c2102Monthly[$m];
             }
+            $data[$c2102->id]['total'] = array_sum($c2102Monthly);
+            
+            // Apply C2199 rules
+            $data[$c2199->id]['opening'] = $c2199Opening;
+            for ($m = 1; $m <= 12; $m++) {
+                $data[$c2199->id]["month_$m"] = $c2199Monthly[$m];
+            }
+            $data[$c2199->id]['total'] = array_sum($c2199Monthly);
         }
-        $debugInfo['journal_counts'] = [
-            'current_year' => $year,
-            'revenue_journals' => $rJournalCount,
-            'expense_journals' => $eJournalCount,
-            'total_items' => $items->count(),
-            'available_years' => $availableYears->pluck('count', 'year')->toArray(),
-            'sample_journals' => $sampleJournals->map(function($j) use ($accountCodes) {
-                return [
-                    'debit' => $accountCodes[$j->debit_account_id] ?? 'Unknown',
-                    'credit' => $accountCodes[$j->credit_account_id] ?? 'Unknown', 
-                    'amount' => $j->total_debit,
-                    'desc' => substr($j->description, 0, 30)
-                ];
-            })->toArray(),
-        ];
 
         return view('comprehensive_income.index', compact('items', 'data', 'year'));
     }
