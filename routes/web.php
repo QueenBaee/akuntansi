@@ -181,6 +181,8 @@ Route::middleware('auth')->group(function () {
     // Buku Besar
     Route::get('/buku-besar', [BukuBesarController::class, 'index'])
         ->name('buku-besar.index');
+    Route::get('/buku-besar/export-pdf', [BukuBesarController::class, 'exportPdf'])
+        ->name('buku-besar.export-pdf');
 
 
     // Route::get('/trial-balance-report', [\App\Http\Controllers\TrialBalanceReportController::class, 'index'])

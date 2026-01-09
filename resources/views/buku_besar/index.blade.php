@@ -41,6 +41,7 @@
         <thead>
             <tr>
                 <th>No</th>
+                <th>Tanggal</th>
                 <th>Keterangan</th>
                 <th>PIC</th>
                 <th>No. Bukti</th>
@@ -53,7 +54,7 @@
 
             {{-- SALDO AWAL --}}
             <tr class="row-opening">
-                <td colspan="4">Saldo Awal</td>
+                <td colspan="5">Saldo Awal</td>
                 <td>-</td>
                 <td>-</td>
                 <td>{{ number_format($openingBalance,0,',','.') }}</td>
@@ -63,6 +64,7 @@
             @forelse($bukuBesarData as $i => $row)
             <tr>
                 <td>{{ $i + 1 }}</td>
+                <td>{{ \Carbon\Carbon::parse($row['date'])->format('d/m/Y') }}</td>
                 <td>{{ $row['description'] }}</td>
                 <td>{{ $row['pic'] }}</td>
                 <td>{{ $row['proof_number'] ?? '-' }}</td>
@@ -76,13 +78,13 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" class="text-center">Tidak ada transaksi</td>
+                <td colspan="8" class="text-center">Tidak ada transaksi</td>
             </tr>
             @endforelse
 
             {{-- TOTAL --}}
             <tr class="row-total">
-                <td colspan="4">Total</td>
+                <td colspan="5">Total</td>
                 <td>{{ number_format($totalDebit,0,',','.') }}</td>
                 <td>{{ number_format($totalCredit,0,',','.') }}</td>
                 <td>-</td>
@@ -90,7 +92,7 @@
 
             {{-- SALDO AKHIR --}}
             <tr class="row-ending">
-                <td colspan="4">Saldo Akhir</td>
+                <td colspan="5">Saldo Akhir</td>
                 <td>-</td>
                 <td>-</td>
                 <td>{{ number_format($endingBalance,0,',','.') }}</td>
@@ -103,6 +105,9 @@
         <button onclick="window.print()" class="btn btn-secondary btn-sm">
             Cetak
         </button>
+        <a href="{{ route('buku-besar.export-pdf', ['account_id' => $selectedAccount->id, 'year' => $year, 'start_date' => $startDate, 'end_date' => $endDate]) }}" class="btn btn-danger btn-sm" target="_blank">
+            Export PDF
+        </a>
     </div>
 @endif
 
@@ -123,15 +128,17 @@
 .buku-besar-table th, .buku-besar-table td { border: 1px solid #000; padding: 4px 6px; }
 .buku-besar-table th { background: #e9ecef; font-weight: bold; text-align: center; width: auto !important; }
 .buku-besar-table th:nth-child(1) { width: 40px !important; }
-.buku-besar-table th:nth-child(2) { width: 30% !important; }
-.buku-besar-table th:nth-child(3) { width: 10% !important; }
-.buku-besar-table th:nth-child(4) { width: 12% !important; }
-.buku-besar-table th:nth-child(5) { width: 13% !important; }
+.buku-besar-table th:nth-child(2) { width: 80px !important; }
+.buku-besar-table th:nth-child(3) { width: 25% !important; }
+.buku-besar-table th:nth-child(4) { width: 10% !important; }
+.buku-besar-table th:nth-child(5) { width: 10% !important; }
 .buku-besar-table th:nth-child(6) { width: 13% !important; }
-.buku-besar-table th:nth-child(7) { width: 15% !important; }
+.buku-besar-table th:nth-child(7) { width: 13% !important; }
+.buku-besar-table th:nth-child(8) { width: 13% !important; }
 .buku-besar-table td { overflow: hidden; text-overflow: ellipsis; }
-.buku-besar-table td:nth-child(2) { white-space: normal; word-wrap: break-word; }
-.buku-besar-table td:nth-child(5), .buku-besar-table td:nth-child(6), .buku-besar-table td:nth-child(7) { text-align: right; }
+.buku-besar-table td:nth-child(2) { text-align: center; }
+.buku-besar-table td:nth-child(3) { white-space: normal; word-wrap: break-word; }
+.buku-besar-table td:nth-child(6), .buku-besar-table td:nth-child(7), .buku-besar-table td:nth-child(8) { text-align: right; }
 .row-opening, .row-total, .row-ending { font-weight: bold; background: #f8f9fa; }
 .buku-besar-footer { margin-top: 20px; text-align: center; }
 .buku-besar-table.no-equal-width { table-layout: fixed !important; }

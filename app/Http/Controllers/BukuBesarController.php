@@ -139,4 +139,78 @@ class BukuBesarController extends Controller
             'bukuBesarTotal'
         ));
     }
+
+    public function exportPdf(Request $request)
+    {
+        $accountId = $request->get('account_id');
+        $year = $request->get('year', date('Y'));
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        $selectedAccount = TrialBalance::find($accountId);
+        if (!$selectedAccount) {
+            abort(404, 'Akun tidak ditemukan');
+        }
+
+        $openingBalance = 0;
+        if (isset($selectedAccount->{"tahun_$year"})) {
+            $openingBalance = $selectedAccount->{"tahun_$year"} ?? 0;
+        } else {
+            $previousYear = $year - 1;
+            $openingBalance = $selectedAccount->{"tahun_$previousYear"} ?? 0;
+        }
+
+        $query = Journal::where('is_posted', true)
+            ->where(function ($q) use ($accountId) {
+                $q->where('debit_account_id', $accountId)
+                  ->orWhere('credit_account_id', $accountId);
+            });
+
+        if ($startDate) {
+            $query->where('date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->where('date', '<=', $endDate);
+        } else {
+            $query->whereYear('date', $year);
+        }
+
+        $journals = $query->orderBy('date')->orderBy('id')->get();
+
+        $bukuBesarData = [];
+        $totalDebit = 0;
+        $totalCredit = 0;
+        $runningBalance = $openingBalance;
+
+        foreach ($journals as $journal) {
+            $debit = $journal->debit_account_id == $accountId ? $journal->total_debit : 0;
+            $credit = $journal->credit_account_id == $accountId ? $journal->total_credit : 0;
+            $runningBalance += $debit - $credit;
+
+            $bukuBesarData[] = [
+                'date' => $journal->date,
+                'description' => $journal->description,
+                'pic' => $journal->pic,
+                'proof_number' => $journal->proof_number,
+                'debit' => $debit,
+                'credit' => $credit,
+                'balance' => $runningBalance,
+            ];
+
+            $totalDebit += $debit;
+            $totalCredit += $credit;
+        }
+
+        $endingBalance = $runningBalance;
+
+        return view('buku_besar.pdf', compact(
+            'selectedAccount',
+            'year',
+            'openingBalance',
+            'bukuBesarData',
+            'totalDebit',
+            'totalCredit',
+            'endingBalance'
+        ));
+    }
 }
